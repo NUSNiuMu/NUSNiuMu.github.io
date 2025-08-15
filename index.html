@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NUSNiuMu 的项目主页</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .repo {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .repo h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+        .repo a {
+            text-decoration: none;
+            color: #007acc;
+        }
+        .repo p {
+            margin: 8px 0 0;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>💻 NUSNiuMu 的 GitHub 项目</h1>
+    <div id="repo-list">正在加载项目...</div>
+
+    <script>
+        const username = "NUSNiuMu"; // 你的 GitHub 用户名
+        fetch(`https://api.github.com/users/${username}/repos?sort=updated`)
+            .then(response => response.json())
+            .then(repos => {
+                const list = document.getElementById('repo-list');
+                list.innerHTML = "";
+                repos.forEach(repo => {
+                    // 过滤掉主页仓库自身
+                    if (repo.name === `${username}.github.io`) return;
+                    const div = document.createElement('div');
+                    div.className = 'repo';
+                    div.innerHTML = `
+                        <h2><a href="${repo.html_url}" target="_blank">${repo.name}</a></h2>
+                        <p>${repo.description || "（暂无项目描述）"}</p>
+                    `;
+                    list.appendChild(div);
+                });
+            })
+            .catch(err => {
+                document.getElementById('repo-list').innerHTML = "❌ 加载失败，请稍后再试";
+                console.error(err);
+            });
+    </script>
+</body>
+</html>
