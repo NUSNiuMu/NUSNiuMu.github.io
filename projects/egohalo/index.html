@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="description" content="团队项目。我从零搭建并持续负责 EgoHalo 采集控制台，也参与设备软件、固件、浏览器上传和多视角数据处理。">
+    <title>EgoHalo 设备与数据工程 · 牛牧</title>
+    <link rel="canonical" href="https://nusniumu.github.io/projects/egohalo/">
+    <link rel="icon" href="../../assets/mark.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/site.css?v=aaaa2aa0">
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main">跳到正文</a>
+    <header class="shell masthead">
+      <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
+      <nav aria-label="主导航">
+        <ul class="nav-list">
+          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#about">关于</a></li>
+          <li><a href="../../#contact">联系</a></li>
+          <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main" class="shell case-shell" tabindex="-1">
+      <header class="case-title">
+        <p class="back"><a href="../../#projects">← 项目档案</a></p>
+        <h1>EgoHalo 设备与数据工程</h1>
+        <p class="lead">团队项目。我从零搭建并持续负责 EgoHalo 采集控制台，也参与设备软件、固件、浏览器上传和多视角数据处理。</p>
+      </header>
+      <ol class="steps">
+        <li><a href="#console">连接设备与采集</a></li>
+        <li><a href="#upload">浏览器直传</a></li>
+        <li><a href="#hands">云端手部处理</a></li>
+      </ol>
+      <div class="case-layout">
+        <nav class="toc" aria-label="章节目录">
+          <h2>目录</h2>
+          <ul>
+            <li><a href="#console">采集控制台</a></li>
+            <li><a href="#upload">浏览器上传</a></li>
+            <li><a href="#ota">OTA 服务</a></li>
+            <li><a href="#looperhub">LooperHub</a></li>
+            <li><a href="#quadcap">QuadCap 固件</a></li>
+            <li><a href="#hands">云端手部处理</a></li>
+          </ul>
+        </nav>
+        <div class="case-text">
+          <section class="chapter" id="console">
+            <h2>采集控制台</h2>
+            <p>我从零搭建并持续负责 EgoHalo 采集控制台。它运行在 X5 上，现场用网页或原生 Android App 就能连接设备、预览、录制和取回数据。</p>
+            <h3>连接、预览与控制</h3>
+            <p>安卓端通过蓝牙发现设备并连接 Wi-Fi，网页和 App 共享设备状态，可以看多路画面和实时轨迹、切换任务并控制录制。录制由设备端执行，客户端切页或断开后还能继续。</p>
+            <h3>起录和保存</h3>
+            <p>录制从早期 rosbag 演进到 X5 本机 Direct MCAP。对 H.264、H.265 视频，起录等待各路完整的可解码边界。Direct 路径上，保存录制的同时可以继续看本地预览。</p>
+            <h3>记录、恢复与导出</h3>
+            <p>按任务和 Take 管理记录。换卡后可以扫描恢复索引，储存空间不足时提前收尾保存。设备保存的 Take 可以通过只读导出交给浏览器上传。</p>
+            <h3>机型与验证</h3>
+            <p>同一控制台维护 EgoHalo 四路、Insight 7 三路、Duo 双路和独立 RDK 双 UVC 的不同配置。单台 X5 做过 H.264 的 ROS 与 Direct MCAP 实录对照，也实测过 MJPEG 录制中重连、实时轨迹和原始 JPEG 读包。</p>
+          </section>
+          <section class="chapter" id="upload">
+            <h2>浏览器上传</h2>
+            <p>采集完成后，团队用浏览器把 Take 交给云端处理。我参与设备导出和云存储直传，维护浏览器兼容和多标签页会话隔离。使用者可以选中 Take，查看每次上传的进度和结果。</p>
+          </section>
+          <section class="chapter" id="ota">
+            <h2>OTA 服务</h2>
+            <p>设备交付后，团队用 OTA 管理版本和恢复。我加入了单次发布关联多个机型的能力，也维护升级时的数据保留流程。维护者可以在一次发布中选好适用机型，设备升级时可保留已录数据。</p>
+          </section>
+          <section class="chapter" id="looperhub">
+            <h2>LooperHub</h2>
+            <p>LooperHub 管理相机、感知和编码输出。我维护机型识别，拆分本地预览与录制路径，并接出本地 VIO 位姿。控制台可以在录制中读取画面和轨迹。</p>
+            <ul class="steps parallel" role="list">
+              <li>相机输入 → 本地预览与轨迹</li>
+              <li>相机输入 → 录制数据输出</li>
+            </ul>
+          </section>
+          <section class="chapter" id="quadcap">
+            <h2>QuadCap 固件</h2>
+            <p>团队用 Buildroot 维护设备系统。我改过产品配置、BLE 名称生成和低电量提示，也参与把采集应用打包进系统。设备可以通过对应机型的固件获得采集应用和设备侧配置。</p>
+            <ol class="steps">
+              <li>机型配置</li>
+              <li>打包采集应用</li>
+              <li>生成对应的系统镜像</li>
+            </ol>
+          </section>
+          <section class="chapter" id="hands">
+            <h2>云端手部处理</h2>
+            <p>云端服务把录制分发到 GPU 处理，生成各视角的手部结果。我扩展了 HEVC 输入兼容和多相机处理。后续复核可以定位是哪一路漏检，以及跨视角是否匹配。</p>
+            <ol class="steps">
+              <li>录制入队</li>
+              <li>按视角处理</li>
+              <li>输出手部结果</li>
+            </ol>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
+  </body>
+</html>

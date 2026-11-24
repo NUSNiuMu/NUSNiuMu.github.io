@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="description" content="从红外画面识别灯点，与已知标记模型匹配，实时显示六自由度位姿。">
+    <title>红外 LED 定位 · 牛牧</title>
+    <link rel="canonical" href="https://nusniumu.github.io/projects/ir-led-tracker/">
+    <link rel="icon" href="../../assets/mark.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/site.css?v=aaaa2aa0">
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main">跳到正文</a>
+    <header class="shell masthead">
+      <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
+      <nav aria-label="主导航">
+        <ul class="nav-list">
+          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#about">关于</a></li>
+          <li><a href="../../#contact">联系</a></li>
+          <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main" class="shell case-shell" tabindex="-1">
+      <header class="case-title">
+        <p class="back"><a href="../../#projects">← 项目档案</a></p>
+        <h1>红外 LED 定位</h1>
+        <p class="lead">从红外画面识别灯点，与已知标记模型匹配，实时显示六自由度位姿。</p>
+      </header>
+      <ol class="steps">
+        <li>采集红外画面</li>
+        <li>匹配可见灯点</li>
+        <li>估计与检查位姿</li>
+        <li>实时查看</li>
+      </ol>
+      <div class="case-layout">
+        <nav class="toc" aria-label="章节目录">
+          <h2>目录</h2>
+          <ul>
+            <li><a href="#marker">红外标记和相机</a></li>
+            <li><a href="#pose">从灯点到位姿</a></li>
+            <li><a href="#checks">实验结果</a></li>
+          </ul>
+        </nav>
+        <div class="case-text">
+          <section class="chapter" id="marker">
+            <h2>红外标记和相机</h2>
+            <p>我搭建了用红外相机追踪 LED 标记的实验。先标定相机内参，再描述标记上各灯点的位置、方向和可视角，供后面做匹配。</p>
+          </section>
+          <section class="chapter" id="pose">
+            <h2>从灯点到位姿</h2>
+            <p>红外图像里的亮点与标记模型对应后，估计目标的三维位置和朝向。实时查看器一起显示原始画面和 3D 位姿，也会检查相邻结果是否突然跳变。</p>
+          </section>
+          <section class="chapter" id="checks">
+            <h2>实验结果</h2>
+            <p>已有单视角的实时输入和可见灯匹配记录。这个实验观察的是当前装置和视角条件，运动中的定位误差需要独立参考继续测量。</p>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
+  </body>
+</html>

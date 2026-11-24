@@ -1,138 +1,160 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="牛牧的个人网站，记录机器人采集、数据处理、导航和机械臂项目。">
-  <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#f8f7f2" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#141a15" media="(prefers-color-scheme: dark)">
-  <meta property="og:title" content="牛牧 · 机器人项目">
-  <meta property="og:description" content="多相机采集、机器人数据、SLAM 导航和机械臂实验。">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://nusniumu.github.io/">
-  <meta property="og:image" content="https://nusniumu.github.io/assets/slam-robot.webp">
-  <meta property="og:image:alt" content="SLAM 导航项目使用的移动机器人">
-  <meta name="referrer" content="strict-origin-when-cross-origin">
-  <title>牛牧 · 机器人项目</title>
-  <link rel="canonical" href="https://nusniumu.github.io/">
-  <link rel="icon" href="assets/mark.png" type="image/png">
-  <link rel="stylesheet" href="assets/site.css?v=868daf86">
-  <script src="assets/projects.js?v=20ad2950" defer></script>
-</head>
-<body id="top">
-  <a class="skip-link" href="#main">跳到正文</a>
-  <header class="shell intro">
-    <img class="portrait" src="assets/niu-mu.webp" width="440" height="660" alt="牛牧的照片" fetchpriority="high">
-    <div>
-      <h1>牛牧</h1>
-      <p>我做多相机采集、机器人数据处理和真机实验。</p>
-    </div>
-    <nav aria-label="主导航">
-      <ul class="nav-list">
-        <li><a href="#projects">项目</a></li>
-        <li><a href="#about">关于</a></li>
-        <li><a href="#contact">联系</a></li>
-        <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <main id="main" class="shell" tabindex="-1">
-    <section id="projects">
-      <div class="project-heading">
-        <h2>项目</h2>
-        <search class="project-filter" aria-label="筛选项目" hidden>
-          <button type="button" data-filter="all" aria-pressed="true" aria-controls="project-list">全部</button>
-          <button type="button" data-filter="data" aria-pressed="false" aria-controls="project-list">采集与数据</button>
-          <button type="button" data-filter="navigation" aria-pressed="false" aria-controls="project-list">感知与导航</button>
-          <button type="button" data-filter="control" aria-pressed="false" aria-controls="project-list">学习与控制</button>
-          <p class="project-count visually-hidden" role="status"></p>
-        </search>
-      </div>
-
-      <div id="project-list">
-        <section class="project-group" data-category="data">
-          <h3>采集与数据</h3>
-          <ul class="project-list" role="list">
-            <li>
-              <div>
-                <h4 lang="en"><a href="projects/insight-capture/">Insight Capture Dashboard</a></h4>
-                <p>用 Jetson 录制三台设备的数据。手机端预览、校准和开停录制，Qt 桌面端回放和检查质量。</p>
-              </div>
-              <a class="repo-link" href="https://github.com/NUSNiuMu/insight-capture-dashboard" aria-label="GitHub 仓库：Insight Capture Dashboard">GitHub 仓库</a>
-            </li>
-            <li>
-              <div>
-                <h4 lang="en">Robot Dataset Annotator</h4>
-                <p>给机器人录制划分任务片段，用任务插件定义边界，人工复核后按批次检查和导出。</p>
-              </div>
-              <a class="repo-link" href="https://github.com/NUSNiuMu/robot-dataset-annotator" aria-label="GitHub 仓库：Robot Dataset Annotator">GitHub 仓库</a>
-            </li>
-            <li>
-              <div>
-                <h4 lang="en">Ego Annotation</h4>
-                <p>从第一视角 MCAP 录制按时间戳取帧，用 Qwen 生成候选动作，再核对分段。仓库里有叠衣服的例子。</p>
-              </div>
-              <a class="repo-link" href="https://github.com/NUSNiuMu/ego-annotation" aria-label="GitHub 仓库：Ego Annotation">GitHub 仓库</a>
-            </li>
-          </ul>
-        </section>
-
-        <section class="project-group" data-category="navigation">
-          <h3>感知与导航</h3>
-          <ul class="project-list" role="list">
-            <li>
-              <div>
-                <h4 lang="en"><a href="projects/slam-navigation/">SLAM Navigation Benchmark</a></h4>
-                <p>把四种激光惯性 SLAM 方法装到同一台移动机器人上，比较航点跟踪和避障。新加坡国立大学毕业设计。</p>
-              </div>
-              <a class="repo-link" href="https://github.com/NUSNiuMu/slam-navigation-benchmark" aria-label="GitHub 仓库：SLAM Navigation Benchmark">GitHub 仓库</a>
-            </li>
-            <li>
-              <div>
-                <h4 lang="en">TinyNav</h4>
-                <p>Uniflex AI 双目导航项目的个人 Fork。上游包含建图、路径规划和移动机器人控制。</p>
-              </div>
-              <a class="repo-link" href="https://github.com/NUSNiuMu/tinynav" aria-label="GitHub Fork：TinyNav">GitHub Fork</a>
-            </li>
-          </ul>
-        </section>
-
-        <section class="project-group" data-category="control">
-          <h3>学习与控制</h3>
-          <ul class="project-list" role="list">
-            <li>
-              <div>
-                <h4 lang="en"><a href="projects/so101-lerobot/">SO101 LeRobot Closed Loop</a></h4>
-                <p>用两台 RGB 相机录制示教，训练 ACT 策略，再在 SO101 真机上做红块入箱和纸杯叠放。</p>
-              </div>
-              <a class="repo-link" href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop" aria-label="GitHub 仓库：SO101 LeRobot Closed Loop">GitHub 仓库</a>
-            </li>
-            <li>
-              <div>
-                <h4 lang="en">Kinova STOMP Motion Planning</h4>
-                <p>在 MATLAB 里用 STOMP 规划机械臂避障轨迹，比较不同机器人模型，测试末端姿态约束。</p>
-              </div>
-              <a class="repo-link" href="https://github.com/NUSNiuMu/kinova-stomp-motion-planning" aria-label="GitHub 仓库：Kinova STOMP Motion Planning">GitHub 仓库</a>
-            </li>
-            <li>
-              <div>
-                <h4 lang="en">Drone Stable Hover RL</h4>
-                <p>在 Isaac Lab 模拟风扰，比较 PPO、TD3 和 DQN 在四旋翼定点悬停任务中的表现。</p>
-              </div>
-              <a class="repo-link" href="https://github.com/NUSNiuMu/Drone-Stable-Hover-RL" aria-label="GitHub 仓库：Drone Stable Hover RL">GitHub 仓库</a>
-            </li>
-          </ul>
-        </section>
-      </div>
-    </section>
-
-    <div class="personal">
-      <section id="about">
-        <h2>关于我</h2>
-        <p>我在新加坡国立大学的毕业设计里做过移动机器人导航。做多相机采集和桌面机械臂实验时，我会检查画面有没有对齐、录下的数据能不能用来训练、训练出的策略能不能在真机上复现。</p>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="description" content="牛牧的个人网站，记录机器人采集、真机实验和我做的设备。">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="牛牧 · 机器人项目">
+    <meta property="og:description" content="机器人采集、真机实验和我做的设备。">
+    <meta property="og:image" content="https://nusniumu.github.io/assets/insight-setup.webp">
+    <meta property="og:image:alt" content="Insight Capture 的设备与接线实拍">
+    <title>牛牧 · 机器人项目</title>
+    <link rel="canonical" href="https://nusniumu.github.io/">
+    <link rel="icon" href="assets/mark.png" type="image/png">
+    <link rel="stylesheet" href="assets/site.css?v=aaaa2aa0">
+    <script src="assets/projects.js?v=7955873b" defer></script>
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main">跳到正文</a>
+    <header class="shell masthead">
+      <a class="brand" href="#top" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
+      <nav aria-label="主导航">
+        <ul class="nav-list">
+          <li><a href="#projects">项目</a></li>
+          <li><a href="#about">关于</a></li>
+          <li><a href="#contact">联系</a></li>
+          <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main" class="shell" tabindex="-1">
+      <section class="front">
+        <div class="intro" id="about">
+          <img class="portrait" src="assets/niu-mu.webp" width="440" height="660" alt="牛牧的照片">
+          <h1>牛牧</h1>
+          <p>我做多相机采集、机器人数据处理和真机实验。我关心的是，怎么把设备上的信号录下来，再用这些数据复现一次真实的动作。</p>
+          <a class="intro-link" href="#projects">浏览项目 <span aria-hidden="true">↓</span></a>
+        </div>
+        <article class="main-project">
+          <img src="assets/insight-setup.webp" width="1200" height="690" fetchpriority="high" alt="Insight 采集设备、Jetson 和接线实拍">
+          <div class="main-copy">
+            <h2 lang="en">Insight Capture Dashboard</h2>
+            <p>三台设备一起采集。手机上看画面、校准和控制录制，回到桌面再回放和检查数据。</p>
+            <div class="actions">
+              <a class="button primary" href="projects/insight-capture/">项目详情</a>
+              <a class="button" href="https://github.com/NUSNiuMu/insight-capture-dashboard">GitHub 仓库</a>
+            </div>
+          </div>
+        </article>
       </section>
+
+      <section class="selected" aria-labelledby="selected-title">
+        <h2 id="selected-title">代表项目</h2>
+        <ul role="list">
+          <li>
+            <h3 lang="en"><a href="projects/so101-lerobot/">SO101 LeRobot</a></h3>
+            <p>两路相机录制示教，用 ACT 训练策略，再回到机械臂上检查抓放和叠杯。</p></li>
+          <li>
+            <h3><a href="projects/ir-led-tracker/">红外 LED 定位</a></h3>
+            <p>从红外画面识别灯点，与已知标记模型匹配，实时显示六自由度位姿。</p></li>
+          <li>
+            <h3 lang="en"><a href="projects/muse/">Muse</a></h3>
+            <p>做了一个触摸屏语音终端，用它在电脑旁发起和查看 Codex 会话。</p></li>
+        </ul>
+      </section>
+
+      <section id="projects" class="archive" aria-labelledby="archive-title">
+        <div class="archive-heading">
+          <h2 id="archive-title">项目档案</h2>
+          <search class="project-filter" aria-label="筛选项目" hidden>
+            <button type="button" data-filter="all" aria-controls="project-list" aria-pressed="true">全部</button>
+            <button type="button" data-filter="data" aria-controls="project-list" aria-pressed="false">采集与数据</button>
+            <button type="button" data-filter="navigation" aria-controls="project-list" aria-pressed="false">感知与导航</button>
+            <button type="button" data-filter="control" aria-controls="project-list" aria-pressed="false">设备与控制</button>
+            <p class="visually-hidden project-count" role="status"></p>
+          </search>
+        </div>
+        <ul class="project-list" id="project-list" role="list">
+          <li class="archive-item" data-category="data">
+            <article>
+              <img class="archive-image" src="assets/insight-hardware.webp" width="960" height="440" alt="Jetson 接口与 Insight 采集套件" loading="lazy">
+              <div class="archive-copy">
+                <h3 lang="en"><a href="projects/insight-capture/">Insight Capture Dashboard</a></h3>
+                <p>三设备同步采集，手机预览和校准，Qt 管理任务、回放和质检。</p>
+                <a class="repo-link" href="https://github.com/NUSNiuMu/insight-capture-dashboard" aria-label="GitHub 仓库：Insight Capture Dashboard">GitHub 仓库</a>
+              </div>
+            </article></li>
+          <li class="archive-item" data-category="control">
+            <article>
+
+              <div class="archive-copy">
+                <h3 lang="en"><a href="projects/so101-lerobot/">SO101 LeRobot</a></h3>
+                <p>两路相机录制示教，用 ACT 训练策略，再回到机械臂上检查抓放和叠杯。</p>
+                <a class="repo-link" href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop" aria-label="GitHub 仓库：SO101 LeRobot">GitHub 仓库</a>
+              </div>
+            </article></li>
+          <li class="archive-item" data-category="navigation">
+            <article>
+
+              <div class="archive-copy">
+                <h3><a href="projects/ir-led-tracker/">红外 LED 定位</a></h3>
+                <p>从红外画面识别灯点，与已知标记模型匹配，实时显示六自由度位姿。</p>
+
+              </div>
+            </article></li>
+          <li class="archive-item" data-category="control">
+            <article>
+
+              <div class="archive-copy">
+                <h3 lang="en"><a href="projects/muse/">Muse</a></h3>
+                <p>做了一个触摸屏语音终端，用它在电脑旁发起和查看 Codex 会话。</p>
+
+              </div>
+            </article></li>
+          <li class="archive-item" data-category="data">
+            <article>
+
+              <div class="archive-copy">
+                <h3 lang="en"><a href="projects/ego-data-pipeline/">Ego Data Pipeline</a></h3>
+                <p>为原始录制生成动作标注，复核后导出到 Viewer。</p>
+
+              </div>
+            </article></li>
+          <li class="archive-item" data-category="control">
+            <article>
+
+              <div class="archive-copy">
+                <h3><a href="projects/multi-x5-time-sync/">多 X5 蓝牙配对与对时</a></h3>
+                <p>在三台 X5 上验证配对、互信和组网对时，再用两台板试验控制器时钟。</p>
+
+              </div>
+            </article></li>
+          <li class="archive-item" data-category="data">
+            <article>
+
+              <div class="archive-copy">
+                <h3><a href="projects/egohalo/">EgoHalo 设备与数据工程</a></h3>
+                <p>我从零搭建采集控制台，也参与浏览器上传、OTA、相机运行时、固件和云端处理。</p>
+
+              </div>
+            </article></li>
+          <li class="archive-item" data-category="navigation">
+            <article>
+              <img class="archive-image" src="assets/tinynav-map.webp" width="960" height="708" alt="TinyNav 上游地图示例" loading="lazy">
+              <div class="archive-copy">
+                <h3 lang="en"><a href="projects/tinynav/">TinyNav</a></h3>
+                <p>我参与的开源机器人导航团队项目，用双目感知做建图、规划与移动机器人控制。</p>
+                <a class="repo-link" href="https://github.com/UniflexAI/tinynav" aria-label="GitHub 仓库：TinyNav">GitHub 仓库</a>
+              </div>
+            </article></li>
+        </ul>
+      </section>
+
       <section id="contact">
         <h2>联系</h2>
         <dl class="contact-details">
@@ -146,11 +168,7 @@
           <dd><a href="https://github.com/NUSNiuMu">NUSNiuMu</a> · <a href="https://github.com/NUSNiuMu?tab=repositories">公开仓库</a></dd>
         </dl>
       </section>
-    </div>
-  </main>
-
-  <footer class="shell site-footer">
-    <a href="#top">回到顶部</a>
-  </footer>
-</body>
+    </main>
+    <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
+  </body>
 </html>

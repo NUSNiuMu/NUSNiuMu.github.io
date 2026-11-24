@@ -1,53 +1,70 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <meta name="description" content="用两台相机录制桌面示教，在 SO101 机械臂上评估 ACT 策略。">
-  <title>SO101 LeRobot Closed Loop · 牛牧</title>
-  <link rel="canonical" href="https://nusniumu.github.io/projects/so101-lerobot/">
-  <link rel="icon" href="../../assets/mark.png" type="image/png">
-  <link rel="stylesheet" href="../../assets/site.css?v=868daf86">
-</head>
-<body id="top">
-  <a class="skip-link" href="#main">跳到正文</a>
-  <header class="shell case-header">
-    <a class="brand" href="../../">牛牧</a>
-    <nav aria-label="主导航">
-      <ul class="nav-list">
-        <li><a href="../../#projects">项目</a></li>
-        <li><a href="../../#about">关于</a></li>
-        <li><a href="../../#contact">联系</a></li>
-        <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <main id="main" class="shell case-shell" tabindex="-1">
-    <header class="case-intro">
-      <h1 lang="en">SO101 LeRobot Closed Loop</h1>
-      <p>用两台相机录制桌面示教，在 SO101 机械臂上评估 ACT 策略。</p>
-      <ul class="case-links">
-        <li><a href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop">GitHub 仓库</a></li>
-        <li><a href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop/blob/main/README.md">硬件与复现说明</a></li>
-      </ul>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="description" content="两路相机录制示教，用 ACT 训练策略，再回到机械臂上检查抓放和叠杯。">
+    <title>SO101 LeRobot · 牛牧</title>
+    <link rel="canonical" href="https://nusniumu.github.io/projects/so101-lerobot/">
+    <link rel="icon" href="../../assets/mark.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/site.css?v=aaaa2aa0">
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main">跳到正文</a>
+    <header class="shell masthead">
+      <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
+      <nav aria-label="主导航">
+        <ul class="nav-list">
+          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#about">关于</a></li>
+          <li><a href="../../#contact">联系</a></li>
+          <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
+        </ul>
+      </nav>
     </header>
-
-    <section class="case-section">
-      <h2>从示教到真机</h2>
-      <ol class="case-steps">
-        <li>腕部相机看夹爪附近，外部相机看桌面。两路 RGB 和关节状态、动作一起录制。</li>
-        <li>用 LeRobot 按 episode 整理数据，训练并回放 ACT 策略。</li>
-        <li>在真机上做红块入箱和纸杯叠放，按失败场景补采数据。</li>
+    <main id="main" class="shell case-shell" tabindex="-1">
+      <header class="case-title">
+        <p class="back"><a href="../../#projects">← 项目档案</a></p>
+        <h1 lang="en">SO101 LeRobot</h1>
+        <p class="lead">两路相机录制示教，用 ACT 训练策略，再回到机械臂上检查抓放和叠杯。</p>
+        <div class="actions"><a class="button primary" href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop">GitHub 仓库</a><a class="button" href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop/blob/main/README.md">硬件与复现说明</a>
+        </div>
+      </header>
+      <ol class="steps">
+        <li>双路示教</li>
+        <li>整理 episode</li>
+        <li>训练 ACT</li>
+        <li>真机评估</li>
       </ol>
-    </section>
-
-    <p class="case-return"><a class="case-back" href="../../#projects">返回项目</a></p>
-  </main>
-
-  <footer class="shell site-footer">
-    <a href="#top">回到顶部</a>
-  </footer>
-</body>
+      <div class="case-layout">
+        <nav class="toc" aria-label="章节目录">
+          <h2>目录</h2>
+          <ul>
+            <li><a href="#demonstration">双路示教</a></li>
+            <li><a href="#act">ACT 训练</a></li>
+            <li><a href="#evaluation">真机评估</a></li>
+          </ul>
+        </nav>
+        <div class="case-text">
+          <section class="chapter" id="demonstration">
+            <h2>双路示教</h2>
+            <p>我用腕部和外部 RGB 相机录制桌面操作。腕部关注夹爪附近，外部相机记录桌面布局，同时保存关节状态和动作，按 episode 整理。</p>
+          </section>
+          <section class="chapter" id="act">
+            <h2>ACT 训练</h2>
+            <p>把整理后的示教数据交给 LeRobot 训练 ACT 策略。离线回放可以检查动作走向，也有单独的检查流程帮助发现视角变化和抓取姿态带来的问题。</p>
+          </section>
+          <section class="chapter" id="evaluation">
+            <h2>真机评估</h2>
+            <p>回到 SO101 上检查红块入箱和纸杯叠放。每次尝试记录现场视角和任务状态，分析失败后再调整示教数据。</p>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
+  </body>
 </html>

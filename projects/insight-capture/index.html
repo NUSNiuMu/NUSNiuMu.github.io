@@ -1,58 +1,68 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <meta name="description" content="三设备同步采集。Jetson 跑采集后端，手机负责现场控制，Qt 负责桌面回放和质检。">
-  <title>Insight Capture Dashboard · 牛牧</title>
-  <link rel="canonical" href="https://nusniumu.github.io/projects/insight-capture/">
-  <link rel="icon" href="../../assets/mark.png" type="image/png">
-  <link rel="stylesheet" href="../../assets/site.css?v=868daf86">
-</head>
-<body id="top">
-  <a class="skip-link" href="#main">跳到正文</a>
-  <header class="shell case-header">
-    <a class="brand" href="../../">牛牧</a>
-    <nav aria-label="主导航">
-      <ul class="nav-list">
-        <li><a href="../../#projects">项目</a></li>
-        <li><a href="../../#about">关于</a></li>
-        <li><a href="../../#contact">联系</a></li>
-        <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <main id="main" class="shell case-shell" tabindex="-1">
-    <header class="case-intro">
-      <h1 lang="en">Insight Capture Dashboard</h1>
-      <p>三设备同步采集。Jetson 跑采集后端，手机负责现场控制，Qt 负责桌面回放和质检。</p>
-      <ul class="case-links">
-        <li><a href="https://github.com/NUSNiuMu/insight-capture-dashboard">GitHub 仓库</a></li>
-        <li><a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/MOBILE_PREVIEW.md">手机预览说明</a></li>
-      </ul>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="description" content="三设备同步采集，手机预览和校准，Qt 管理任务、回放和质检。">
+    <title>Insight Capture Dashboard · 牛牧</title>
+    <link rel="canonical" href="https://nusniumu.github.io/projects/insight-capture/">
+    <link rel="icon" href="../../assets/mark.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/site.css?v=aaaa2aa0">
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main">跳到正文</a>
+    <header class="shell masthead">
+      <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
+      <nav aria-label="主导航">
+        <ul class="nav-list">
+          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#about">关于</a></li>
+          <li><a href="../../#contact">联系</a></li>
+          <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
+        </ul>
+      </nav>
     </header>
-
-    <figure class="case-media">
-      <img src="../../assets/insight-setup.webp" width="1200" height="690" fetchpriority="high" alt="Insight 采集设备与 Jetson 的硬件连接">
-      <figcaption>设备接线见<a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/hardware-manual/overview.jpg">公开硬件手册</a>。</figcaption>
-    </figure>
-
-    <section class="case-section">
-      <h2>现场采集</h2>
-      <p>手机端用 WebRTC 同时预览三路画面，可以在线校准和开停录制。分布式录制时，各设备先保存自己的数据，再按需回传与合包。</p>
-    </section>
-    <section class="case-section">
-      <h2>回放与质检</h2>
-      <p>Qt 桌面端管理任务，查找、回放、评分和优化录制。建图定位、录制和后处理由 Jetson 后端负责，两端共用项目状态。</p>
-    </section>
-
-    <p class="case-return"><a class="case-back" href="../../#projects">返回项目</a></p>
-  </main>
-
-  <footer class="shell site-footer">
-    <a href="#top">回到顶部</a>
-  </footer>
-</body>
+    <main id="main" class="shell case-shell" tabindex="-1">
+      <header class="case-title">
+        <p class="back"><a href="../../#projects">← 项目档案</a></p>
+        <h1 lang="en">Insight Capture Dashboard</h1>
+        <p class="lead">三设备同步采集，手机预览和校准，Qt 管理任务、回放和质检。</p>
+        <div class="actions"><a class="button primary" href="https://github.com/NUSNiuMu/insight-capture-dashboard">GitHub 仓库</a><a class="button" href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/MOBILE_PREVIEW.md">手机预览说明</a>
+        </div>
+      </header>
+      <figure class="case-media">
+        <img src="../../assets/insight-setup.webp" width="1200" height="690" fetchpriority="high" alt="Insight 采集设备和 Jetson 的接线">
+        <figcaption>接线实拍来自<a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/hardware-manual/overview.jpg">公开硬件手册</a>。</figcaption>
+      </figure>
+      <div class="case-layout">
+        <nav class="toc" aria-label="章节目录">
+          <h2>目录</h2>
+          <ul>
+            <li><a href="#preview">现场预览与校准</a></li>
+            <li><a href="#capture">设备录制与合包</a></li>
+            <li><a href="#review">桌面回放与质检</a></li>
+          </ul>
+        </nav>
+        <div class="case-text">
+          <section class="chapter" id="preview">
+            <h2>现场预览与校准</h2>
+            <p>手机打开采集页后，可以并排看三路画面、校准和启停录制。现场用同一项目状态管理任务与 Take，也能查看设备是否正在保存。</p>
+          </section>
+          <section class="chapter" id="capture">
+            <h2>设备录制与合包</h2>
+            <p>我搭建了 Jetson 上的采集后端和手机、桌面两端。设备分布录制时，各自先保存原始数据，采集完成后在需要时回传并合包。</p>
+          </section>
+          <section class="chapter" id="review">
+            <h2>桌面回放与质检</h2>
+            <p>Qt 桌面端管理任务和录制，负责查找、回放、评分及优化。两端共用采集后端，现场控制和后处理可以分别进行。</p>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
+  </body>
 </html>

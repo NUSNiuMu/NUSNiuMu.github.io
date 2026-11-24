@@ -1,13 +1,13 @@
 const filter = document.querySelector('.project-filter');
 const buttons = [...filter.querySelectorAll('button[data-filter]')];
-const groups = [...document.querySelectorAll('#project-list > [data-category]')];
+const list = document.querySelector('#project-list');
 const status = filter.querySelector('[role="status"]');
 
 function showCategory(category) {
   let visible = 0;
-  for (const group of groups) {
-    group.hidden = category !== 'all' && group.dataset.category !== category;
-    if (!group.hidden) visible += group.querySelectorAll('li').length;
+  for (const project of list.children) {
+    project.hidden = category !== 'all' && project.dataset.category !== category;
+    if (!project.hidden) visible += 1;
   }
   for (const button of buttons) {
     button.setAttribute('aria-pressed', String(button.dataset.filter === category));

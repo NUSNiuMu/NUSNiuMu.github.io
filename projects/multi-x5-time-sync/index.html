@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="description" content="在三台 X5 上验证配对、互信和组网对时，再用两台板试验控制器时钟。">
+    <title>多 X5 蓝牙配对与对时 · 牛牧</title>
+    <link rel="canonical" href="https://nusniumu.github.io/projects/multi-x5-time-sync/">
+    <link rel="icon" href="../../assets/mark.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/site.css?v=aaaa2aa0">
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main">跳到正文</a>
+    <header class="shell masthead">
+      <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
+      <nav aria-label="主导航">
+        <ul class="nav-list">
+          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#about">关于</a></li>
+          <li><a href="../../#contact">联系</a></li>
+          <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main" class="shell case-shell" tabindex="-1">
+      <header class="case-title">
+        <p class="back"><a href="../../#projects">← 项目档案</a></p>
+        <h1>多 X5 蓝牙配对与对时</h1>
+        <p class="lead">在三台 X5 上验证配对、互信和组网对时，再用两台板试验控制器时钟。</p>
+      </header>
+      <ol class="steps">
+        <li>逐对配对与互信</li>
+        <li>发现与选主</li>
+        <li>连接 PAN</li>
+        <li>板间估计对时</li>
+      </ol>
+      <div class="case-layout">
+        <nav class="toc" aria-label="章节目录">
+          <h2>目录</h2>
+          <ul>
+            <li><a href="#pairing">三台 X5 配对与选主</a></li>
+            <li><a href="#pan">三板 PAN 短测</a></li>
+            <li><a href="#clock">两板控制器时钟实验</a></li>
+          </ul>
+        </nav>
+        <div class="case-text">
+          <section class="chapter" id="pairing">
+            <h2>三台 X5 配对与选主</h2>
+            <p>我在三台 RDK X5 上逐对完成蓝牙配对和互信。节点发现彼此并选出主板后，通过经典蓝牙 PAN 组网，由 chrony 跟随组内时间源。</p>
+          </section>
+          <section class="chapter" id="pan">
+            <h2>三板 PAN 短测</h2>
+            <p>约四分钟的功能短测，统计收敛后的两台从板。图中是软件估计的相对偏差 P95，横条按 0–10 ms 绘制。</p>
+            <ul class="metrics" role="list">
+              <li><span>从板 A · P95</span><strong>4.13 ms</strong><span class="bar" aria-hidden="true"><span style="--fraction:0.4130"></span></span></li>
+              <li><span>从板 B · P95</span><strong>6.41 ms</strong><span class="bar" aria-hidden="true"><span style="--fraction:0.6410"></span></span></li>
+            </ul>
+          </section>
+          <section class="chapter" id="clock">
+            <h2>两板控制器时钟实验</h2>
+            <p>用经典蓝牙连接两端共享的控制器时钟建立时间映射。约 185 秒内的绝对软件估计偏差如下，横条按 0–100 µs 绘制。真实板间偏差有待独立共同触发测量。</p>
+            <ul class="metrics" role="list">
+              <li><span>中位数</span><strong>22.6 µs</strong><span class="bar" aria-hidden="true"><span style="--fraction:0.2260"></span></span></li>
+              <li><span>P95</span><strong>57.1 µs</strong><span class="bar" aria-hidden="true"><span style="--fraction:0.5710"></span></span></li>
+              <li><span>最大</span><strong>89.4 µs</strong><span class="bar" aria-hidden="true"><span style="--fraction:0.8940"></span></span></li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
+  </body>
+</html>
