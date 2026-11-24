@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="description" content="一条从双视角示教采集，到 ACT 训练，再回到机械臂验证的桌面操作流程。">
+  <meta name="description" content="用两台相机录制桌面示教，在 SO101 机械臂上评估 ACT 策略。">
   <title>SO101 LeRobot Closed Loop · 牛牧</title>
   <link rel="canonical" href="https://nusniumu.github.io/projects/so101-lerobot/">
   <link rel="icon" href="../../assets/mark.png" type="image/png">
@@ -12,67 +12,42 @@
 </head>
 <body id="top">
   <a class="skip-link" href="#main">跳到正文</a>
-  <header class="site-header">
-    <div class="shell header-inner">
-      <a class="brand" href="../../">
-        <img src="../../assets/mark.png" alt="" width="34" height="34">
-        <span><strong>牛牧</strong><span class="brand-name mono" lang="en">NIU MU</span></span>
-      </a>
-      <nav aria-label="主导航">
-        <ul class="nav-list">
-          <li><a href="../../#projects">项目</a></li>
-          <li><a href="../../#about">关于</a></li>
-          <li><a href="../../#contact">联系</a></li>
-          <li><a class="nav-github" href="https://github.com/NUSNiuMu">GitHub <span aria-hidden="true">↗</span></a></li>
-        </ul>
-      </nav>
-    </div>
+  <header class="shell case-header">
+    <a class="brand" href="../../">牛牧</a>
+    <nav aria-label="主导航">
+      <ul class="nav-list">
+        <li><a href="../../#projects">项目</a></li>
+        <li><a href="../../#about">关于</a></li>
+        <li><a href="../../#contact">联系</a></li>
+        <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
+      </ul>
+    </nav>
   </header>
 
   <main id="main" class="shell case-shell" tabindex="-1">
-    <div class="case-intro">
-      <a class="case-back" href="../../#projects"><span aria-hidden="true">←</span> 返回项目档案</a>
-      <p class="eyebrow">学习与控制</p>
+    <header class="case-intro">
       <h1 lang="en">SO101 LeRobot Closed Loop</h1>
-      <p class="case-lead">一条从双视角示教采集，到 ACT 训练，再回到机械臂验证的桌面操作流程。</p>
-      <a class="primary-link" href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop">GitHub 仓库 <span aria-hidden="true">↗</span></a>
-    </div>
+      <p>用两台相机录制桌面示教，在 SO101 机械臂上评估 ACT 策略。</p>
+      <ul class="case-links">
+        <li><a href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop">GitHub 仓库</a></li>
+        <li><a href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop/blob/main/README.md">硬件与复现说明</a></li>
+      </ul>
+    </header>
 
-    <figure class="case-media">
+    <section class="case-section">
+      <h2>从示教到真机</h2>
       <ol class="case-steps">
-        <li><strong>采集示教</strong>记录腕部与外部 RGB 画面、关节状态和动作。</li>
-        <li><strong>训练策略</strong>用 LeRobot 数据集训练 ACT 策略。</li>
-        <li><strong>真机评估</strong>检查抓放与叠放结果，按失败场景补采数据。</li>
+        <li>腕部相机看夹爪附近，外部相机看桌面。两路 RGB 和关节状态、动作一起录制。</li>
+        <li>用 LeRobot 按 episode 整理数据，训练并回放 ACT 策略。</li>
+        <li>在真机上做红块入箱和纸杯叠放，按失败场景补采数据。</li>
       </ol>
-      <figcaption>SO101 真机迭代流程</figcaption>
-    </figure>
+    </section>
 
-    <div class="case-content">
-      <section>
-        <h2>想解决什么</h2>
-        <p>一个抓放脚本可以完成示范。要让视觉策略学会动作，需要把画面和机械臂状态录下来，形成可训练的数据，再回到同一套硬件上检查。</p>
-      </section>
-      <section>
-        <h2>怎么做</h2>
-        <ul>
-          <li>腕部相机看夹爪附近，外部相机提供桌面视角。两路画面进入同一套示教录制流程。</li>
-          <li>按 episode 组织观测和动作，用 LeRobot 训练、回放和评估 ACT 策略。</li>
-          <li>用红块入箱、纸杯叠放作为桌面任务，结合真机结果继续迭代数据。</li>
-        </ul>
-      </section>
-    </div>
-
-    <div class="case-related">
-      <a class="text-link" href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop/blob/main/README.md">查看硬件与复现说明 <span aria-hidden="true">↗</span></a>
-      <a class="text-link" href="../../#contact">联系我 <span aria-hidden="true">→</span></a>
-    </div>
+    <p class="case-return"><a class="case-back" href="../../#projects">返回项目</a></p>
   </main>
 
-  <footer class="site-footer">
-    <div class="shell footer-inner">
-      <p>牛牧 <span class="mono" lang="en">/ NUSNiuMu</span></p>
-      <a href="#top">回到顶部 <span aria-hidden="true">↑</span></a>
-    </div>
+  <footer class="shell site-footer">
+    <a href="#top">回到顶部</a>
   </footer>
 </body>
 </html>
