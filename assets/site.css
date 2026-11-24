@@ -224,7 +224,21 @@ button { font: inherit; cursor: pointer; }
   font-weight: 650;
 }
 .steps li::before { content: counter(step); color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 720; }
-.steps.parallel li::before { content: none; }
+.steps.parallel li::before, .capture-workflow li::before { content: none; }
+
+.capture-workflow li { align-items: stretch; padding: 0; }
+.capture-workflow a {
+  display: grid;
+  align-content: center;
+  gap: .28rem;
+  inline-size: 100%;
+  padding: clamp(.85rem, 2vw, 1.45rem);
+  text-decoration: none;
+}
+.capture-workflow a:hover { background: var(--tint); }
+.capture-workflow a:focus-visible { outline-offset: -5px; }
+.capture-workflow strong { font-size: 1.32rem; text-decoration: underline; text-underline-offset: .2em; }
+.capture-workflow span { color: var(--muted); font-weight: 400; }
 
 .case-layout { display: grid; grid-template-columns: minmax(9rem, .29fr) minmax(0, 1fr); gap: clamp(1.5rem, 6vw, 5rem); align-items: start; margin-block-start: clamp(2rem, 4.4vw, 3.4rem); }
 .toc { position: sticky; inset-block-start: 1.1rem; min-inline-size: 0; border-block-start: 1px solid var(--ink); padding-block-start: .7rem; }
@@ -251,7 +265,7 @@ button { font: inherit; cursor: pointer; }
 }
 
 @media (max-width: 42rem) {
-  .front, .selected ul, .project-list { grid-template-columns: minmax(0, 1fr); }
+  .front, .selected ul, .project-list, .capture-workflow { grid-template-columns: minmax(0, 1fr); }
   .front { gap: 1.7rem; padding-block: 1.75rem 2.65rem; }
   .intro { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: .85rem; }
   .portrait { inline-size: 3.65rem; margin: 0; }
