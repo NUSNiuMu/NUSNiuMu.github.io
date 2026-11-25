@@ -11,7 +11,7 @@
     <title>EgoHalo 设备与数据工程 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/egohalo/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=500a7fd6">
+    <link rel="stylesheet" href="../../assets/site.css?v=a3511689">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -55,6 +55,13 @@
             <p>我从零搭建并持续负责 EgoHalo 采集控制台。它运行在 X5 上，现场用网页或原生 Android App 就能连接设备、预览、录制和取回数据。</p>
             <h3>连接、预览与控制</h3>
             <p>安卓端通过蓝牙发现设备并连接 Wi-Fi，网页和 App 共享设备状态，可以看多路画面和实时轨迹、切换任务并控制录制。录制由设备端执行，客户端切页或断开后还能继续。</p>
+            <figure class="case-media">
+              <video class="sample-video" width="1280" height="450" controls playsinline preload="none" loading="lazy" poster="../../assets/project-media/egohalo-quad-demo.webp" aria-label="EgoHalo H1 实机四路鱼眼与位姿演示">
+                <source src="../../assets/project-media/egohalo-quad-demo.mp4" type="video/mp4">
+                <a href="../../assets/project-media/egohalo-quad-demo.mp4">打开 EgoHalo H1 演示视频</a>
+              </video>
+              <figcaption>团队的 EgoHalo H1 实机演示。左侧显示位姿，右侧是四路鱼眼相机画面。</figcaption>
+            </figure>
             <h3>起录和保存</h3>
             <p>录制从早期 rosbag 演进到 X5 本机 Direct MCAP。对 H.264、H.265 视频，起录等待各路完整的可解码边界。Direct 路径上，保存录制的同时可以继续看本地预览。</p>
             <h3>记录、恢复与导出</h3>

@@ -11,7 +11,7 @@
     <title>Insight Capture Dashboard · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/insight-capture/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=500a7fd6">
+    <link rel="stylesheet" href="../../assets/site.css?v=a3511689">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -26,55 +26,144 @@
         </ul>
       </nav>
     </header>
-    <main id="main" class="shell case-shell" tabindex="-1">
-      <header class="case-title">
-        <p class="back"><a href="../../#projects">← 项目档案</a></p>
-        <h1 lang="en">Insight Capture Dashboard</h1>
-        <p class="lead">三设备同步采集，手机预览和校准，Qt 管理任务、回放和质检。</p>
-        <div class="actions"><a class="button primary" href="https://github.com/NUSNiuMu/insight-capture-dashboard">GitHub 仓库</a><a class="button" href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/MOBILE_PREVIEW.md">手机预览说明</a>
+    <main id="main" class="shell case-shell insight-case" tabindex="-1">
+      <header class="insight-hero">
+        <div class="case-title">
+          <p class="back"><a href="../../#projects">← 项目档案</a></p>
+          <h1 lang="en">Insight Capture Dashboard</h1>
+          <p class="lead">把头部视角和左右腕动作录成同一条 Take。现场用手机操作，录完在 Qt 回放和检查每一路数据。</p>
+          <div class="actions">
+            <a class="button primary" href="https://github.com/NUSNiuMu/insight-capture-dashboard">GitHub 仓库</a>
+            <a class="button" href="#review">看 Qt 工作流</a>
+          </div>
         </div>
+        <figure class="case-media">
+          <video class="sample-video" width="1280" height="632" controls playsinline preload="none" poster="../../assets/project-media/insight-wearable-demo.webp" aria-label="团队穿戴采集演示">
+            <source src="../../assets/project-media/insight-wearable-demo.mp4" type="video/mp4">
+            <a href="../../assets/project-media/insight-wearable-demo.mp4">打开采集演示视频</a>
+          </video>
+          <figcaption>团队采集演示。左侧是第一视角，中间是手部三维跟踪，右上是现场操作。</figcaption>
+        </figure>
       </header>
-      <ol class="steps capture-workflow" role="list" aria-label="采集流程">
-        <li>
-          <a href="#preview">
-            <strong>手机端</strong>
-            <span>看三路画面、校准和启停录制</span>
-          </a>
-        </li>
-        <li>
-          <a href="#capture">
-            <strong>采集设备</strong>
-            <span>三台设备本地录制，回传后合包</span>
-          </a>
-        </li>
-        <li>
-          <a href="#review">
-            <strong>Qt 桌面端</strong>
-            <span>按 Take 回放、评分和质检</span>
-          </a>
-        </li>
-      </ol>
+
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <h2>目录</h2>
           <ul>
-            <li><a href="#preview">现场预览与校准</a></li>
-            <li><a href="#capture">设备录制与合包</a></li>
-            <li><a href="#review">桌面回放与质检</a></li>
+            <li><a href="#system">设备和分工</a></li>
+            <li><a href="#preview">现场预览与录制</a></li>
+            <li><a href="#capture">两端保存与合包</a></li>
+            <li><a href="#review">Qt 桌面端</a></li>
           </ul>
         </nav>
         <div class="case-text">
+          <section class="chapter" id="system">
+            <h2>一条 Take 需要哪些设备</h2>
+            <p>头部相机交代工作台和动作发生的位置，两只腕部相机各自补上手边的细节。手挡住其中一路时，复查仍能切到另一只手或头部视角。常用组合是 Insight9 加两台 Insight3，也可以换用 EgoHalo 头部设备。</p>
+            <figure class="insight-figure">
+              <img class="kit-photo" src="../../assets/project-media/insight-wearable-kit.webp" width="1200" height="676" alt="从左到右是头带采集设备与两套腕部相机组件" loading="lazy">
+              <figcaption>团队设备组图。头部与双腕提供互补的观察角度。</figcaption>
+            </figure>
+            <p>我在团队项目里负责 Jetson 端采集协调、手机操作和 Qt 回放之间的衔接。手机网页和 Qt 共用 Jetson 后端的任务、Take 与录制状态，从手机切到 Qt 时仍能找到同一条记录。</p>
+            <dl class="insight-pairs">
+              <div><dt>手机网页</dt><dd>连接 Jetson 热点，预览、校准、启停录制。</dd></div>
+              <div><dt>Jetson 后端</dt><dd>管理设备输入、任务和录制状态。</dd></div>
+              <div><dt>Qt 桌面端</dt><dd>查找 Take、回放、做完整性检查及评分。</dd></div>
+            </dl>
+          </section>
+
           <section class="chapter" id="preview">
-            <h2>现场预览与校准</h2>
-            <p>手机打开采集页后，可以并排看三路画面、校准和启停录制。现场用同一项目状态管理任务与 Take，也能查看设备是否正在保存。</p>
+            <h2>手机切页，录制继续</h2>
+            <p>开录前，操作员通过 Jetson 热点看三路画面，检查镜头和任务。公共地图校准把各设备的轨迹放进同一坐标系，现场能看出哪只腕部还没有定位。</p>
+            <figure class="insight-figure">
+              <ol class="insight-flow" role="list">
+                <li><strong>就绪</strong><span>预览开启，核对任务和相机，检查能否起录。</span></li>
+                <li><strong>录制</strong><span>设备写数据，手机底栏保留 Take、时长和结束操作。</span></li>
+                <li><strong>保存</strong><span>等待设备确认落盘。回到采集页后，预览恢复。</span></li>
+              </ol>
+              <figcaption>现场操作顺序。起录、录制和保存期间，后端释放网页预览的编码资源。</figcaption>
+            </figure>
+            <p>我把开始和结束操作放在随状态变化的底栏里。现场人员去记录页查 Take，仍能看到录制时间和「结束并保存」。手机掉线或锁屏时，Jetson 后端继续管理录制。重新连接后，页面从后端读取实际状态。</p>
+            <p><a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/MOBILE_PREVIEW.md">手机预览与离线采集说明</a></p>
           </section>
+
           <section class="chapter" id="capture">
-            <h2>设备录制与合包</h2>
-            <p>我搭建了 Jetson 上的采集后端和手机、桌面两端。设备分布录制时，各自先保存原始数据，采集完成后在需要时回传并合包。</p>
+            <h2>先保存原件，采完再合包</h2>
+            <p>用 EgoHalo 做头部采集时，头部设备把四路视频、IMU 和 VIO 写入自身 TF 卡。Jetson 保存左右腕数据和公共坐标系下的位姿。停止后等两端各自确认落盘，就可以录下一条，把传输和合包留到采集结束后。</p>
+            <figure class="insight-figure recording-path">
+              <dl class="insight-pairs recording-inputs">
+                <div><dt>EgoHalo · TF 卡</dt><dd>头部原始视频、IMU 和 VIO</dd></div>
+                <div><dt>Jetson · 采集盘</dt><dd>左右腕原始数据和统一位姿</dd></div>
+              </dl>
+              <p class="recording-output"><strong>按共同录制编号配对</strong><span>校验原件，按源时间戳合并，核对六路视频的共同可解码区间。</span></p>
+              <figcaption>EgoHalo 配置下的一条 Take。合包后仍保留两端原件。</figcaption>
+            </figure>
+            <h3>一条实录怎样验收</h3>
+            <p>一次独立设备实录完成了 Qt 启停、两端保存和回传合包。逐条核对后，合包消息内容与原件一致。时序检查也发现头部左前相机有三处采集时间戳缺口，这条 Take 因此被标记为需要复查。</p>
+            <dl class="insight-results" aria-label="单次实录合包的结果">
+              <div><dt>共同可解码时长</dt><dd>32.48 秒</dd></div>
+              <div><dt>合包话题</dt><dd>26 路</dd></div>
+              <div><dt>核对的消息</dt><dd>66,698 条</dd></div>
+            </dl>
+            <p><a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/EGOHALO_DISTRIBUTED_RECORDING.md">双端录制、合包和实测记录</a></p>
           </section>
+
           <section class="chapter" id="review">
-            <h2>桌面回放与质检</h2>
-            <p>Qt 桌面端管理任务和录制，负责查找、回放、评分及优化。两端共用采集后端，现场控制和后处理可以分别进行。</p>
+            <h2>Qt 桌面端，从建任务到重看轨迹</h2>
+            <p class="insight-standfirst">手机负责现场操作。回到 Jetson 的原生 Qt，操作员可以准备任务、检查三路空间状态、管理录制，并追查一条 Take 在哪一刻出了问题。</p>
+            <p>桌面端使用 C++、QML、Qt Quick 3D 和 GStreamer。实时画面、三维视图、录制库和处理任务共用后端。切换 Qt 页面时，正在运行的录制或处理作业可以继续。</p>
+
+            <h3>录制前，确认任务、空间和输入</h3>
+            <dl class="qt-tools">
+              <div>
+                <dt>Tasks <span>任务</span></dt>
+                <dd>建立任务、写入动作说明，再选择当前任务和下一条 Take。每条历史 Take 带保存状态、质检摘要和人工判断，也能从列表直接进回放。</dd>
+              </div>
+              <div>
+                <dt>Spatial <span>空间采集</span></dt>
+                <dd>同时看头部、双腕画面和三维地图。用头部建图，再让双腕观测同一片区域，核对轨迹是否进入公共坐标系。可以在空间页直接起停录制。</dd>
+              </div>
+              <div>
+                <dt>Recorder <span>逐话题录制</span></dt>
+                <dd>按默认配置、按组或逐个选择 ROS 话题，确认目标盘和目录，再看时钟、输入和存储是否通过起录检查。需要做定位实验时，可以只录所需输入。</dd>
+              </div>
+            </dl>
+
+            <h3>录制后，先找异常，再看评分</h3>
+            <dl class="qt-tools">
+              <div>
+                <dt>Recordings <span>录制库</span></dt>
+                <dd>按当前目录或全部目录找 Take，用路径、时长和消息数核对目标。点播放才准备回放缓存，在同一时间轴暂停或拖动三路视频和轨迹。双端原件也在这里回传、合包和检查完整性。</dd>
+              </div>
+              <div>
+                <dt>Scoring <span>轨迹评分</span></dt>
+                <dd>选同一条 Take，计算各相机的 VIO 轨迹质量分和异常段，回到异常时刻对照动作。完整性结果、轨迹分数和人工判断各自记录。</dd>
+              </div>
+            </dl>
+            <div class="quality-examples">
+              <figure class="case-media">
+                <img src="../../assets/project-media/insight-message-integrity.webp" width="825" height="551" alt="完整性检查逐话题显示消息数、实际与标称频率及丢帧率" loading="lazy">
+                <figcaption><a href="../../assets/project-media/insight-message-integrity.webp">完整性检查</a> 核对消息数、频率和丢帧比例。</figcaption>
+              </figure>
+              <figure class="case-media">
+                <img src="../../assets/project-media/insight-trajectory-review.webp" width="828" height="627" alt="三路相机的轨迹诊断面板分别显示质量得分和异常统计" loading="lazy">
+                <figcaption><a href="../../assets/project-media/insight-trajectory-review.webp">轨迹诊断</a> 按相机比较评分和异常。两图为团队演示中的示例配置。</figcaption>
+              </figure>
+            </div>
+
+            <h3>需要追查定位时，重建轨迹并核对设置</h3>
+            <dl class="qt-tools">
+              <div>
+                <dt>Optimize <span>离线优化</span></dt>
+                <dd>选录制、相机和图像流运行 COLMAP，查看进度和日志，也能重新加载旧运行。三维视图叠加原始 VIO 与重建轨迹，方便比较覆盖、尺度和异常片段。</dd>
+              </div>
+              <div>
+                <dt>Settings <span>设备设置</span></dt>
+                <dd>调整腕部图像参与定位的区域，修改会影响后续定位处理，原始录制保留完整画面。设备空闲时可确认重启后端，再核对三路输入、时钟与定位。</dd>
+              </div>
+            </dl>
+            <p>时钟对齐、帧时间差和实际曝光差分别验证。轨迹评分反映录制内的诊断指标，空间精度需要独立标定或外部参考。</p>
+            <p><a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/native_dashboard/PARITY.md">查看原生 Qt 功能说明</a></p>
           </section>
         </div>
       </div>
