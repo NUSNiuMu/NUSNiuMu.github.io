@@ -94,7 +94,7 @@ button { font: inherit; cursor: pointer; }
 }
 .brand:hover { border-color: var(--accent); }
 
-.nav-list, .selected ul, .project-list, .toc ul, .metrics, .case-links {
+.nav-list, .project-list, .toc ul, .metrics, .case-links {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -152,12 +152,8 @@ button { font: inherit; cursor: pointer; }
 .button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .button.primary:hover { text-decoration: underline; }
 
-.selected, .archive, #contact { border-block-start: 1px solid var(--ink); padding-block: 1.45rem clamp(2.65rem, 6vw, 4.8rem); }
-.selected h2, .archive h2, #contact h2 { font-size: clamp(1.55rem, 3vw, 2.2rem); font-weight: 760; }
-.selected ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem clamp(.8rem, 2.5vw, 2.45rem); margin-block-start: 1.5rem; }
-.selected li { border-inline-start: 2px solid var(--line); padding-inline-start: .9rem; }
-.selected h3 { font-size: 1.15rem; }
-.selected p { margin-block-start: .42rem; color: var(--muted); }
+.archive, #contact { border-block-start: 1px solid var(--ink); padding-block: 1.45rem clamp(2.65rem, 6vw, 4.8rem); }
+.archive h2, #contact h2 { font-size: clamp(1.55rem, 3vw, 2.2rem); font-weight: 760; }
 
 .archive-heading { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: .85rem; }
 .project-filter { display: flex; flex-wrap: wrap; gap: .35rem; }
@@ -190,8 +186,7 @@ button { font: inherit; cursor: pointer; }
 .case-shell { padding-block: clamp(2rem, 5vw, 4.4rem) clamp(2.8rem, 6vw, 5rem); }
 .case-title, .case-intro { max-inline-size: 68rem; margin-block-end: clamp(1.5rem, 3.4vw, 2.75rem); }
 .case-title h1, .case-intro h1 { font-size: clamp(2.35rem, 6.25vw, 5rem); font-weight: 780; letter-spacing: -.054em; overflow-wrap: anywhere; }
-.back { margin-block-end: .85rem; }
-.back a, .case-back { display: inline-flex; align-items: center; min-block-size: 1.8rem; color: var(--accent); font-weight: 660; }
+.case-back { display: inline-flex; align-items: center; min-block-size: 1.8rem; color: var(--accent); font-weight: 660; }
 .lead, .case-intro p { max-inline-size: 53ch; margin-block-start: .9rem; color: var(--muted); font-size: 1.1rem; }
 .case-links { display: flex; flex-wrap: wrap; gap: .55rem; margin-block-start: .85rem; }
 
@@ -229,7 +224,6 @@ button { font: inherit; cursor: pointer; }
 
 .case-layout { display: grid; grid-template-columns: minmax(9rem, .29fr) minmax(0, 1fr); gap: clamp(1.5rem, 6vw, 5rem); align-items: start; margin-block-start: clamp(2rem, 4.4vw, 3.4rem); }
 .toc { position: sticky; inset-block-start: 1.1rem; min-inline-size: 0; border-block-start: 1px solid var(--ink); padding-block-start: .7rem; }
-.toc h2 { margin-block: 0 .55rem; color: var(--muted); font-size: .95rem; }
 .toc a { display: block; padding-block: .28rem; font-size: .96rem; }
 .chapter, .case-section { border-block-start: 1px solid var(--line); padding-block: 1.1rem 1.9rem; }
 .chapter h2, .case-section h2 { font-size: clamp(1.45rem, 3vw, 2.2rem); letter-spacing: -.025em; }
@@ -249,10 +243,11 @@ button { font: inherit; cursor: pointer; }
   .front { gap: 1.75rem; }
   .case-layout { display: block; }
   .toc { position: static; margin-block-end: 1.5rem; }
+  .toc ul { display: flex; flex-wrap: wrap; gap: .1rem 1rem; }
 }
 
 @media (max-width: 42rem) {
-  .front, .selected ul, .project-list { grid-template-columns: minmax(0, 1fr); }
+  .front, .project-list { grid-template-columns: minmax(0, 1fr); }
   .front { gap: 1.7rem; padding-block: 1.75rem 2.65rem; }
   .intro { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: .85rem; }
   .portrait { inline-size: 3.65rem; margin: 0; }
@@ -260,8 +255,6 @@ button { font: inherit; cursor: pointer; }
   .intro p, .intro-link { grid-column: 1 / -1; }
   .intro p { margin-block-start: .9rem; font-size: 1rem; }
   .intro-link { justify-self: start; margin-block-start: .2rem; }
-  .selected ul { margin-block-start: 1.05rem; }
-  .selected li { padding-block: .1rem; }
 }
 
 @media (max-width: 22rem) {
@@ -290,7 +283,6 @@ button { font: inherit; cursor: pointer; }
 .insight-hero h1 { font-size: clamp(2.45rem, 5.35vw, 4.45rem); }
 .insight-case .chapter { padding-block: clamp(1.35rem, 3vw, 2.3rem) clamp(2rem, 4vw, 3.5rem); }
 .insight-case .chapter h3 { margin-block-start: clamp(1.6rem, 3.3vw, 2.6rem); }
-.insight-case .chapter .insight-standfirst { color: var(--ink); font-size: 1.1rem; }
 .insight-figure { margin-block: 1.35rem; }
 .insight-figure figcaption { margin-block-start: .55rem; color: var(--muted); font-size: .9rem; }
 .kit-photo { inline-size: 100%; block-size: auto; border: 1px solid var(--ink); }
@@ -329,7 +321,6 @@ button { font: inherit; cursor: pointer; }
   border-block-start: 1px solid var(--line);
 }
 .qt-tools dt { font-weight: 740; overflow-wrap: anywhere; }
-.qt-tools dt span { display: block; font-size: .85rem; color: var(--muted); font-weight: 530; }
 .qt-tools dd { max-inline-size: 60ch; }
 .quality-examples { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 
@@ -343,5 +334,4 @@ button { font: inherit; cursor: pointer; }
     border-inline-start: 0;
     border-block-start: 1px solid var(--line);
   }
-  .qt-tools dt span { display: inline; margin-inline-start: .45em; }
 }

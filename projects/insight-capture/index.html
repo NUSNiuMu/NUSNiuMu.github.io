@@ -11,7 +11,7 @@
     <title>Insight Capture Dashboard · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/insight-capture/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=a3511689">
+    <link rel="stylesheet" href="../../assets/site.css?v=2170c578">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -29,7 +29,6 @@
     <main id="main" class="shell case-shell insight-case" tabindex="-1">
       <header class="insight-hero">
         <div class="case-title">
-          <p class="back"><a href="../../#projects">← 项目档案</a></p>
           <h1 lang="en">Insight Capture Dashboard</h1>
           <p class="lead">把头部视角和左右腕动作录成同一条 Take。现场用手机操作，录完在 Qt 回放和检查每一路数据。</p>
           <div class="actions">
@@ -48,7 +47,6 @@
 
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
-          <h2>目录</h2>
           <ul>
             <li><a href="#system">设备和分工</a></li>
             <li><a href="#preview">现场预览与录制</a></li>
@@ -110,21 +108,20 @@
 
           <section class="chapter" id="review">
             <h2>Qt 桌面端，从建任务到重看轨迹</h2>
-            <p class="insight-standfirst">手机负责现场操作。回到 Jetson 的原生 Qt，操作员可以准备任务、检查三路空间状态、管理录制，并追查一条 Take 在哪一刻出了问题。</p>
-            <p>桌面端使用 C++、QML、Qt Quick 3D 和 GStreamer。实时画面、三维视图、录制库和处理任务共用后端。切换 Qt 页面时，正在运行的录制或处理作业可以继续。</p>
+            <p>桌面端使用 C++、QML、Qt Quick 3D 和 GStreamer。实时画面、三维视图、录制库和处理任务共用后端。切换 Qt 页面时，录制与处理作业可以继续。</p>
 
             <h3>录制前，确认任务、空间和输入</h3>
             <dl class="qt-tools">
               <div>
-                <dt>Tasks <span>任务</span></dt>
+                <dt lang="en">Tasks</dt>
                 <dd>建立任务、写入动作说明，再选择当前任务和下一条 Take。每条历史 Take 带保存状态、质检摘要和人工判断，也能从列表直接进回放。</dd>
               </div>
               <div>
-                <dt>Spatial <span>空间采集</span></dt>
+                <dt lang="en">Spatial</dt>
                 <dd>同时看头部、双腕画面和三维地图。用头部建图，再让双腕观测同一片区域，核对轨迹是否进入公共坐标系。可以在空间页直接起停录制。</dd>
               </div>
               <div>
-                <dt>Recorder <span>逐话题录制</span></dt>
+                <dt lang="en">Recorder</dt>
                 <dd>按默认配置、按组或逐个选择 ROS 话题，确认目标盘和目录，再看时钟、输入和存储是否通过起录检查。需要做定位实验时，可以只录所需输入。</dd>
               </div>
             </dl>
@@ -132,11 +129,11 @@
             <h3>录制后，先找异常，再看评分</h3>
             <dl class="qt-tools">
               <div>
-                <dt>Recordings <span>录制库</span></dt>
+                <dt lang="en">Recordings</dt>
                 <dd>按当前目录或全部目录找 Take，用路径、时长和消息数核对目标。点播放才准备回放缓存，在同一时间轴暂停或拖动三路视频和轨迹。双端原件也在这里回传、合包和检查完整性。</dd>
               </div>
               <div>
-                <dt>Scoring <span>轨迹评分</span></dt>
+                <dt lang="en">Scoring</dt>
                 <dd>选同一条 Take，计算各相机的 VIO 轨迹质量分和异常段，回到异常时刻对照动作。完整性结果、轨迹分数和人工判断各自记录。</dd>
               </div>
             </dl>
@@ -154,11 +151,11 @@
             <h3>需要追查定位时，重建轨迹并核对设置</h3>
             <dl class="qt-tools">
               <div>
-                <dt>Optimize <span>离线优化</span></dt>
+                <dt lang="en">Optimize</dt>
                 <dd>选录制、相机和图像流运行 COLMAP，查看进度和日志，也能重新加载旧运行。三维视图叠加原始 VIO 与重建轨迹，方便比较覆盖、尺度和异常片段。</dd>
               </div>
               <div>
-                <dt>Settings <span>设备设置</span></dt>
+                <dt lang="en">Settings</dt>
                 <dd>调整腕部图像参与定位的区域，修改会影响后续定位处理，原始录制保留完整画面。设备空闲时可确认重启后端，再核对三路输入、时钟与定位。</dd>
               </div>
             </dl>
