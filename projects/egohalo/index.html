@@ -16,7 +16,7 @@
     <title>EgoHalo 设备与数据工程 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/egohalo/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
+    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -36,7 +36,7 @@
         <div class="case-title">
           <h1><span lang="en">EgoHalo</span> <span class="case-title-line">设备与数据工程</span></h1>
           <p class="lead">EgoHalo 是一台四路鱼眼的头戴采集设备。我从零搭建并持续负责它的采集控制台，主导了浏览器上传，也参与了 OTA、相机运行时、固件和云端手部处理。</p>
-          <div class="actions"><a class="button primary" href="#direct-mcap">看多路起录</a><a class="button" href="#console">看采集控制台</a></div>
+          <div class="actions"><a class="button primary" href="#compare">看录制对照</a><a class="button" href="#console">看采集控制台</a></div>
         </div>
         <figure class="case-media">
           <video class="sample-video" controls playsinline preload="none" poster="../../assets/insight-v1/insight-egohalo-four-view.webp" width="1280" height="720" aria-label="EgoHalo H1 四路相机和位姿">
@@ -50,17 +50,18 @@
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>做什么</dt><dd>头戴采集设备从连接、预览、录制到取回和上传数据的整条链路</dd></div>
         <div><dt>我做的</dt><dd>从零搭建并负责采集控制台（网页 + 原生 Android）；主导浏览器上传；参与 OTA、相机运行时、固件和云端手部处理</dd></div>
-        <div><dt>技术栈</dt><dd lang="en">MCAP · ROS CDR · H.264/H.265 · MJPEG · WebRTC · Android BLE/Wi-Fi · Buildroot</dd></div>
-        <div><dt>实测</dt><dd>单台 X5 上 4 轮 × 180 秒 H.264 对照，每轮 13 个话题、16 路视频全量解码通过；直接写包的进程 CPU 均值约降 30%</dd></div>
+        <div><dt>技术栈</dt><dd lang="en">MCAP · ROS 2 CDR · H.264/H.265 · MJPEG · WebRTC · Android BLE/Wi-Fi · Buildroot</dd></div>
+        <div><dt>实测</dt><dd>同一台 X5 主板 ROS/直接写包交替 4 × 180 秒：合计进程 CPU 397% → 278%（约 −30%），图像源间隔 &gt; 50 ms 的次数 65 → 15；16 路视频全量解码通过</dd></div>
         <div class="summary-key"><dt>难点与解决</dt><dd>设备端直接写 MCAP 时，从任意编码帧开录会让回放器在首个关键帧前解不出画面。我让每路等到参数集和 IDR 齐备，取共同边界后才确认开录。</dd></div>
-        <div><dt>目前进展</dt><dd>控制台覆盖 EgoHalo、Insight 7 / Duo 和独立 RDK 双 UVC 三类机型；长时、满卡和多设备同步还没有实机验收。</dd></div>
+        <div><dt>目前进展</dt><dd>控制台覆盖 EgoHalo、Insight 7 / Duo 和独立 RDK 双 UVC 三类机型；直接写包的长时、满卡和多设备同步还没有实机验收。</dd></div>
       </dl>
 
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
             <li><a href="#console">采集控制台</a></li>
-            <li><a href="#direct-mcap">多路起录</a></li>
+            <li><a href="#direct-mcap">多路起录与直接写包</a></li>
+            <li><a href="#compare">ROS 录制与直接写包对照</a></li>
             <li><a href="#take-data">存储、频率与机型</a></li>
             <li><a href="#pipeline">链路上的其他环节</a></li>
             <li><a href="#next">局限与下一步</a></li>
@@ -71,47 +72,127 @@
             <h2>采集控制台</h2>
             <div class="insight-text-media">
               <div>
-                <p>我从初版 Web 控制台做起，把连接设备、实时查看相机和轨迹、任务录制、取回数据放进同一套操作入口。后来加了原生 Android 端，用蓝牙发现设备、Wi-Fi 连接，网页和 App 共用设备的状态与录制接口。</p>
-                <p>现场用四宫格看每路相机朝向，也能单独放大某一路确认画面。实时轨迹用来看设备运动和定位状态。</p>
+                <p>控制台运行在设备的 X5 主板（8 核 ARM，系统由 Buildroot 构建）上。我从初版 Web 控制台做起，把连接设备、实时查看相机和轨迹、任务录制、取回数据放进同一套接口；后来加了原生 Android 端，用 BLE（低功耗蓝牙）发现设备、Wi-Fi 热点连接，网页和 App 共用设备的状态与录制接口。客户端断线或切页不影响后端录制。</p>
+                <p>预览可切四宫格、单路和放大；H.264/H.265 模式下切换布局不断开四路编码连接和解码器。实时轨迹读取相机端与图像同步的 VIO 位姿，带序号和进程代次，控制台据此去重并识别设备端轨迹重启。</p>
               </div>
               <figure class="case-media portrait-media">
                 <a class="screenshot-link" href="../../assets/project-media/egohalo-four-cameras.webp" aria-label="打开原图 · 控制台四路预览"><img src="../../assets/project-media/egohalo-four-cameras.webp" width="480" height="680" loading="lazy" decoding="async" alt="采集控制台同时显示四路相机画面"></a>
                 <figcaption><strong class="insight-media-title">控制台四路预览</strong>控制台实机画面。</figcaption>
               </figure>
             </div>
+            <figure class="data-table"><table><caption><strong>本页用到的术语</strong>按第一次出现的顺序。</caption><thead><tr><th>术语</th><th>是什么</th></tr></thead><tbody>
+              <tr><td>MCAP</td><td>开源的多话题日志容器格式，ROS 2 录制包（rosbag2）可用它存储；内部分块并带索引</td></tr>
+              <tr><td>ROS 2 · DDS · CDR</td><td>机器人中间件；消息经 DDS 发布订阅，以 CDR 二进制格式序列化</td></tr>
+              <tr><td>H.264 / H.265</td><td>帧间压缩视频编码；H.265（HEVC）同画质下码率通常更低，解码更重</td></tr>
+              <tr><td>IDR · SPS/PPS · P 帧</td><td>IDR 是可独立解码的关键帧，SPS/PPS 是解码所需的参数集；P 帧依赖之前的帧，单独拿到解不出来</td></tr>
+              <tr><td>MJPEG</td><td>每帧独立的 JPEG 图像序列，无帧间依赖，体积远大于 H.264</td></tr>
+              <tr><td>WebRTC</td><td>浏览器实时音视频协议，用于手机和网页预览</td></tr>
+              <tr><td>VIO</td><td>视觉惯性里程计：相机画面加 IMU 估计设备位姿</td></tr>
+              <tr><td>ISP</td><td>图像信号处理器：把传感器原始数据转成图像，位于编码之前</td></tr>
+              <tr><td>fsync</td><td>要求操作系统把文件缓存真正写到存储介质，返回后断电也不丢</td></tr>
+              <tr><td>OTA</td><td>Over-the-Air，设备联网升级</td></tr>
+            </tbody></table></figure>
           </section>
 
           <section class="chapter" id="direct-mcap">
-            <h2>多路起录</h2>
-            <p>EgoHalo 在设备本机直接写 MCAP，不经过 ROS 录制。问题在于四路视频是各自编码的：如果按下录制就开始写包，某一路可能从一个 P 帧开始，回放器在它的第一个关键帧之前什么也解不出来，四路的有效起点也对不齐。</p>
-            <p>我的处理是开录前先等。H.264/H.265 每一路都要收到完整参数集和 IDR，所有选中的相机都到达可解码起点后，取共同的起录边界，再向用户确认“已开始录制”。写包沿用源时间戳、ROS 消息类型和原有话题，与 ROS 录制的包结构一致。MJPEG 每帧都是独立 JPEG，原样写入即可。</p>
-            <ol class="insight-flow" role="list"><li><strong>就绪判定</strong><span>每路等到参数集和 IDR</span></li><li><strong>相机本地写包</strong><span>源时间戳、CDR 和原有话题</span></li><li><strong>终止与落盘</strong><span>排空写队列，报告实际结果</span></li></ol>
-            <p>结束时也不能只看“停止”按钮有没有响应。写队列要排空、文件关闭、刷盘成功，才算这条 Take 保存完成。录制缓存耗尽时尽量写完已收到的数据，并把这条标为异常，不会在丢帧之后仍显示成功。</p>
-            <h3>单台 X5 的实录对照</h3>
-            <dl class="insight-results"><div><dt>H.264 录制</dt><dd>4 × 180 秒</dd></div><div><dt>每轮保存话题</dt><dd>13 个</dd></div><div><dt>全量解码</dt><dd>16 路</dd></div></dl>
-            <p>对照顺序是 ROS → 直接 → 直接 → ROS。四轮都正常保存，全部消息能反序列化，相机内参和静态 TF 内容一致。直接写包的进程 CPU 均值约降低 30%，但停止保存并没有变快，源时间戳缺口和 VIO 频率波动也仍然存在。另有一次单台 X5 的 MJPEG 实验，检查了原始 JPEG、WebRTC 四宫格与单路，以及实时轨迹。</p>
+            <h2>多路起录与直接写包</h2>
+            <p>EgoHalo 在设备本机直接写 MCAP，不经过 ROS 录制。四路视频各自编码：如果按下录制就开始写包，某一路可能从 P 帧开始，回放器在它的第一个关键帧之前什么也解不出来，四路的有效起点也对不齐。</p>
+            <p>处理方式是开录前先等：H.264/H.265 每一路都收到完整参数集和 IDR，所有选中的相机都到达可解码起点后，取共同的起录边界，再向用户确认“已开始录制”。写包沿用源时间戳、ROS 消息类型和原有话题，与 ROS 录制的包结构一致，下游读取方式不变。MJPEG 每帧都是独立 JPEG，原样写入即可。</p>
+            <ol class="insight-flow" role="list"><li><strong>就绪判定</strong><span>每路等到参数集和 IDR，取共同起录边界</span></li><li><strong>相机本地写包</strong><span>相机进程内把同一份 CDR 送入独立写线程</span></li><li><strong>终止与落盘</strong><span>排空写队列、关闭 MCAP、逐文件 fsync，报告实际结果</span></li></ol>
+            <ul class="plain-list">
+              <li><strong>一份编码，两条支路。</strong>编码数据从硬件缓冲只拷出一次，预览和录制共享同一份只读帧、各自入队。预览队列每路上限 8 帧 / 4 MiB，发送积压超过 200 ms 只断开这一路预览、等关键帧重连；不请求相机 IDR，不碰录制缓存。</li>
+              <li><strong>缓存耗尽不报成功。</strong>写线程用配置的字节预算；耗尽时停止接收新样本，尽量写完已入队数据并关闭文件，写入 recording-error.json，这条 Take 保持待恢复，不能通过完整录制导出。</li>
+              <li><strong>控制进程崩溃不丢锁。</strong>控制子进程通过 Unix socket 的 SCM_RIGHTS 把录制锁的文件描述符交给相机进程；即使控制台异常退出，相机在关闭写包前仍持有锁，控制连接中断就停止并关闭异常包。</li>
+            </ul>
+            <h3>起停各花多少时间</h3>
+            <figure class="data-table"><table><caption><strong>一次起停的分段耗时（秒）</strong>直接写包 + MJPEG，录音关闭，单次无追踪样本；从设备本机 HTTP 请求起算，不含手机链路和界面刷新。</caption><thead><tr><th>阶段</th><th class="num">耗时</th></tr></thead><tbody>
+              <tr><td>开始请求返回（只表示接受）</td><td class="num">0.368</td></tr>
+              <tr><td>实际首帧确认</td><td class="num">0.937</td></tr>
+              <tr><td>轮询看到“录制中”</td><td class="num">1.371</td></tr>
+              <tr><td>停止请求返回</td><td class="num">0.228</td></tr>
+              <tr><td>进入刷盘保存阶段</td><td class="num">0.557</td></tr>
+              <tr><td>停止 → 保存完成</td><td class="num">2.513</td></tr>
+            </tbody></table></figure>
+            <p>停止后视频约 0.03–0.06 秒停止采集，剩下的时间花在排空队列、关闭 MCAP、改名写清单、逐文件 fsync 和目录同步上。同一次分析发现录音开启时最后一个音频采样比视频晚约 3.0 秒：源码在排空视频后才停止音频输入；修正方向是在停止边界先冻结音频采集，再排空已收数据。</p>
+          </section>
+
+          <section class="chapter" id="compare">
+            <h2>ROS 录制与直接写包对照</h2>
+            <figure class="data-table"><table><caption><strong>参与对照的两种录制方式</strong>同一编码器、同一消息格式，差别只在传输和写盘的位置。</caption><thead><tr><th>方式</th><th>数据怎么走</th><th>录制中能做什么</th></tr></thead><tbody>
+              <tr><td>ROS 录制（rosbag2）</td><td>相机发布 ROS 消息 → DDS → 独立 Recorder 进程订阅 → 写 MCAP</td><td>外部节点可同时订阅，ROS 轨迹持续更新</td></tr>
+              <tr><td>直接写包</td><td>相机进程内把相同 CDR 送入有界缓存和写线程 → 写 MCAP；控制经 Unix socket</td><td>录制时暂停所选流的 ROS 发布，位姿照常入包</td></tr>
+            </tbody></table></figure>
+            <p>测试条件：同一台 X5、同一候选程序，按 ROS → 直接 → 直接 → ROS 交替（ABBA，抵消时间顺序带来的偏差），每轮 180 秒；四路 H.264 Main、4000 kbps、GOP 30，13 个话题，同一张 TF 卡。每秒读一次 /proc 统计 CPU。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/egohalo-ros-vs-direct.webp" aria-label="打开原图：ROS 录制与直接写包的 CPU 和源时间戳缺口对照">
+                <img src="../../assets/project-media/egohalo-ros-vs-direct.webp" width="1500" height="620" alt="左图：四轮合计进程 CPU，ROS 两轮为 394% 和 401%，直接写包两轮为 277% 和 279%，差别主要在控制台和录制子进程部分。右图：图像源时间戳间隔大于 50 毫秒的次数，ROS 两轮前左路 23 和 26、VIO 图像 33 和 32，直接写包两轮前左路 4 和 3、VIO 图像 8 和 6。" loading="lazy">
+              </a>
+              <figcaption><strong class="insight-media-title">四轮 ABBA 对照</strong>左：合计进程 CPU，100% 表示一个核。右：图像源时间戳间隔超过 50 ms 的次数（正常间隔约 33 ms）。</figcaption>
+            </figure>
+            <figure class="data-table"><table><caption><strong>两轮均值</strong>CPU 差异包含传输、订阅、独立 Recorder 和实时轨迹等工作量变化，不能当作单独写线程的加速比。</caption><thead><tr><th>指标</th><th class="num">ROS 录制</th><th class="num">直接写包</th><th class="num">差异</th></tr></thead><tbody>
+              <tr class="is-best"><td>合计进程 CPU</td><td class="num">397.49%</td><td class="num">278.06%</td><td class="num">−30.0%，约少 1.19 核</td></tr>
+              <tr><td>整机 CPU（8 核合计）</td><td class="num">63.15%</td><td class="num">46.19%</td><td class="num">−16.96 个百分点</td></tr>
+              <tr><td>进程常驻内存合计</td><td class="num">480.27 MiB</td><td class="num">462.96 MiB</td><td class="num">−17.31 MiB</td></tr>
+              <tr><td>起录确认</td><td class="num">1.570 s</td><td class="num">1.472 s</td><td class="num">快 0.098 s</td></tr>
+              <tr><td>停止 → 最终保存</td><td class="num">1.587 s</td><td class="num">1.833 s</td><td class="num">慢 0.246 s</td></tr>
+              <tr><td>图像源间隔 &gt; 50 ms（四路合计，两轮）</td><td class="num">65 次</td><td class="num">15 次</td><td class="num">−50 次</td></tr>
+              <tr><td>VIO 100 Hz 位姿最大源间隔</td><td class="num">42.5 / 45.0 ms</td><td class="num">37.5 / 32.5 ms</td><td class="num">—</td></tr>
+            </tbody></table></figure>
+            <figure class="data-table"><table><caption><strong>逐轮记录频率（Hz）</strong>取四路共同起点后第 10 秒开始的 160 秒窗口，按去重后的源 header 计数。</caption><thead><tr><th>轮次</th><th class="num">前左</th><th class="num">前右</th><th class="num">左侧</th><th class="num">右侧</th><th class="num">IMU</th><th class="num">VIO 位姿</th></tr></thead><tbody>
+              <tr><td>1 · ROS</td><td class="num">29.87</td><td class="num">29.94</td><td class="num">30.00</td><td class="num">30.00</td><td class="num">400.0</td><td class="num">98.94</td></tr>
+              <tr><td>2 · 直接</td><td class="num">29.98</td><td class="num">29.98</td><td class="num">29.99</td><td class="num">30.00</td><td class="num">400.0</td><td class="num">99.39</td></tr>
+              <tr><td>3 · 直接</td><td class="num">29.99</td><td class="num">29.99</td><td class="num">30.00</td><td class="num">30.00</td><td class="num">400.0</td><td class="num">99.48</td></tr>
+              <tr><td>4 · ROS</td><td class="num">29.86</td><td class="num">29.96</td><td class="num">30.00</td><td class="num">30.00</td><td class="num">400.0</td><td class="num">98.68</td></tr>
+            </tbody></table></figure>
+            <ul class="plain-list">
+              <li><strong>缺口发生在写包之前。</strong>80 次 &gt; 50 ms 的图像间隔中，70 次的前后源时间戳与编码前的相机日志完全一致，说明缺口在 DDS / MCAP 之前就存在；直接写包减少了缺口次数，但不能当作缺口来源已消除。</li>
+              <li><strong>完整性相同。</strong>四轮都正常保存 13 个话题，消息全部可反序列化，16 路视频全量解码；CameraInfo 和静态 TF 内容一致，取回文件 SHA-256 一致。</li>
+              <li><strong>怎么选。</strong>单机本地落盘用直接写包；录制期间需要外部 ROS 订阅、实时 ROS 轨迹或背包同步链路时用 ROS。停止保存速度和包大小没有显示直接写包的优势。</li>
+            </ul>
           </section>
 
           <section class="chapter" id="take-data">
             <h2>存储、频率与机型</h2>
-            <p><strong>实际采集频率。</strong>Take 详情按话题显示平均记录频率。为了不读整个文件，我先读 MCAP 摘要里的消息计数和各块的时间上下界，再只读可能包含首尾消息的索引。合并各分包的总数和全局首尾时间，按 (N − 1) / (t末 − t首) 算出 Hz。这只是平均值，逐帧缺口交给单独的诊断检查。</p>
-            <p><strong>存储与恢复。</strong>Take 按任务归档。换 TF 卡后可以扫描重建索引；空间不足时尽量把正在录的这条保存完，之后可只读导出。</p>
-            <dl class="insight-facts"><div><dt>EgoHalo</dt><dd>四路鱼眼，Buildroot 系统，固定使用本机直接写 MCAP。</dd></div><div><dt>Insight 7 / Duo</dt><dd>Insight 7 三路，Duo 双路，各自保留配置与校准。</dd></div><div><dt>独立 RDK 双 UVC</dt><dd>按 UVC 设备配置采集。</dd></div></dl>
+            <p><strong>实际采集频率。</strong>Take 详情按话题显示平均记录频率。为了不读整个文件，先读 MCAP 摘要里的消息计数和各块的时间上下界，再只读可能包含首尾消息的索引；合并各分包的总数和全局首尾时间，按 (N − 1) / (t末 − t首) 算出 Hz。这是平均值，逐帧缺口交给单独的诊断检查。</p>
+            <p><strong>存储与恢复。</strong>Take 按任务归档，录制索引按 TF 卡隔离；换卡后可以扫描重建索引；空间不足时尽量把正在录的这条保存完，之后可只读导出。</p>
+            <figure class="data-table"><table><caption><strong>录制验收矩阵（ROS 录制路径，2026-10-16，直接写包上线前）</strong>同一台设备，每种格式 × 时长各录两轮，12 轮全部通过；“最低图像频率”取四路中最低的一路。</caption><thead><tr><th>格式 · 时长</th><th class="num">最低图像频率</th><th class="num">VIO 位姿</th><th class="num">单轮文件大小</th></tr></thead><tbody>
+              <tr><td>H.264 · 60 s</td><td class="num">29.90–29.97 Hz</td><td class="num">99.6–99.7 Hz</td><td class="num">148–187 MiB</td></tr>
+              <tr><td>H.264 · 300 s</td><td class="num">29.95–29.97 Hz</td><td class="num">99.5–99.7 Hz</td><td class="num">918–921 MiB</td></tr>
+              <tr><td>H.264 · 600 s</td><td class="num">29.95–29.96 Hz</td><td class="num">99.6 Hz</td><td class="num">1,833–1,837 MiB</td></tr>
+              <tr><td>MJPEG · 60 s</td><td class="num">29.98–30.00 Hz</td><td class="num">98.8–99.3 Hz</td><td class="num">2,170–2,171 MiB</td></tr>
+              <tr><td>MJPEG · 300 s</td><td class="num">29.97–29.99 Hz</td><td class="num">98.4–98.9 Hz</td><td class="num">10,827–10,844 MiB</td></tr>
+              <tr><td>MJPEG · 600 s</td><td class="num">29.97–29.98 Hz</td><td class="num">97.6–98.1 Hz</td><td class="num">21,883–21,895 MiB</td></tr>
+            </tbody></table></figure>
+            <p>按 600 秒折算，四路 H.264 整包约 3.1 MiB/s，MJPEG 约 36.5 MiB/s，同样时长占用约 12 倍；IMU 每轮都在 400 Hz，时间戳没有倒退。这组验收走的是 ROS 录制路径，直接写包还没有做 600 秒长录。</p>
+            <dl class="insight-facts"><div><dt>EgoHalo</dt><dd>四路鱼眼，Buildroot 系统，固定使用本机直接写 MCAP。</dd></div><div><dt>Insight 7 / Duo</dt><dd>Insight 7 三路（RGB 与左右目），Duo 双路，各自保留配置与校准；起录等三路都拿到可独立解码的首个 IDR。</dd></div><div><dt>独立 RDK 双 UVC</dt><dd>自动识别 MJPEG UVC 相机并协商参数，C++ 原生采集。</dd></div></dl>
           </section>
 
           <section class="chapter" id="pipeline">
             <h2>链路上的其他环节</h2>
             <p>下面几块是团队共同维护的系统。浏览器上传由我主导，其余几块我参与了一部分。</p>
             <h3>浏览器上传</h3>
-            <p>用浏览器把已录 Take 从设备传到云存储。我主导了这部分：设备数据导出、分片直传和续传，以及浏览器兼容、账号绑定和多标签页会话隔离。刷新页面后可以复用已经传完的分片。</p>
+            <p>用浏览器把已录 Take 从设备传到云存储。我负责设备数据导出、分片直传和续传，以及浏览器兼容、账号绑定和多标签页会话隔离。设备导出提供带版本和 SHA-256 校验的分段（HTTP Range）读取；取消上传时中止网络请求和本批次后续录制，但保留已传分片和预留额度，刷新或重开后续传不重发已完成分片。</p>
+            <ul class="plain-list">
+              <li><strong>取消与续传：</strong>13 项检查通过，覆盖签名、分片续传、断连等待、最终提交响应丢失、单条失败后继续、超时与主动取消区分。</li>
+              <li><strong>浏览器兼容：</strong>Chrome 131 因页面显式声明了它不支持的本地网络地址空间参数，能显示界面但读不到设备信息；改为普通同源导出请求、保留配对令牌后，Chrome 131 和 154 的配对、分段上传字节校验、取消续传和会话过期重配均通过。</li>
+            </ul>
             <figure class="case-media">
               <a class="screenshot-link" href="../../assets/project-media/egohalo-upload.webp" aria-label="打开原图 · 上传进度"><img src="../../assets/project-media/egohalo-upload.webp" width="366" height="236" loading="lazy" decoding="async" alt="网页中的单条上传进度和取消入口"></a>
               <figcaption><strong class="insight-media-title">上传进度</strong>上传界面局部，已裁掉账号与录制标识。</figcaption>
             </figure>
             <h3>OTA 服务</h3>
-            <p>设备交付后通过 OTA 网页管理发布。我的改动让一条发布可以关联多个产品 ID，设备仍按自身机型匹配更新。我也参与了运行时升级和恢复流程，升级时保留用户数据和已有录制。</p>
+            <p>设备交付后通过 OTA 网页管理发布。我的改动让一条发布可以关联多个产品 ID，设备仍按自身机型匹配更新；也参与了运行时升级和恢复流程，升级时保留用户数据和已有录制。</p>
             <h3>相机运行时</h3>
-            <p>相机运行时负责感知、编码和 ROS 输出。我维护机型识别与校准配置，把预览和录制拆成两条队列：编码数据从硬件缓冲拷出一次，两边共享同一份只读帧。预览积压时只断开预览，录制按自己的缓存预算写入。另外接出与相机源时间同步的 VIO 位姿，带序号和进程代次，控制台据此去重并识别设备端轨迹重启。</p>
+            <p>相机运行时负责感知、编码和 ROS 输出。我维护机型识别与校准配置，拆分了预览和录制两条队列（见上文），接出与图像同步的 VIO 位姿。</p>
+            <p>前左路偶发缺帧的排查：5 分钟四路 H.265 实录缺 40 帧（前左 34 帧，0.38%），每处都是单次少一帧（间隔 33.3 → 66.7 ms），且都在编码前出现 frame ID 跳号、对应同一路 ISP 报出的尺寸异常（VSIZE_ERR），写盘没有额外丢帧。原驱动会直接丢掉这类帧。</p>
+            <figure class="data-table"><table><caption><strong>放行“已完成处理、仅有尺寸异常”的帧前后</strong>各 5 分钟实录；其他错误、混合错误和超时仍丢弃，不改帧 ID 和时间戳，不用重复帧补齐。</caption><thead><tr><th>相机</th><th class="num">之前：缺帧</th><th class="num">之后：缺帧</th><th class="num">之后：保留下来的异常帧</th></tr></thead><tbody>
+              <tr><td>前置左</td><td class="num">34</td><td class="num">0</td><td class="num">40</td></tr>
+              <tr><td>前置右</td><td class="num">1</td><td class="num">0</td><td class="num">3</td></tr>
+              <tr><td>左侧</td><td class="num">1</td><td class="num">0</td><td class="num">1</td></tr>
+              <tr><td>右侧</td><td class="num">4</td><td class="num">0</td><td class="num">4</td></tr>
+              <tr class="is-best"><td>合计</td><td class="num">40（0.11%）</td><td class="num">0</td><td class="num">48</td></tr>
+            </tbody></table></figure>
+            <p>之后四路整段 H.265 全部解码通过，抽查异常帧及前后帧未见花屏或缺行。但这一版是临时加载的内核模块，没有写进开机配置，重启后会恢复原来的丢帧策略。</p>
             <h3>设备固件</h3>
             <p>设备系统由 Buildroot 构建。我参与了 Insight 7 Duo 的产品配置打包、与机型一致的 BLE 名称、低电量状态灯，以及把匹配的采集应用装进发布包。</p>
             <h3>云端手部处理</h3>
@@ -125,9 +206,9 @@
           <section class="chapter" id="next">
             <h2>局限与下一步</h2>
             <ul class="plain-list">
-              <li><strong>验收范围还窄。</strong>直接写包的实机对照都在单台 X5 上完成。长时录制、拔卡、满卡、慢卡、功耗和多设备绝对同步都还待验收。</li>
+              <li><strong>验收范围还窄。</strong>直接写包的实机对照都在单台 X5 上、每轮 180 秒，一次 ABBA。长时录制、拔卡、满卡、慢卡、功耗和多设备绝对同步都还待验收。</li>
               <li><strong>H.265 只验证到源就绪。</strong>四路本机 H.265 源已能就绪，手机硬解和长时运行还要实机验证。</li>
-              <li><strong>省了 CPU，没省保存时间。</strong>直接写包降低了 CPU，但停止保存没有更快，源时间戳缺口也仍在，需要单独定位原因。</li>
+              <li><strong>省了 CPU，没省保存时间。</strong>停止到保存完成反而慢 0.25 秒；源时间戳缺口来自编码之前，ISP 异常帧放行还没固化进开机配置。</li>
               <li><strong>频率是平均值。</strong>Take 详情里的 Hz 只反映平均记录频率，逐帧缺口要看诊断报告。</li>
             </ul>
           </section>

@@ -16,7 +16,7 @@
     <title>Ego Data Pipeline · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/ego-data-pipeline/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
+    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -36,7 +36,7 @@
         <div class="case-title">
           <h1 lang="en">Ego Data Pipeline</h1>
           <p class="lead">我把第一视角录制自动处理成带动作标注和手部三维关键点的数据集。Qwen 先给动作候选，审理按整条记录核对，证据不足时才回看疑点附近的图像；每个结果都能追回源帧。</p>
-          <div class="actions"><a class="button primary" href="#review">看动作分段与复核</a><a class="button" href="#deliver">看交付结果</a></div>
+          <div class="actions"><a class="button primary" href="#review">看动作分段与复核</a><a class="button" href="#hand">看手部处理</a></div>
         </div>
         <figure class="case-media">
           <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/ego-action-review.webp" width="800" height="800" aria-label="录制画面与动作候选">
@@ -50,54 +50,177 @@
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>做什么</dt><dd>多相机第一视角录制 → 动作区间、手部三维关键点、导出包和 Viewer 回放</dd></div>
         <div><dt>我做的</dt><dd>采样与分窗、Qwen 动作分段与审理规则、双目手部三角化、导出发布，以及按阶段回执续跑</dd></div>
-        <div><dt>技术栈</dt><dd>MCAP · Qwen · 多视角三角化 · Python 常驻服务</dd></div>
-        <div><dt>规模</dt><dd>11 月 17 日运行检查时，Viewer 累计 1,138 条录制、17,336 个 episode</dd></div>
+        <div><dt>技术栈</dt><dd>MCAP · Qwen3.5-9B · WiLoR/MANO · 双目三角化 · Python 常驻服务 · 多 GPU 调度</dd></div>
+        <div><dt>规模</dt><dd>11 月 17 日 Viewer 累计 1,138 条录制、17,336 个 episode（前一天为 1,089 / 16,433）</dd></div>
         <div class="summary-key"><dt>难点与解决</dt><dd>模型分段随措辞摆动。我让文本审理把相邻窗口拼回整条记录核对，只在证据不足的疑点请求额外图像，并保留父候选 ID 以便追溯。</dd></div>
-        <div><dt>目前进展</dt><dd>叠衣服任务持续自动运行；叠杯子已完成小批试跑，27 个循环全部接纳。</dd></div>
+        <div><dt>目前进展</dt><dd>叠衣服持续自动运行；叠杯子 1,643 条录制已登记，首批 2 条录制、11 个 episode 已发布。</dd></div>
       </dl>
 
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
+            <li><a href="#methods">方法一览</a></li>
             <li><a href="#input">按源时间戳采样</a></li>
             <li><a href="#review">动作分段与证据复核</a></li>
-            <li><a href="#deliver">多视角手部与交付</a></li>
+            <li><a href="#hand">多视角手部</a></li>
+            <li><a href="#deliver">交付与吞吐</a></li>
             <li><a href="#next">局限与下一步</a></li>
           </ul>
         </nav>
         <div class="case-text">
+          <section class="chapter" id="methods">
+            <h2>方法一览</h2>
+            <ol class="insight-flow" role="list"><li><strong>前段</strong><span>NAS 下载 → CPU 解码采样 → Qwen 给动作候选</span></li><li><strong>审理</strong><span>整条文本审理 → 疑点按需看图 → 接纳 episode</span></li><li><strong>下游</strong><span>手部 2D/3D → 导出 → 对象存储 → Viewer 发布</span></li></ol>
+            <figure class="data-table"><table><caption><strong>流水线里用到的模型和方法</strong>模型均为现成权重，未做训练或微调。</caption><thead><tr><th>方法</th><th>怎么工作</th><th>输入 / 条件</th><th>出处</th></tr></thead><tbody>
+              <tr><td>Qwen3.5-9B</td><td>开源视觉语言模型：看一组图像，按提示词输出结构化 JSON（动作名、起止帧、证据帧、疑点）</td><td>每 3 秒窗口约 7 张 544×960 JPEG；FP16，单张 24 GiB 显卡放一份模型（参数约 17.5 GiB）</td><td>Qwen 开源模型</td></tr>
+              <tr><td>文本审理</td><td>固定版本的大语言模型按规则文档（skill）读整条录制的全部候选，检查任务边界、动作顺序和完成条件，输出接纳 / 待复核</td><td>只读 Qwen 的文字输出，不看图</td><td>自写规则</td></tr>
+              <tr><td>按需图像复核</td><td>同一模型只看疑点半开区间内的真实采样图，可拆分、合并候选或标为待审理</td><td>疑点范围；没有提示帧时确定性取首、中、末三张</td><td>自写规则</td></tr>
+              <tr><td>WiLoR</td><td>Transformer 手部重建模型，从手部裁图回归 MANO 参数，得到 21 个关键点的 2D 和局部 3D</td><td>扩大 2 倍的手框，仿射裁成 256×256；FP32</td><td>Potamias 等，CVPR 2025</td></tr>
+              <tr><td>MANO</td><td>参数化手部网格模型：少量姿态 / 形状参数生成整只手的网格和关节</td><td>WiLoR 输出的参数</td><td>Romero 等，2017</td></tr>
+              <tr><td>MediaPipe HandLandmarker</td><td>轻量手部关键点模型，这里只当独立的左右手参照</td><td>每相机每 10 帧调用一次</td><td>MediaPipe 开源</td></tr>
+              <tr><td>双目三角化</td><td>同一时刻左右目的 2D 关键点去畸变后，用标定外参求三维点</td><td>两路采集时间差 ≤ 1 ms；真实内外参</td><td>—</td></tr>
+              <tr><td>动态规划手性平滑</td><td>在半秒窗口里综合检测、几何和独立参照的证据，求左右手标签序列的最优解，抑制左右来回翻</td><td>单佩戴者、同时可见的两只手应异侧；证据不足保留 unknown</td><td>—</td></tr>
+              <tr><td>One Euro 滤波</td><td>截止频率随速度自适应的低通：慢时去抖，快时少滞后；正反向各跑一遍</td><td>连续的 2D 轨迹；帧间隔超过 1.5 倍时断开，不补造</td><td>Casiez 等，2012</td></tr>
+            </tbody></table></figure>
+            <p>本页的 episode 指一次完整任务循环（例如叠好一件衣服），是数据集的基本单元；Take 指一次录制，一条 Take 通常含多个 episode。MCAP 是带索引的多话题日志格式，录制的原始数据就是 MCAP。</p>
+          </section>
+
           <section class="chapter" id="input">
             <h2>按源时间戳采样</h2>
-            <p>录制从 NAS 进入，按源内容查重。采样以参考相机的源时间戳为准，按 3 秒半开窗口切分，每 0.5 秒取不早于目标的第一个实际解码帧，再补窗口尾帧并去重。末尾不足 3 秒的窗口也保留。每张图都能回查源帧号和时间。</p>
+            <p>录制从 NAS（网络存储）进入，按源内容哈希查重，已发布的来源直接跳过。采样以参考相机的源时间戳为准：从首个 header 时间起按 3 秒半开窗口 [t, t+3) 切分，每 0.5 秒取不早于目标时间的第一个实际解码帧，再补窗口末帧并去重，末尾不足 3 秒的窗口也保留。每张图都能回查源帧号和时间。</p>
             <ol class="insight-flow" role="list"><li><strong>MCAP</strong><span>按参考相机源时间解码</span></li><li><strong>取样</strong><span>3 秒分窗，0.5 秒取帧</span></li><li><strong>模型输入</strong><span>图像、窗口和源帧映射</span></li></ol>
             <figure class="case-media">
               <a class="screenshot-link" href="../../assets/project-media/ego-sample-frames.jpg" aria-label="打开原图 · 动作附近的候选图像"><img src="../../assets/project-media/ego-sample-frames.jpg" width="1050" height="1230" loading="lazy" decoding="async" alt="叠衣动作的连续采样图，每张上方有源时间和帧号。"></a>
-              <figcaption><strong class="insight-media-title">动作附近的候选图像</strong>预采样与动作检查记录。图中的源帧号可定位回实际录制。</figcaption>
+              <figcaption><strong class="insight-media-title">动作附近的候选图像</strong>每张上方是源时间和帧号，可定位回实际录制。</figcaption>
             </figure>
+            <h3>输入分辨率与提示词：试过的替代方案</h3>
+            <p>为了提速，我试过把图缩到 384×672（每窗视觉 token 从 3,570 降到 1,764）并同时缩短提示词。三个历史窗口的对照：</p>
+            <figure class="data-table"><table><caption><strong>同一模型、同一批源帧的三种输入</strong>“动作段”是模型输出的动作数量；JSON 格式有效不等于内容有效。</caption><thead><tr><th>配置</th><th class="num">窗口 0</th><th class="num">窗口 10</th><th class="num">窗口 20</th><th class="num">三窗重复请求耗时</th></tr></thead><tbody>
+              <tr><td>544×960 + 完整提示词（原配置）</td><td class="num">2 段</td><td class="num">1 段</td><td class="num">2 段</td><td class="num">28.708 s</td></tr>
+              <tr><td>384×672 + 短提示词</td><td class="num">2 段</td><td class="num">0 段（漏动作）</td><td class="num">0 段（漏动作）</td><td class="num">—</td></tr>
+              <tr class="is-best"><td>384×672 + 完整提示词</td><td class="num">2 段</td><td class="num">1 段</td><td class="num">2 段</td><td class="num">25.003 s（−12.9%）</td></tr>
+            </tbody></table></figure>
+            <p>短提示词版本在窗口 10、20 输出空数组，画面里却明确有抚平、折叠和折袖，低耗时来自“什么都没说”。恢复完整提示词后边界、证据帧与原结果一致。只验证了三个窗口，生产仍用 544×960。</p>
           </section>
 
           <section class="chapter" id="review">
             <h2>动作分段与证据复核</h2>
-            <p>Qwen 对每个图像窗口给出动作候选。文本审理把相邻窗口拼回整条记录，检查任务边界、动作顺序和完成条件。证据不足时才请求疑点范围内的采样图，可以拆分、合并或记为待审理，并保留父候选 ID。</p>
-            <dl class="insight-facts"><div><dt>时间约束</dt><dd>用源帧半开区间检查重叠与越界，保留真实短动作和显式留白。</dd></div><div><dt>异常恢复</dt><dd>局部错误独立记录，其余合格片段继续。恢复按阶段回执复用已通过的结果。</dd></div><div><dt>实录抽查</dt><dd>一条录制初始推理用 88 张图，两个疑点额外复核 14 张图，最终接纳 7 个命名动作与 3 段留白。</dd></div></dl>
-            <p>接入叠杯子任务时，我用 5 条录制（Qwen 630 个窗口全部有效）迭代审理方法。前几轮的问题是循环之间的静止片段没有归属，整段被隔离，拆塔与套回交错处也只能留空；补上“静止片段须被引用”和两个组合动作后，第 6 轮 27 个循环全部接纳。</p>
+            <p>Qwen 对每个窗口给出动作候选，窗口之间互不知情。文本审理把相邻窗口拼回整条记录，检查任务边界、动作顺序和完成条件；证据不足时才请求疑点范围内的采样图，可以拆分、合并或记为待审理，并在输出里保留父候选 ID（source_episode_ids）。</p>
+            <dl class="insight-facts"><div><dt>时间约束</dt><dd>用源帧半开区间检查重叠与越界，保留真实短动作和显式留白（允许 episode 内部有不命名的空档）。</dd></div><div><dt>异常恢复</dt><dd>局部错误独立记录，其余合格 episode 继续；网络或服务容量这类暂态失败按 60 / 300 秒最多再试两次。恢复按阶段回执复用已通过的结果。</dd></div><div><dt>实录抽查</dt><dd>一条录制 13 个窗口、88 张图；两个疑点额外复核 14 张图，最终接纳 1 个 episode，含 7 个命名动作与 3 段留白。</dd></div></dl>
+            <h3>叠杯子：审理规则怎么迭代</h3>
+            <p>接入叠杯子时，我用 5 条 5–8 分钟的录制（Qwen 630 个窗口全部有效；另 1 条源文件首个数据块损坏、0 条消息可读）迭代审理方法。每个循环约 60 秒：搭成 10 杯 4-3-2-1 金字塔再拆回。Qwen 把“搭塔”和“套回”都叫 stacking，需要靠循环阶段区分。</p>
+            <figure class="data-table"><table><caption><strong>每轮改动与接纳 / 延后的循环数</strong>第 1、2、4 轮只跑了一条录制。</caption><thead><tr><th>轮次</th><th>方法改动</th><th class="num">接纳 / 延后</th></tr></thead><tbody>
+              <tr><td>1</td><td>初版动作词表</td><td class="num">2 / 8</td></tr>
+              <tr><td>2</td><td>要求循环之间的静止片段有归属</td><td class="num">3 / 6</td></tr>
+              <tr><td>3</td><td>写明静止片段必须被候选引用（落在区间内不算）</td><td class="num">24 / 3</td></tr>
+              <tr><td>4</td><td>新增组合动作“拆塔套回”</td><td class="num">6 / 0</td></tr>
+              <tr><td>5</td><td>新增组合动作“分杯排底”</td><td class="num">14 / 13</td></tr>
+              <tr class="is-best"><td>6</td><td>组合动作作为默认解读；图像复核必须引用、起点必须在采样帧上</td><td class="num">27 / 0</td></tr>
+            </tbody></table></figure>
+            <p>第 6 轮 27 个 episode 时长中位 61 秒（42–90 秒），共 236 个动作；仍有 22% 的 episode 时长未标注，主要在拆塔第一个杯子落桌之后。第 5 轮退步的原因是文本审理为确认“中途是否落桌”把全部候选升级成图像复核，图像复核又产生了空引用和不在采样帧上的起点。</p>
+            <h3>Qwen 双输入：吞吐换来的质量差异</h3>
+            <p>一张卡只放得下一份模型，我让它一次处理两条录制的窗口（batch = 2），短录制交接后立刻补位。三条完整录制（326.4 秒、111 个窗口）的隔离对照：</p>
+            <figure class="data-table"><table><caption><strong>单输入顺序处理 vs 双输入持续补位</strong>同一模型、提示词、分辨率和生成参数。</caption><thead><tr><th>口径</th><th class="num">单输入</th><th class="num">双输入</th></tr></thead><tbody>
+              <tr class="is-best"><td>处理时钟（含采样）</td><td class="num">1,285.93 s</td><td class="num">1,002.86 s（吞吐 +28.2%）</td></tr>
+              <tr><td>折算原始数据处理量</td><td class="num">15.23 分钟/小时</td><td class="num">19.53 分钟/小时</td></tr>
+              <tr><td>动作名、范围、证据帧一致的窗口</td><td class="num" colspan="2">111 / 111</td></tr>
+              <tr><td>token 和解析内容完全一致的窗口</td><td class="num" colspan="2">107 / 111</td></tr>
+            </tbody></table></figure>
+            <p>不一致的一处是“与下一窗口连续”的标记丢了一条。下游文本审理两版都得到同样的 4 个 episode 边界，但图像复核发现：双输入版把一段可见的展开衣物标成了“抚平”。这不能算语义等价；收益与这个已知差异一起交给负责人决定，确认接受后才接入生产。</p>
+          </section>
+
+          <section class="chapter" id="hand">
+            <h2>多视角手部</h2>
+            <p>头部三路相机（一路单目 + 一对双目）逐帧检测和跟踪手，每只手按左、右两种假设分别过 WiLoR；全部帧推理完后，再离线读真实内外参，按同一相机时钟在 1 ms 内配对双目帧，用重投影几何决定左右手和跨视角身份。</p>
+            <figure class="data-table"><table><caption><strong>双目三维点的接受门限</strong>不通过的点留空并写进有效性掩码（valid mask），记录拒绝原因；模型估计的 3D 与双目标定 3D 分开保存。</caption><thead><tr><th>检查</th><th class="num">门限</th></tr></thead><tbody>
+              <tr><td>双目帧时间差</td><td class="num">≤ 1 ms</td></tr>
+              <tr><td>通过的关键点（含腕点）</td><td class="num">≥ 15 / 21</td></tr>
+              <tr><td>深度</td><td class="num">0.05–2 m</td></tr>
+              <tr><td>两路回投影误差</td><td class="num">≤ 6 px</td></tr>
+              <tr><td>骨段长度</td><td class="num">约 4–130 mm</td></tr>
+              <tr><td>相邻帧关节速度</td><td class="num">≤ 5 m/s</td></tr>
+            </tbody></table></figure>
+            <ol class="insight-flow" role="list"><li><strong>同步</strong><span>从已知来源时间一对一配帧</span></li><li><strong>三角化</strong><span>两路去畸变观测和相机外参</span></li><li><strong>核验</strong><span>双路回投影与骨长检验</span></li></ol>
+            <h3>手部阶段的耗时在哪</h3>
+            <p>两条 23 分钟的长录制各有约 12.3 万张相机帧，以约 4 帧/秒推理需要 8 个半小时以上。我对三个生产任务做了非阻塞采样（共 2,694 个主线程样本），按步骤归属墙钟时间：</p>
+            <figure class="case-media bar-compare">
+              <figcaption><strong class="insight-media-title">手部推理主线程的时间占比</strong>含 GPU 执行和等待；按内容不同占比会变，是优先级依据，不是精确算力占比。</figcaption>
+              <dl>
+                <div class="is-best"><dt>姿态模型（ViT 主干、MANO 及其他）</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:100%"></span></span><b>54.5%</b></dd></div>
+                <div><dt>图像预处理（高斯滤波、裁剪、旋转拷贝）</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:42%"></span></span><b>22.9%</b></dd></div>
+                <div><dt>手部检测（含两个方向）</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:24.4%"></span></span><b>13.3%</b></dd></div>
+                <div><dt>独立左右手参照</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:8.3%"></span></span><b>4.5%</b></dd></div>
+                <div><dt>MCAP 读取、反序列化、解码</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:4.6%"></span></span><b>2.5%</b></dd></div>
+                <div><dt>搬运、跟踪及其他</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:4.2%"></span></span><b>2.3%</b></dd></div>
+              </dl>
+            </figure>
+            <figure class="data-table"><table><caption><strong>手部吞吐的几项优化</strong>同一张卡、相同输入的对照；不同实验的倍率不能相乘。</caption><thead><tr><th>改动</th><th class="num">之前</th><th class="num">之后</th><th>结论</th></tr></thead><tbody>
+              <tr class="is-best"><td>同卡双进程（两份固定 539 帧工作）</td><td class="num">串行 344.64 s</td><td class="num">并行 225.27 s</td><td>吞吐 1.53 倍，轨迹对照一致</td></tr>
+              <tr><td>同一张图的左右手请求复用高斯滤波（FP32）</td><td class="num">—</td><td class="num">−10.7% / −15.5%</td><td>两段 898 帧，输出差异在重复运行的噪声内</td></tr>
+              <tr><td>AMP 混合精度（FP16 推理）</td><td class="num">—</td><td class="num">—</td><td>改变了双目观测结果，没有采用</td></tr>
+              <tr><td>每两帧的姿态候选汇成一批</td><td class="num">—</td><td class="num">吞吐 +11.4%</td><td>离散判定一致，数值差超出重复运行范围；已接入生产</td></tr>
+            </tbody></table></figure>
+            <h3>轨迹断点：原因是手出了画</h3>
+            <p>手部轨迹经常断开、换 ID。抽查一条叠衣服录制（3,138 帧，104 秒）：单侧手缺失的缺口中 88% 两端的框贴着画面边缘，66% 的缺失帧三个相机都看不到这只手；被检测阈值、去重或数量上限丢掉的不到 2%。跟踪器 0.5 秒没匹配就放弃，手每次出画再回来都会新建 ID。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/ego-pipeline-hand-track-ids.webp" aria-label="打开原图：跟踪 ID 时间线，重连前后对比">
+                <img src="../../assets/project-media/ego-pipeline-hand-track-ids.webp" width="1500" height="919" alt="上图：一路双目相机在 104 秒内出现 26 个跟踪 ID，每行一个，左手蓝色、右手橙色，片段在手出画处断开。下图：按左右手重连后只剩左手和右手两行，空白段是手不在画面内。" loading="lazy">
+              </a>
+              <figcaption><strong class="insight-media-title">跟踪 ID 时间线：重连前后</strong>同一条录制、同一路双目相机。离线原型按已判定的左右手把片段重连成一个身份，只对 ≤ 10 帧的画内缺口做 2D 线性插值，画外段保持空白。</figcaption>
+            </figure>
+            <figure class="data-table"><table><caption><strong>离线连续性原型的效果</strong>两条叠衣服录制；剩余的多余 ID 来自左右手未判定的观测。</caption><thead><tr><th>录制 · 相机</th><th class="num">ID 数 前 → 后</th><th class="num">画外缺口 / 帧</th><th class="num">画内缺口 / 帧</th><th class="num">插值帧</th></tr></thead><tbody>
+              <tr><td>104 秒 · 单目</td><td class="num">24 → 3</td><td class="num">45 / 1,031</td><td class="num">12 / 25</td><td class="num">25</td></tr>
+              <tr><td>104 秒 · 双目 1</td><td class="num">26 → 2</td><td class="num">54 / 1,029</td><td class="num">1 / 60</td><td class="num">0</td></tr>
+              <tr><td>104 秒 · 双目 2</td><td class="num">27 → 2</td><td class="num">52 / 1,027</td><td class="num">1 / 9</td><td class="num">9</td></tr>
+              <tr><td>36 秒 · 单目</td><td class="num">11 → 2</td><td class="num">17 / 316</td><td class="num">0</td><td class="num">0</td></tr>
+              <tr><td>36 秒 · 双目 1</td><td class="num">9 → 5</td><td class="num">13 / 241</td><td class="num">1 / 15</td><td class="num">0</td></tr>
+              <tr><td>36 秒 · 双目 2</td><td class="num">8 → 4</td><td class="num">25 / 268</td><td class="num">1 / 15</td><td class="num">0</td></tr>
+            </tbody></table></figure>
+            <p>插值的增益很小（单目双手同时可见的比例 67.7% → 68.3%），因为缺失主要在画外。同一次检查还发现单目相机的模型 3D 深度中位约 21 米：它用的是 WiLoR 的虚拟焦距而不是真实内参，所以单目 3D 不可用，三维只认双目三角化的结果。</p>
           </section>
 
           <section class="chapter" id="deliver">
-            <h2>多视角手部与交付</h2>
-            <p>双目手部几何以相机采集时间配对，要求时间差在 1 ms 内。先对两路二维关键点去畸变，再用标定外参三角化。三维点投回两路画面，结合重投影残差、深度与骨长筛掉异常点，无效点随有效性掩码写入结果。</p>
-            <ol class="insight-flow" role="list"><li><strong>同步</strong><span>从已知来源时间一对一配帧</span></li><li><strong>三角化</strong><span>两路去畸变观测和相机外参</span></li><li><strong>核验</strong><span>双路回投影与骨长检验</span></li></ol>
-            <p>导出包保留分集 MCAP、源帧映射、关键点和预览。Viewer 并排回放各相机，在同一时间线查看手部叠加和动作。</p>
-            <dl class="insight-results"><div><dt>发布片段</dt><dd>33.53 秒</dd></div><div><dt>实际回读视角</dt><dd>3 路</dd></div><div><dt>已接纳动作</dt><dd>7 个</dd></div></dl>
-            <p>这是单样本走完整条 NAS → Viewer 链路的验收：三路各生成 1,006 个参考帧的预览，实测播放到约 18 秒时手部叠加和动作都随画面推进。</p>
+            <h2>交付与吞吐</h2>
+            <p>导出包保留分集 MCAP、源帧映射、关键点、有效性掩码、审理依据和三路预览。Viewer 并排回放各相机，在同一时间线查看手部叠加和动作。</p>
+            <figure class="case-media">
+              <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/ego-action-review.webp" width="800" height="800" aria-label="录制画面与动作候选">
+                <source src="../../assets/project-media/ego-action-review.mp4" type="video/mp4">
+                <a href="../../assets/project-media/ego-action-review.mp4">打开视频 · 录制画面与动作候选</a>
+              </video>
+              <figcaption><strong class="insight-media-title">录制画面与动作候选</strong>本地交付演示的 13 秒片段，标识已遮挡。左侧是录制画面，右侧是模型的初步分段。</figcaption>
+            </figure>
+            <figure class="data-table"><table><caption><strong>一条录制走完 NAS → Viewer 的分段耗时</strong>33.53 秒的 episode，三路各 1,006 帧；这是首次单样本验收，之后上线的双进程等优化不在其中。</caption><thead><tr><th>阶段</th><th>工作量</th><th class="num">耗时</th></tr></thead><tbody>
+              <tr><td>Qwen 生成</td><td>13 窗、88 张图</td><td class="num">103.6 s</td></tr>
+              <tr><td>文本审理</td><td>整条候选</td><td class="num">80.3 s</td></tr>
+              <tr><td>按需图像复核</td><td>2 个疑点、14 张图</td><td class="num">95.5 s</td></tr>
+              <tr class="is-best"><td>手部</td><td>三路共 3,018 帧</td><td class="num">775.4 s</td></tr>
+              <tr><td>导出</td><td>分集 MCAP、映射、手部数据、三路预览</td><td class="num">44.2 s</td></tr>
+              <tr><td>上传与发布</td><td>9 个对象，100.6 MB</td><td class="num">—</td></tr>
+            </tbody></table></figure>
+            <p>回读验收：三路视频可播放，播放到约 18 秒时手部叠加和动作随画面推进；935 个参考帧至少有一个有效 2D 点，867 个帧有有效双目 3D 点，无效点全部为零值且掩码为 0，没有插值补齐。</p>
+            <h3>持续运行的吞吐</h3>
+            <figure class="data-table"><table><caption><strong>各阶段每小时完成多少数据（分钟/小时）</strong>数据时长 ÷ 墙钟时长；各阶段处理的是不同录制，数值不能相加或相减。基线含 9 条 Viewer 故障积压，不是完全受控的对照。</caption><thead><tr><th>阶段</th><th class="num">基线 5 小时 44 分</th><th class="num">双进程上线前后的完整一小时</th></tr></thead><tbody>
+              <tr><td>Qwen 完成（原始录制）</td><td class="num">11.66</td><td class="num">14.09</td></tr>
+              <tr><td>审理形成 episode</td><td class="num">8.82</td><td class="num">11.58</td></tr>
+              <tr><td>手部</td><td class="num">6.96</td><td class="num">10.00</td></tr>
+              <tr><td>导出</td><td class="num">6.62</td><td class="num">10.00</td></tr>
+              <tr><td>上传 + Viewer 正式发布</td><td class="num">6.62</td><td class="num">8.25</td></tr>
+            </tbody></table></figure>
+            <figure class="data-table"><table><caption><strong>导出、上传和 Viewer 的单项优化</strong>每项都是同数据前后对照。</caption><thead><tr><th>改动</th><th class="num">之前</th><th class="num">之后</th></tr></thead><tbody>
+              <tr><td>标定附件去重：每集只存起点有效的 CameraInfo/TF 和区间内真实变化</td><td class="num">导出 576.4 s，产物 2.504 GB</td><td class="num">489.2 s，0.164 GB</td></tr>
+              <tr><td>三相机一次扫描 + 预览解码器跨集复用（同一条 4 集录制）</td><td class="num">489.2 s</td><td class="num">140.7 s</td></tr>
+              <tr><td>重新导出积压的 4 条大包</td><td class="num">待上传 44.35 GB</td><td class="num">2.156 GB（−95.1%）</td></tr>
+              <tr><td>上传双并发（同一组 6 个对象，各两轮）</td><td class="num">单并发平均 151.4 s</td><td class="num">102.4 s（−32.4%）</td></tr>
+              <tr class="is-best"><td>Viewer 目录按数据库版本缓存、缩略图按可见区域渲染</td><td class="num">首页容器内 20.88 s，公网约 25 s 无首字节</td><td class="num">公网 0.41–1.18 s</td></tr>
+            </tbody></table></figure>
           </section>
 
           <section class="chapter" id="next">
             <h2>局限与下一步</h2>
             <ul class="plain-list">
-              <li><strong>手部轨迹断点多。</strong>抽查一条叠衣服录制，单侧手缺失的缺口 88% 两端贴着画面边缘，主要是手出了画；跟踪 0.5 秒未匹配就换 ID，每路相机出现 24–27 个 ID。离线原型按左右手重连后降到 2–5 个，还没进生产。</li>
-              <li><strong>模型输出随措辞摆动。</strong>叠杯子试跑中，继续改提示词的收益已经递减；最终轮仍有 22% 的 episode 时长未标注，上塔类指令也偏笼统。</li>
-              <li><strong>验收样本有限。</strong>交付链的逐帧核对只做了单样本，叠杯子的手部、导出和发布还没在真实数据上跑过。</li>
+              <li><strong>手部轨迹断点多。</strong>按左右手重连身份的原型能把每路 24–27 个 ID 降到 2–3 个，还没进生产；画内真实漏检集中在抓布、手指被遮挡时，调阈值没用，需要更强的检测器或跨相机补充。</li>
+              <li><strong>模型输出随措辞摆动。</strong>叠杯子继续改提示词的收益已经递减；首批 7 条生产录制接纳 97 个 episode，留白仍占 23.2%，上塔类指令也偏笼统（Qwen 原文缺层数和杯数）。</li>
+              <li><strong>手部是瓶颈。</strong>姿态模型占一半以上时间，长录制单条要 8 小时以上；双进程之后的端到端提速还没有足够的完整发布样本来量化。</li>
             </ul>
           </section>
         </div>

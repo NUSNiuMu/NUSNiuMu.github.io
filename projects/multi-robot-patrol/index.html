@@ -16,7 +16,7 @@
     <title>多机器人协同巡逻 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/multi-robot-patrol/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
+    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -76,7 +76,7 @@
             <p>攻击要持续 T = 75 步，期间只要有机器人回到该点就算防御成功。我用了两种攻击者，结果取两者中更强的那个：</p>
             <ul class="plain-list">
               <li><strong>等待型。</strong>先旁观一段时间，找出最容易得手的点；之后每当机器人离开这个点就开始攻击。</li>
-              <li><strong>自适应型（SBR）。</strong>能看到所有机器人的位置，从观察到的轨迹里统计“在什么状态下动手成功率最高”，只在那种状态下出手。参数在单独的调参地图上选，攻击者观察和最终评估用的是不同时间段的数据。</li>
+              <li><strong>自适应型（SBR，状态条件最优响应）。</strong>能看到所有机器人的位置，从观察到的轨迹里统计“在什么状态下动手成功率最高”，只在那种状态下出手。参数在单独的调参地图上选，攻击者观察和最终评估用的是不同时间段的数据。</li>
             </ul>
             <ol class="insight-flow" role="list"><li><strong>分区</strong><span>把 30 个点分给几台机器人</span></li><li><strong>巡逻</strong><span>每台在自己的组里决定下一站</span></li><li><strong>评估</strong><span>攻击者观察后挑最弱的点和时机</span></li></ol>
           </section>
@@ -84,7 +84,7 @@
           <section class="chapter" id="partition">
             <h2>均衡分区</h2>
             <p>K-means 只看点的远近，分出来的组工作量差很多：有的组绕一圈要 90 步，有的只要 26 步。攻击者只需要盯住最长那组。</p>
-            <p>IMIC（改进的最小增量聚类）用最远点做种子，再把每个点分给“当前工作量 + 插入增量”最小的组，工作量就是组内 TSP 回路的长度。分完再从最重的组往外迁点。重写时我加了多组种子重启，以及组间换点（IMIC+）。</p>
+            <p>IMIC（改进的最小增量聚类）用最远点做种子，再把每个点分给“当前工作量 + 插入增量”最小的组，工作量就是组内 TSP 回路（经过组内每个点一次再回到起点的最短路线）的长度。分完再从最重的组往外迁点。重写时我加了多组种子重启，以及组间换点（IMIC+）。</p>
             <figure class="case-media">
               <a class="screenshot-link" href="../../assets/project-media/patrol-partition.webp" aria-label="打开原图 · 分区对比"><img src="../../assets/project-media/patrol-partition.webp" width="1280" height="700" loading="lazy" decoding="async" alt="同一张有障碍地图上，K-means 分区四组巡逻周期为 90、78、68、26；IMIC+ 分区为 70、68、70、70"></a>
               <figcaption><strong class="insight-media-title">同一张地图的两种分区</strong>K-means 最长周期 90 步，IMIC+ 四组都在 68–70 步。组间工作量方差下降约 93%。</figcaption>
@@ -93,20 +93,31 @@
 
           <section class="chapter" id="random">
             <h2>随机巡逻的陷阱</h2>
-            <p>毕设里，每台机器人在组内按马尔可夫链随机选下一站，越久没去、越近的点概率越大。路线确实难猜了，路径熵从 TSP 的 0 升到约 2.5 bit。</p>
+            <p>毕设里，每台机器人在组内按马尔可夫链随机选下一站，越久没去、越近的点概率越大。路线确实难猜了，衡量“下一站有多难猜”的路径熵从 TSP 的 0 升到约 2.5 bit。</p>
             <p>但重写后的评估发现，这样做防御率反而更低：有障碍环境下只有 22%，比固定路线差很多。原因是随机游走的回访间隔有长尾，总有某个点偶尔很久才被访问一次；攻击者不需要猜路线，只要等这个长尾出现。</p>
           </section>
 
           <section class="chapter" id="dcmep">
             <h2>截止期约束的随机巡逻</h2>
-            <p>我的改进叫 DC-MEP：随机，但只在“安全”的选项里随机。机器人每到一个点，先列出下一站的候选，只保留去了之后仍然来得及把组内所有点在 T 步内都访问到的那些（判断方法：去完之后，从某个点出发、沿组内 TSP 回路走一圈，能否让每个点的空闲时间都不超过 T），再在其中均匀随机选。</p>
+            <p>我的改进叫 DC-MEP（Deadline-Constrained Max-Entropy Patrol，截止期约束的最大熵巡逻）：随机，但只在“安全”的选项里随机。机器人每到一个点，先列出下一站的候选，只保留去了之后仍然来得及把组内所有点在 T 步内都访问到的那些（判断方法：去完之后，从某个点出发、沿组内 TSP 回路走一圈，能否让每个点的空闲时间都不超过 T），再在其中均匀随机选。</p>
             <p><strong>安全性可以证明：</strong>只要组的回路长度不超过 T，任何时刻上一步计划的剩余部分本身就是一个安全候选，所以候选集永远非空；归纳下去，每条样本路径上都没有点空闲超过 T 步，任何攻击者在这个组里都会失败。这个保证不依赖通信，因为每个组只有一台机器人，它自己的到访记录就够了。回路长于 T 时，没有任何策略能保证，DC-MEP 退化为按距离加权的随机游走。</p>
             <p>两部分是互补的：均衡分区让更多组的回路短于 T，DC-MEP 在这些组里“免费”换来不可预测性。</p>
           </section>
 
           <section class="chapter" id="baselines">
             <h2>和文献方法对比</h2>
-            <p>只和自己的旧方案比说服力不够，所以我又按论文思路实现了四种经典的多机器人巡逻策略：CR（各自去最久没人去的邻点）、HPCC 式和 SEBS 式（共享空闲度的贪心 / 贝叶斯决策），以及 Cyclic（所有机器人沿一条全局 TSP 回路等间距地走）。</p>
+            <p>我按论文思路实现了四种经典的多机器人巡逻策略，和自己的方案放在同一套地图、攻击者和评估协议下比较。“空闲度”指一个巡逻点距上次有机器人到访过了多少步；“邻点”指每个巡逻点按 A* 距离最近的 4 个点。</p>
+            <figure class="data-table"><table><caption><strong>参与对比的方法</strong>上半部分是分区式（每台机器人只管自己那组点），下半部分是文献中的无分区策略。</caption><thead><tr><th>方法</th><th>怎么选下一站</th><th>需要的信息 / 通信</th></tr></thead><tbody>
+              <tr><td>K-means + TSP（基线）</td><td>按坐标 K-means 分组；组内沿固定的 TSP 回路（经过所有点一次的最短闭合路线）循环走</td><td>无需通信</td></tr>
+              <tr><td>IMIC / IMIC+ 分区</td><td>改进的最小增量聚类：按“组内 TSP 回路长度”均衡工作量分组；IMIC+ 再加多组种子重启和组间换点</td><td>只在分区时需要</td></tr>
+              <tr><td>+ 马尔可夫（毕设原方案）</td><td>组内随机游走，越久没去、越近的点转移概率越大</td><td>只用自己的到访记录</td></tr>
+              <tr><td>+ DC-MEP（改进）</td><td>Deadline-Constrained Max-Entropy Patrol：只在“去了之后仍能让组内每个点在 T 步内被访问”的候选里均匀随机选</td><td>只用自己的到访记录</td></tr>
+              <tr><td>Cyclic<br>（Chevaleyre 2004）</td><td>所有点连成一条全局 TSP 回路，所有机器人同向、等间距地沿它走；故障后可重新等距</td><td>需要保持间距的协调</td></tr>
+              <tr><td>CR，Conscientious Reactive<br>（Machado 等 2002）</td><td>去邻点中自己记录里空闲最久的那个</td><td>完全不通信</td></tr>
+              <tr><td>HPCC 式，Heuristic Pathfinder Cognitive Coordinated<br>（Almeida 等 2004）</td><td>在全图中选“归一化空闲度 − 0.5 × 归一化距离”最大的点作为目标，跳过其他机器人已选的目标</td><td>共享空闲度和目标</td></tr>
+              <tr><td>SEBS 式，State Exchange Bayesian Strategy<br>（Portugal 与 Rocha 2013）</td><td>对每个邻点算“空闲度 ÷ 距离”的增益，用贝叶斯公式得后验概率，其他机器人打算去的点先验调低，取后验最大者</td><td>共享空闲度和意图</td></tr>
+            </tbody></table></figure>
+            <p>HPCC 式和 SEBS 式是按论文思路的简化实现，不是原作者代码。</p>
             <figure class="case-media bar-compare">
               <figcaption><strong class="insight-media-title">有障碍环境的防御成功率</strong>T = 75 步，4 台机器人，40 张评估地图，取两种攻击者中更强者，越长越好。</figcaption>
               <dl>
@@ -138,8 +149,9 @@
               </video>
               <figcaption><strong class="insight-media-title">5 台坏掉 1 台</strong>同一张地图。左：不重新分区，失效机器人那片区域无人巡逻，21 次攻击全部得逞；右：剩下 4 台在线重新分区，28 次全部拦截。</figcaption>
             </figure>
+            <figure class="data-table"><table><caption><strong>t = 1000 时一台机器人失效后的防御率</strong>有障碍地图，攻击者只观察失效后的巡逻，取两种攻击者中更强者。</caption><thead><tr><th>配置</th><th class="num">5 台 → 4 台</th><th class="num">4 台 → 3 台</th></tr></thead><tbody><tr><td>分区式，不重新分区</td><td class="num">0%</td><td class="num">0%</td></tr><tr><td>IMIC+ + TSP，在线重新分区</td><td class="num">70%</td><td class="num">0%</td></tr><tr><td>IMIC+ + DC-MEP，在线重新分区</td><td class="num">75%</td><td class="num">21%</td></tr><tr><td>Cyclic，不重新等距</td><td class="num">5%</td><td class="num">0%</td></tr><tr class="is-best"><td>Cyclic，重新等距</td><td class="num">100%</td><td class="num">11%</td></tr><tr><td>CR</td><td class="num">31%</td><td class="num">21%</td></tr><tr><td>SEBS 式</td><td class="num">32%</td><td class="num">14%</td></tr></tbody></table></figure>
             <ul class="plain-list">
-              <li><strong>机器人故障：分区必须在线重分。</strong>坏一台而不重新分区，防御率直接变成 0。在线重新分区后，5 台坏 1 台能恢复到 75%，和一开始就只有 4 台（78%）几乎一样。Cyclic 也需要重新等距：重新等距能保持 100%，不重新等距时自适应攻击者能把它打到 5%。</li>
+              <li><strong>机器人故障：分区必须在线重分。</strong>不重新分区时，失效机器人那组无人巡逻，防御率为 0。在线重新分区后，5 台变 4 台恢复到 75%，与一开始就只有 4 台的 78% 接近；4 台变 3 台时只有 DC-MEP 和 CR 还剩 21%。Cyclic 不重新等距时，自适应攻击者能抓住机器人间隔不均，把它打到 5%。</li>
               <li><strong>通信：分区策略完全不受影响。</strong>加 10 到 300 步的通信延迟、或者只能在 5 到 20 格半径内通信，分区策略的防御率变化都小于 1 个百分点，这正是上面安全性证明的推论。相比之下，依赖共享空闲度的 HPCC 式和 SEBS 式只要 10 步延迟就从 16% / 32% 掉到 3% / 1%，平均空闲度从约 40 步升到约 135 步，比完全不通信还差：几台机器人拿着过时的空闲度，容易做出重复的选择。</li>
             </ul>
             <figure class="case-media">
@@ -154,7 +166,8 @@
 
           <section class="chapter" id="scaling">
             <h2>规模扩展</h2>
-            <p>巡逻点从 30 个增加到 100 个时，要让防御率达到 90%，分区式（IMIC + DC-MEP）需要的机器人从 4.4 台增加到 7.4 台，Cyclic 从 3.9 台增加到 6.1 台，HPCC 式和 SEBS 式则要 15 台左右。DC-MEP 在这里和固定 TSP 需要的台数完全一样：随机性本身不省机器人。</p>
+            <figure class="data-table"><table><caption><strong>达到 90% 防御率所需机器人数</strong>有障碍地图，T = 75，40 张评估地图平均；“≥”表示到上限 16 台仍有地图达不到。</caption><thead><tr><th>策略</th><th class="num">30 点</th><th class="num">50 点</th><th class="num">75 点</th><th class="num">100 点</th></tr></thead><tbody><tr class="is-best"><td>Cyclic（全局循环）</td><td class="num">3.9</td><td class="num">4.8</td><td class="num">5.2</td><td class="num">6.1</td></tr><tr><td>IMIC + DC-MEP</td><td class="num">4.4</td><td class="num">5.3</td><td class="num">6.3</td><td class="num">7.4</td></tr><tr><td>IMIC + TSP</td><td class="num">4.4</td><td class="num">5.3</td><td class="num">6.3</td><td class="num">7.4</td></tr><tr><td>SEBS 式</td><td class="num">7.9</td><td class="num">10.4</td><td class="num">≥13.3</td><td class="num">≥15.4</td></tr><tr><td>HPCC 式</td><td class="num">≥8.6</td><td class="num">≥11.0</td><td class="num">≥13.2</td><td class="num">≥15.0</td></tr></tbody></table></figure>
+            <p>DC-MEP 和固定 TSP 在每张图上需要的台数完全一样：随机性本身不省机器人。</p>
             <p>DC-MEP 的随机性真正有用的地方，是谁都给不出保证的时候：攻击窗口缩短到 T = 50 时，Cyclic 和 TSP 都是 0，DC-MEP 还有 19%；4 台坏到 3 台时，DC-MEP 加在线重新分区有 21%，TSP 是 0，Cyclic 是 11%；只有 2 到 3 台机器人时也是 DC-MEP 最好。</p>
             <figure class="case-media">
               <a class="screenshot-link" href="../../assets/project-media/patrol-v2-scaling.webp" aria-label="打开原图 · 规模扩展"><img src="../../assets/project-media/patrol-v2-scaling.webp" width="1280" height="540" loading="lazy" decoding="async" alt="左：30 个巡逻点时防御率随机器人数的变化，Cyclic 在 4 台时到 1.0，DC-MEP 在 2 到 3 台时最高；右：达到 90% 防御率所需机器人数随巡逻点数变化，Cyclic 最少，分区式稍多，SEBS 式和 HPCC 式约为两倍。"></a>

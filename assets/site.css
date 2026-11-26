@@ -507,3 +507,13 @@ button { font: inherit; cursor: pointer; }
 .case-media.portrait-media { max-inline-size: 22rem; }
 .bar-compare dd { grid-template-columns: minmax(0, 1fr) 5.2rem; }
 .bar-compare dd b { white-space: nowrap; }
+
+/* Data comparison tables */
+.portfolio-case .data-table { margin-block: 1.25rem; border: 1px solid var(--line); background: var(--paper); overflow-x: auto; }
+.portfolio-case .data-table table { inline-size: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .92rem; }
+.portfolio-case .data-table caption { caption-side: top; text-align: start; padding: .75rem .85rem .4rem; color: var(--muted); font-size: .88rem; }
+.portfolio-case .data-table caption strong { display: block; color: var(--ink); font-size: .98rem; }
+.portfolio-case .data-table th, .portfolio-case .data-table td { padding: .5rem .85rem; text-align: start; border-block-start: 1px solid color-mix(in srgb, var(--line) 45%, transparent); vertical-align: top; }
+.portfolio-case .data-table thead th { color: var(--muted); font-weight: 650; font-size: .85rem; border-block-start: 0; }
+.portfolio-case .data-table td.num, .portfolio-case .data-table th.num { text-align: end; white-space: nowrap; }
+.portfolio-case .data-table tr.is-best td { background: var(--tint); font-weight: 700; }

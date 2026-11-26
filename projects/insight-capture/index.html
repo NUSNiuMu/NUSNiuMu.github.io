@@ -16,7 +16,7 @@
     <title>Insight Capture Dashboard · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/insight-capture/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
+    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -31,11 +31,11 @@
         </ul>
       </nav>
     </header>
-    <main id="main" class="shell case-shell insight-case insight-v1" tabindex="-1">
+    <main id="main" class="shell case-shell insight-case insight-v1 portfolio-case" tabindex="-1">
       <header class="insight-hero">
         <div class="case-title">
           <h1 lang="en">Insight Capture Dashboard</h1>
-          <p class="lead">头部和双腕三台相机接入 Jetson，现场用手机监看，事后在原生 Qt 里回放和质检。最费功夫的是让三台相机各自的 VIO 落到同一个坐标系：头部建图，腕部用自己的画面去匹配这张图。</p>
+          <p class="lead">头部和双腕三台相机接入 Jetson，现场用手机监看，事后在原生 Qt 里回放和质检。难点是让三台相机各自的 VIO 落到同一个坐标系：头部建图，腕部用自己的画面去匹配这张图。</p>
           <div class="actions">
             <a class="button primary" href="#spatial">看空间定位</a>
             <a class="button" href="https://github.com/NUSNiuMu/insight-capture-dashboard">GitHub 仓库</a>
@@ -53,10 +53,10 @@
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>做什么</dt><dd>头部 + 双腕三相机的同步采集系统，覆盖现场采集、回放、质检和轨迹复查</dd></div>
         <div><dt>我做的</dt><dd>独立开发：Jetson 端采集与定位后端、手机采集页、原生 Qt 桌面客户端</dd></div>
-        <div><dt>技术栈</dt><dd lang="en">ROS 2 · MCAP · SuperGlue · PnP · C++/QML · Qt Quick 3D · GStreamer · Vue · COLMAP</dd></div>
-        <div><dt>实测数据</dt><dd>双路原生预览 29.99 / 30.00 FPS；一条双端实录合包 26 个话题、66,698 条消息，逐条与原件核对</dd></div>
-        <div class="summary-key"><dt>难点与解决</dt><dd>三台相机的 VIO 各有原点和朝向。头部双目建公共地图，腕部用图像匹配加 PnP 定位，过几何门限且最近 5 次中 3 次一致才更新位姿。</dd></div>
-        <div><dt>目前进展</dt><dd>地图匹配和坐标链路已在实机接通；定位精度还没有用独立标定观测验收。</dd></div>
+        <div><dt>技术栈</dt><dd lang="en">ROS 2 · MCAP · SuperPoint/SuperGlue · PnP · C++/QML · Qt Quick 3D · GStreamer · Vue · COLMAP</dd></div>
+        <div><dt>实测数据</dt><dd>本机预览 29.99 / 30.00 FPS、收帧到显示入口中位 5.67–5.99 ms；双端实录合包 26 个话题、66,698 条消息逐条哈希一致</dd></div>
+        <div class="summary-key"><dt>难点与解决</dt><dd>三台相机的 VIO 各有原点和朝向。头部双目建公共地图，腕部用图像匹配加 PnP 定位，过几何门限且最近 5 次中 3 次一致（两两差 ≤ 5 cm / 3°）才更新位姿。</dd></div>
+        <div><dt>目前进展</dt><dd>地图匹配和坐标链路已在实机接通；离线标定板对照的相对位置 RMSE 为 10.8–15.2 mm，在线整链路精度未验收。</dd></div>
       </dl>
 
       <div class="case-layout">
@@ -64,9 +64,10 @@
           <ul>
             <li><a href="#system">采集系统</a></li>
             <li><a href="#spatial">多相机空间定位</a></li>
-            <li><a href="#preview">手机采集界面</a></li>
+            <li><a href="#precision">定位精度对照</a></li>
+            <li><a href="#preview">手机与本机预览</a></li>
             <li><a href="#review">原生 Qt 回放与质检</a></li>
-            <li><a href="#validation">实测记录</a></li>
+            <li><a href="#recording">双端录制与时间同步</a></li>
             <li><a href="#next">局限与下一步</a></li>
             <li><a href="#demos">团队演示</a></li>
           </ul>
@@ -74,7 +75,7 @@
         <div class="case-text">
           <section class="chapter" id="system">
             <h2>采集系统</h2>
-            <p>常用配置是头部 Insight9 加两台腕部 Insight3。头部记录动作所在的环境，双腕保留手边细节。Jetson 接收各路输入，同时供手机预览和 Qt 回放。</p>
+            <p>常用配置是头部 Insight9 加两台腕部 Insight3，三台相机经 USB 网口接入 Jetson（NVIDIA 的嵌入式 GPU 计算板）。Jetson 同时负责录制、在线建图定位、手机预览和 Qt 回放。</p>
             <figure class="case-media">
               <a class="screenshot-link" href="../../assets/insight-v1/wearable-kit.png" aria-label="打开原图：头部采集设备与两套腕部相机组件">
                 <img src="../../assets/insight-v1/wearable-kit.png" width="1672" height="941" alt="头部采集设备与两套腕部相机组件" loading="lazy">
@@ -82,11 +83,20 @@
               <figcaption>头部与双腕设备组。</figcaption>
             </figure>
             <ol class="insight-flow" role="list">
-              <li><strong>头部与双腕</strong><span>RGB 或红外图像、深度、IMU 与设备 VIO。</span></li>
-              <li><strong>Jetson · ROS 2</strong><span>按话题接收，保留采集时间戳、坐标变换和任务关联。</span></li>
-              <li><strong>MCAP</strong><span>原始消息与元数据落盘，供 Qt 对照视频、轨迹和质检结果。</span></li>
+              <li><strong>头部与双腕</strong><span>RGB 或红外图像、深度、IMU 与约 100 Hz 的设备 VIO。</span></li>
+              <li><strong>Jetson · ROS 2</strong><span>按话题接收，保留源时间戳、TF（坐标变换树）和任务关联。</span></li>
+              <li><strong>MCAP</strong><span>原始消息与元数据落盘，Qt 按同一时间轴对照视频、轨迹和质检。</span></li>
             </ol>
-            <p>另一套配置把头部换成 EgoHalo H1，用它的四路鱼眼、IMU 和 VIO 作为头部输入，Jetson 只接左右腕。两端各自录制原始数据，之后按同一录制编号合成一个 ROS 2 数据包。</p>
+            <figure class="data-table"><table><caption><strong>本页用到的数据与传输术语</strong>按第一次出现的顺序。</caption><thead><tr><th>术语</th><th>是什么</th></tr></thead><tbody>
+              <tr><td>VIO，Visual-Inertial Odometry</td><td>视觉惯性里程计：相机画面加 IMU 积分估计自身位姿；每台设备从自己的开机位置起算，原点和朝向互不相同</td></tr>
+              <tr><td>IMU</td><td>惯性测量单元，输出加速度和角速度</td></tr>
+              <tr><td>ROS 2 / DDS</td><td>机器人中间件；话题消息经 DDS（数据分发服务）发布订阅</td></tr>
+              <tr><td>MCAP</td><td>开源的多话题日志容器格式，ROS 2 的录制包可用它存储；带索引，可按时间随机读取</td></tr>
+              <tr><td>CDR</td><td>ROS 2 消息的二进制序列化格式；合包时按 CDR 字节逐条比对哈希</td></tr>
+              <tr><td>H.264 · IDR · SPS/PPS · GOP</td><td>视频编码。IDR 是可独立解码的关键帧，SPS/PPS 是解码所需的参数集，GOP 是两个关键帧之间的一组帧；P 帧依赖前面的帧，不能单独解码</td></tr>
+              <tr><td>NTP</td><td>网络时间协议：用请求/应答的四个时间戳估计两台设备的时钟偏差和往返时延</td></tr>
+            </tbody></table></figure>
+            <p>另一套配置把头部换成 EgoHalo H1：头部四路鱼眼、IMU 和 VIO 由 EgoHalo 自己存到 TF 卡，Jetson 只接左右腕，两端各自录原始数据，事后按同一录制编号合成一个 ROS 2 数据包（见<a href="#recording">双端录制</a>）。</p>
             <figure class="case-media">
               <video class="sample-video" width="1280" height="720" controls playsinline preload="none" poster="../../assets/insight-v1/insight-egohalo-four-view.webp" aria-labelledby="video-egohalo">
                 <source src="../../assets/insight-v1/insight-egohalo-four-view.mp4" type="video/mp4">
@@ -100,13 +110,8 @@
             <h2>多相机空间定位</h2>
             <div class="insight-text-media">
               <div>
-                <p>每台相机都在输出自己的 VIO，但三条轨迹各有独立的原点和朝向。直接把它们画在一起，头和手的相对位置是错的。</p>
-                <p>我的做法是让头部双目先建一张公共地图，左右腕再用各自的画面去匹配这张图，求出它们在头部坐标系里的位姿。</p>
-                <dl class="insight-facts">
-                  <div><dt>头部建图</dt><dd>头部双目生成现场的公共地图，用 SuperPoint/SuperGlue 提取和匹配特征。</dd></div>
-                  <div><dt>腕部匹配</dt><dd>腕部画面与地图做图像匹配，低置信度对应先剔除，再用 PnP 求位姿。</dd></div>
-                  <div><dt>防跳变</dt><dd>至少 12 对对应、10 个内点、重投影误差不超过 3 px，且最近 5 次中有 3 次给出一致的解，才切换位姿。</dd></div>
-                </dl>
+                <p>三台相机各自输出 VIO，三条轨迹的原点和朝向互不相关。直接画在一起，头和手的相对位置是错的；用可视模型的偏移去“对齐”也不行，因为每次重启原点都会变。</p>
+                <p>做法：头部双目先建一张稀疏公共地图，左右腕再用各自的画面去匹配这张图，求出腕部在地图坐标系里的位姿，再通过各自 VIO 外推到 30 Hz 输出。原始 VIO 和原始图像原样录制，统一位姿是单独的一条数据流。</p>
               </div>
               <figure class="case-media device-phone">
                 <a class="screenshot-link" href="../../assets/insight-v1/mobile-trajectory.png" aria-label="打开原图：手机三维视图显示头部和双腕在公共坐标系中的位置">
@@ -115,7 +120,40 @@
                 <figcaption>Jetson 实机轨迹页，三台设备在同一坐标系中。</figcaption>
               </figure>
             </div>
-            <p>候选解的一致性判断最初放得比较宽，两个相差较大的解可能被算成一簇，导致位姿来回切换。我把候选间差异收紧到 5 cm / 3°，另一个解也有支持时标记为歧义并等待，不降低 PnP 本身的门限。原始 VIO 和原始图像始终原样保存，统一位姿作为单独的数据流。</p>
+            <figure class="data-table"><table><caption><strong>定位链路用到的方法</strong>出处列的是方法原始论文或项目；本项目使用现成实现，未改模型。</caption><thead><tr><th>方法</th><th>怎么工作</th><th>输入 / 条件</th><th>出处</th></tr></thead><tbody>
+              <tr><td>SuperPoint</td><td>卷积网络在整张图上同时检测特征点并输出 256 维描述子</td><td>灰度图，本项目统一缩放到 544×640，在 TensorRT（NVIDIA 推理引擎）上运行</td><td>DeTone 等，2018</td></tr>
+              <tr><td>SuperGlue</td><td>图神经网络在两张图的特征点之间做注意力匹配，每对给出置信度</td><td>两组 SuperPoint 特征；本项目丢弃置信度 &lt; 0.5 的对应</td><td>Sarlin 等，2020</td></tr>
+              <tr><td>双目三角化</td><td>同一特征在左右目的像素位置 + 已知基线，求出三维点</td><td>头部左右目（EgoHalo 前置双目基线 69.25 mm）；视差角 &lt; 0.5° 的点拒绝</td><td>—</td></tr>
+              <tr><td>BA，Bundle Adjustment</td><td>联合优化关键帧位姿和地图点，使所有观测的重投影误差最小</td><td>多帧观测；地图点至少被 3 帧观测才确认</td><td>—</td></tr>
+              <tr><td>PnP，Perspective-n-Point</td><td>已知若干三维点及其在图像上的像素位置，求相机位姿</td><td>腕部图像与地图的 2D–3D 对应 + 相机内参</td><td>OpenCV 实现</td></tr>
+              <tr><td>RANSAC</td><td>反复随机取最小样本求解，取支持点（内点）最多的解，排除错误匹配</td><td>PnP 的候选对应</td><td>Fischler 与 Bolles，1981</td></tr>
+              <tr><td>Huber 损失细化</td><td>误差小时按平方、大时按线性计，减弱离群点对位姿的拉扯</td><td>RANSAC 内点；阈值 1 px，最多 20 次函数求值，未收敛直接拒绝</td><td>—</td></tr>
+              <tr><td>EKF，扩展卡尔曼滤波</td><td>把小幅视觉修正平滑地融进 VIO 输出，避免位姿跳变</td><td>VIO 位姿 + 地图修正；&gt; 5 cm 的修正不走 EKF，需可靠重定位确认</td><td>—</td></tr>
+            </tbody></table></figure>
+            <figure class="data-table"><table><caption><strong>腕部位姿被接受的门限</strong>任何一条不满足，本次匹配都不更新位姿，状态报告为 verifying 或 vio_only（只沿用旧修正外推）。</caption><thead><tr><th>检查</th><th class="num">门限</th></tr></thead><tbody>
+              <tr><td>图像对应数</td><td class="num">≥ 12</td></tr>
+              <tr><td>PnP 内点数 / 内点比例</td><td class="num">≥ 10 / ≥ 0.45</td></tr>
+              <tr><td>重投影误差</td><td class="num">≤ 3 px</td></tr>
+              <tr><td>内点在图像网格中的覆盖</td><td class="num">≥ 4 格</td></tr>
+              <tr><td>多帧一致：最近 5 次中支持同一解</td><td class="num">≥ 3 次，且含当前观测</td></tr>
+              <tr><td>“同一解”的判定：候选两两差异</td><td class="num">≤ 5 cm / 3°</td></tr>
+            </tbody></table></figure>
+            <h3>修过的失效：模型来回跳</h3>
+            <p>现场两个腕部模型突然几乎重叠，独立订阅测得相机中心间距只有约 1.7 cm。同一 14 秒内两路原始 VIO 只有毫米级变化，但腕 A 的日志有 28 次大幅地图修正、B 为 0，问题在定位确认，不在 VIO。原规则允许以中心为基准各 20 cm / 12° 的解进同一簇，簇直径实际可达 40 cm；而 10° 的修正就已触发硬切换。</p>
+            <figure class="data-table"><table><caption><strong>候选确认规则修改前后</strong>PnP 数量、内点比例、像素误差和网格门限都没有放宽。</caption><thead><tr><th>项目</th><th>修改前</th><th>修改后</th></tr></thead><tbody>
+              <tr><td>同一簇的范围</td><td>以中心为基准各 20 cm / 12°</td><td>任意两候选之间 ≤ 5 cm / 3°</td></tr>
+              <tr><td>另一个解也有支持</td><td>可能被拼进同一簇</td><td>另一解有 2 次支持即标记为歧义并等待</td></tr>
+              <tr><td>输出的位姿</td><td>平移中位数 + 另一候选的旋转</td><td>同一候选的完整 SE(3) 解（平移 + 旋转一起取）</td></tr>
+              <tr class="is-best"><td>腕 A 大幅修正次数</td><td>28 次 / 14 秒</td><td>0 次 / 60 秒（A、B 都为 0）</td></tr>
+            </tbody></table></figure>
+            <h3>静止约束：区分“漂”和“跳”</h3>
+            <p>533 秒的长采样里，两腕间距从 10.494 cm 变成 8.242 cm；按原始 VIO 和初始修正推算应为 9.910 cm，说明一部分变化来自重复的地图修正。对已定位的腕部，我加了独立的静止判据：设备报告 TRACKING_STATIC、最近 0.35 秒 VIO 速度足够小、图像光流相对固定参考图稳定至少 1.2 秒（≥ 30 个特征、中位位移 ≤ 0.5 px、P90 ≤ 1 px）。满足时保持进入时的地图位姿，跳过重复的 SuperGlue/PnP；设备、VIO 或图像任一报告运动就解除，解除后要重新通过地图确认才能再次进入。</p>
+            <dl class="insight-results" aria-label="静止约束实机采样">
+              <div><dt>两分钟静止 · 状态采样</dt><dd>120/120 次保持</dd></div>
+              <div><dt>180 秒运动 · 最后 60 秒间距波动</dt><dd>2.0 mm</dd></div>
+              <div><dt>同期 GPU 忙碌中位</dt><dd>93% → 68%</dd></div>
+            </dl>
+            <p>GPU 的两个数来自不同时间和地图状态，只说明静止时省掉了重复推理，不是同输入的性能对照。静止期间间距保持 10.259 cm，但另一次重启后的首次匹配得到约 11.18 cm：稳定不等于准确，约束不会纠正首次定位的偏差。</p>
             <figure class="case-media">
               <video class="sample-video" width="1280" height="720" controls playsinline preload="none" poster="../../assets/insight-v1/insight-onboard-vio.webp" aria-labelledby="video-vio">
                 <source src="../../assets/insight-v1/insight-onboard-vio.mp4" type="video/mp4">
@@ -123,11 +161,47 @@
               </video>
               <figcaption><strong class="insight-media-title" id="video-vio">Insight 端侧 VIO</strong>实际运动、图像观测和相机输出的轨迹并列。团队演示素材。</figcaption>
             </figure>
+            <h3>显示端的细碎抖动</h3>
+            <p>静止时 3D 模型放大后有亚毫米级抖动。我只在 Qt 显示端加了自适应低通（低速截止 3 Hz，速度增大时升到 30 Hz；&gt; 2 cm / 5°、断流或回放时直接跳到新位姿），不改后端位姿和录制数据。</p>
+            <figure class="data-table"><table><caption><strong>同一段 20 秒真实采样的逐帧变化 P95</strong>模拟 20 cm/s、90°/s 运动时的最大显示滞后为 2.24 mm / 0.39°。</caption><thead><tr><th>设备</th><th class="num">未过滤</th><th class="num">显示过滤后</th></tr></thead><tbody>
+              <tr><td>腕 A 位置 / 角度</td><td class="num">0.340 mm / 0.0163°</td><td class="num">0.170 mm / 0.0083°</td></tr>
+              <tr><td>腕 B 位置 / 角度</td><td class="num">0.260 mm / 0.0140°</td><td class="num">0.134 mm / 0.0065°</td></tr>
+              <tr><td>头部位置 / 角度</td><td class="num">0.295 mm / 0.0192°</td><td class="num">0.159 mm / 0.0082°</td></tr>
+            </tbody></table></figure>
             <p><a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/EGOHALO_MAPPING.md">建图与腕部定位说明</a></p>
           </section>
 
+          <section class="chapter" id="precision">
+            <h2>定位精度对照</h2>
+            <p>在线链路没有真值，我用已录数据做了一次离线对照：画面里有 AprilGrid（由多个 AprilTag 二维码组成的标定板），用板子独立求出每对相机的相对变换作为参照，再比较两版定位算法给出的相对变换。训练图像 21 张，评估 109 张查询图像，两版全部通过定位门限。</p>
+            <figure class="data-table"><table><caption><strong>参与对照的两版算法</strong>同一批图像、同一 TensorRT SuperPoint 特征、同一 RANSAC 随机种子。</caption><thead><tr><th>版本</th><th>地标怎么建</th><th>位姿怎么求</th></tr></thead><tbody>
+              <tr><td>基线</td><td>原地标融合</td><td>RANSAC PnP</td></tr>
+              <tr class="is-best"><td>改进</td><td>按空间距离 + 描述子余弦相似度 + 距离比关联同一特征；同一体素可保留不同特征；至少 3 帧确认；每体素只留观测最多的真实地标</td><td>RANSAC PnP 后再用 1 px Huber 损失细化 6 自由度位姿</td></tr>
+            </tbody></table></figure>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/insight-capture-relative-rmse.webp" aria-label="打开原图：相对位姿位置 RMSE 对照">
+                <img src="../../assets/project-media/insight-capture-relative-rmse.webp" width="1500" height="560" alt="两个片段、三对相机的相对位置 RMSE。第一段头部/腕A 14.53 降到 12.69 mm，头部/腕B 14.91 到 14.19，两腕 15.27 到 15.24；第二段头部/腕A 12.91 到 12.92，头部/腕B 15.16 到 10.77，两腕 16.84 到 12.91。" loading="lazy">
+              </a>
+              <figcaption><strong class="insight-media-title">相对位姿位置 RMSE</strong>RMSE 是误差的均方根。指标是“估计的两相机相对平移”与“标定板参照的相对平移”之差。</figcaption>
+            </figure>
+            <figure class="data-table"><table><caption><strong>对应的角度 RMSE（度）</strong>六组中三组下降明显，两组持平，一组略升。</caption><thead><tr><th>片段 · 相机对</th><th class="num">基线</th><th class="num">改进</th></tr></thead><tbody>
+              <tr><td>26–46 s · 头部 / 腕 A</td><td class="num">1.060</td><td class="num">0.915</td></tr>
+              <tr><td>26–46 s · 头部 / 腕 B</td><td class="num">1.072</td><td class="num">1.010</td></tr>
+              <tr><td>26–46 s · 腕 A / 腕 B</td><td class="num">1.042</td><td class="num">1.070</td></tr>
+              <tr><td>65–80 s · 头部 / 腕 A</td><td class="num">0.966</td><td class="num">0.971</td></tr>
+              <tr class="is-best"><td>65–80 s · 头部 / 腕 B</td><td class="num">1.078</td><td class="num">0.761</td></tr>
+              <tr><td>65–80 s · 腕 A / 腕 B</td><td class="num">1.190</td><td class="num">0.912</td></tr>
+            </tbody></table></figure>
+            <ul class="plain-list">
+              <li><strong>代价。</strong>关键帧更新耗时中位 16.3 → 57.5 ms，查询定位中位 16.1 → 18.0 ms（P95 19.7 → 21.1 ms）。</li>
+              <li><strong>试过没用的方案。</strong>对自然特征做通用的 cornerSubPix（OpenCV 亚像素角点细化）：在 4,421 个已知单应的真实匹配上中位误差下降，但误差 &gt; 3 px 的匹配从 227 增至 387，三维对照也没稳定改善，没有采用。</li>
+              <li><strong>上游深度。</strong>后续加入双目亚像素细化和前后向检查，同一批标定板点的单帧深度残差 RMSE 从约 9.6–10.5 mm 降到 3.0–4.2 mm；这是上游几何观测，不是三相机输出精度。</li>
+              <li><strong>边界。</strong>两个评估窗口在开发期间用过，没有另外的盲测数据，也没有重复试验；这是离线算法对照，不是在线整链路验收。</li>
+            </ul>
+          </section>
+
           <section class="chapter" id="preview">
-            <h2>手机采集界面</h2>
+            <h2>手机与本机预览</h2>
             <div class="insight-text-media insight-phone-section">
               <figure class="case-media device-phone">
                 <a class="screenshot-link" href="../../assets/insight-v1/mobile-capture.png" aria-label="打开原图：手机采集页并列显示头部与两只腕部相机实时画面">
@@ -136,9 +210,9 @@
                 <figcaption>Jetson 实机三路预览。</figcaption>
               </figure>
               <dl class="insight-facts">
-                <div><dt>三路预览</dt><dd>同时检查头部与双腕取景，也能单看一路核对近处操作。</dd></div>
-                <div><dt>任务与录制</dt><dd>选择任务、启停录制，在记录页按任务查看 Take。</dd></div>
-                <div><dt>设备状态</dt><dd>相机就绪、Jetson 存储和时钟同步，开录前一眼判断现场条件。</dd></div>
+                <div><dt>三路预览</dt><dd>头部与双腕同屏，也可单看一路核对近处操作。</dd></div>
+                <div><dt>任务与录制</dt><dd>选择任务、启停录制，在记录页按任务查看 Take（一次录制）。</dd></div>
+                <div><dt>设备状态</dt><dd>按相机显示等待 USB、正在校时、等待图像、等待 VIO、已就绪；相机系统时钟实际修正量 &lt; 5 ms 才启动采集。</dd></div>
               </dl>
             </div>
             <details class="insight-disclosure">
@@ -158,12 +232,34 @@
                 </figure>
               </div>
             </details>
-            <p><a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/MOBILE_PREVIEW.md">手机预览与离线采集说明</a></p>
+            <h3>Jetson 本机 Qt 预览：绕开 WebRTC 编码</h3>
+            <p>最初 Qt 和网页一样走 WebRTC（浏览器实时音视频协议），本机显示也要先编码再解码。我给本机客户端加了一条只对 loopback（本机回环地址）开放的通道：后端把收到的帧加 32 字节头（格式、宽高、源时间戳、主机收帧时间）通过 WebSocket 直接发给 Qt，Qt 用 GStreamer 的 appsrc 送进 Jetson 硬件解码 NVDEC、图像转换 VIC 后直接显示。</p>
+            <figure class="data-table"><table><caption><strong>两条预览路径</strong>远程网页、远程 Qt 和 MP4 回放仍走原路径。</caption><thead><tr><th>场景</th><th>图像路径</th><th>积压时怎么丢</th></tr></thead><tbody>
+              <tr><td>原路径：WebRTC</td><td>ROS reader → 编码 → WebRTC → Qt 解码</td><td>由编码与网络栈决定</td></tr>
+              <tr><td>本机 Insight3（原始帧）</td><td>ROS reader → 只保留最新一帧 → loopback WebSocket → appsrc → VIC → 显示</td><td>新帧覆盖旧帧</td></tr>
+              <tr><td>本机 EgoHalo（H.264）</td><td>ROS reader → 有界的连续 GOP 队列 → loopback WebSocket → NVDEC → VIC → 显示</td><td>P 帧不能单独丢；积压、超龄（&gt; 150 ms）或丢参考帧后等下一个完整 IDR 恢复</td></tr>
+            </tbody></table></figure>
+            <figure class="data-table"><table><caption><strong>两台 Insight3 本机预览实测</strong>预热后采样 90.10 秒，逐帧诊断开启。起点是主机预览队列收到帧，终点是显示 sink（GStreamer 输出端）入口；不含曝光、USB/DDS 和屏幕扫描。</caption><thead><tr><th>指标</th><th class="num">Insight3 A</th><th class="num">Insight3 B</th></tr></thead><tbody>
+              <tr><td>显示 sink 输出率</td><td class="num">29.99 FPS</td><td class="num">30.00 FPS</td></tr>
+              <tr><td>收帧 → sink 入口 中位</td><td class="num">5.99 ms</td><td class="num">5.67 ms</td></tr>
+              <tr><td>同一阶段 P95 / 最大</td><td class="num">8.92 / 16.92 ms</td><td class="num">8.33 / 13.36 ms</td></tr>
+              <tr><td>sink 帧间隔 P95 / 最大</td><td class="num">41.02 / 51.18 ms</td><td class="num">38.34 / 43.61 ms</td></tr>
+              <tr><td>&gt; 100 ms 帧间隔 / sink 丢弃</td><td class="num">0 / 0</td><td class="num">0 / 0</td></tr>
+            </tbody></table></figure>
+            <figure class="data-table"><table><caption><strong>同机优化前后</strong>前后诊断条件不同的项（Qt 自身 CPU、GPU 总负载）没有列入。</caption><thead><tr><th>指标</th><th class="num">之前</th><th class="num">之后</th></tr></thead><tbody>
+              <tr><td>WebRTC 编码 worker CPU</td><td class="num">约 25% 单核</td><td class="num">约 0.03%</td></tr>
+              <tr><td>任务列表请求（磁盘读取移到线程）</td><td class="num">52–69 ms</td><td class="num">中位 5.37 ms</td></tr>
+              <tr><td>姿态推送最大停顿</td><td class="num">约 182 ms（每 5 秒一次）</td><td class="num">53.95 ms</td></tr>
+              <tr><td>六路同时在线：ROS 图像消息构造</td><td class="num">200–263 ms / 帧</td><td class="num">1.7–2.9 ms / 帧</td></tr>
+              <tr class="is-best"><td>六路同时在线：建图双目输出</td><td class="num">部分只有约 1 Hz</td><td class="num">稳定 5 Hz</td></tr>
+            </tbody></table></figure>
+            <p>消息构造慢的原因：把 bytes 直接赋给 ROS Image.data 会触发生成代码的逐字节类型检查。改成 <code>array('B', bytes)</code> 批量赋值后，单独的 ROS 检查从 68.54 ms 降到 0.41 ms，序列化后的 CDR 与原像素逐字节一致。</p>
+            <p><a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/NATIVE_PERFORMANCE.md">性能记录</a> · <a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/MOBILE_PREVIEW.md">手机预览与离线采集说明</a></p>
           </section>
 
           <section class="chapter" id="review">
             <h2>原生 Qt 回放与质检</h2>
-            <p>桌面端用 C++、QML、Qt Quick 3D 和 GStreamer，没有内嵌网页。多视角回放、空间检查和数据诊断放在同一个客户端里。</p>
+            <p>桌面端用 C++、QML、Qt Quick 3D 和 GStreamer，没有内嵌网页。多视角回放、空间检查和数据诊断在同一个客户端里。</p>
             <figure class="case-media">
               <a class="screenshot-link" href="../../assets/insight-v1/qt-recordings.png" aria-label="打开原图：原生 Qt 录制库列出每条录制的时长、消息数、话题数和回放入口">
                 <img src="../../assets/insight-v1/qt-recordings.png" width="1600" height="1000" alt="原生 Qt 录制库列出每条录制的时长、消息数、话题数和回放入口" loading="lazy">
@@ -172,25 +268,25 @@
             </figure>
             <dl class="qt-tools">
               <div><dt lang="en">Tasks</dt><dd>建立和切换任务，查看各次 Take 的保存状态、质检记录和人工判断。</dd></div>
-              <div><dt lang="en">Spatial</dt><dd>三维视图里查看公共地图与头部、双腕位姿。</dd></div>
+              <div><dt lang="en">Spatial</dt><dd>三维视图里查看公共地图与头部、双腕位姿，卡片区分地图匹配、确认中、VIO 外推、未定位、位姿中断和离线。</dd></div>
               <div><dt lang="en">Recorder</dt><dd>配置话题和录制目录，确认输入、时钟和存储能否起录。</dd></div>
               <div><dt lang="en">Recordings</dt><dd>同步时间轴上对照各路视频与轨迹，检查各话题的记录完整性。</dd></div>
               <div><dt lang="en">Scoring</dt><dd>分别查看各相机的 VIO 轨迹得分和异常区间，结合视频定位问题。</dd></div>
-              <div><dt lang="en">Optimize</dt><dd>按录制、相机和图像流运行 COLMAP，对照重建轨迹与原始 VIO。</dd></div>
-              <div><dt lang="en">Settings</dt><dd>调整腕部定位遮罩，管理后端和设备设置。</dd></div>
+              <div><dt lang="en">Optimize</dt><dd>按录制、相机和图像流运行 COLMAP（开源 SfM，从多张图像恢复相机轨迹和三维结构），对照重建轨迹与原始 VIO。</dd></div>
+              <div><dt lang="en">Settings</dt><dd>调整腕部定位遮罩（遮住夹爪），管理后端和设备设置。</dd></div>
             </dl>
             <div class="quality-examples">
               <figure class="case-media">
                 <a class="screenshot-link" href="../../assets/insight-v1/message-integrity.png" aria-label="打开原图：多个 ROS 话题的消息数、实测频率和丢帧率">
                   <img src="../../assets/insight-v1/message-integrity.png" width="825" height="551" alt="多个 ROS 话题的消息数、实测频率和丢帧率" loading="lazy">
                 </a>
-                <figcaption>完整性检查示例：各话题消息数、实测频率和丢帧率。</figcaption>
+                <figcaption>完整性检查：各话题消息数、实测频率和丢帧率。</figcaption>
               </figure>
               <figure class="case-media">
                 <a class="screenshot-link" href="../../assets/insight-v1/trajectory-score.png" aria-label="打开原图：三台相机各自的轨迹得分和诊断指标">
                   <img src="../../assets/insight-v1/trajectory-score.png" width="828" height="627" alt="三台相机各自的轨迹得分和诊断指标" loading="lazy">
                 </a>
-                <figcaption>轨迹评分示例：三台相机分别打分。</figcaption>
+                <figcaption>轨迹评分：三台相机分别打分。</figcaption>
               </figure>
             </div>
             <details class="insight-disclosure">
@@ -225,31 +321,52 @@
             <p><a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/native_dashboard/PARITY.md">原生 Qt 功能说明</a></p>
           </section>
 
-          <section class="chapter" id="validation">
-            <h2>实测记录</h2>
-            <h3>双 Insight3 原生预览</h3>
-            <p>两路原生显示 sink 的输出分别为 29.99 和 30.00 FPS。从主机收到预览帧到显示 sink 入口，耗时中位数分别为 5.99 和 5.67 ms。<a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/NATIVE_PERFORMANCE.md">性能记录</a></p>
-            <h3>一条 EgoHalo 配置的双端实录</h3>
+          <section class="chapter" id="recording">
+            <h2>双端录制与时间同步</h2>
+            <p>EgoHalo 配置下，Qt 的一个起停按钮同时控制两端：EgoHalo 在自己的 TF 卡写四路原始 H.264、IMU、VIO、标定和静态 TF；Jetson 写左右腕和在线定位产生的统一位姿。每条录制生成共同的 session_id，配对只认这个编号，不按文件名或起录时间猜。</p>
+            <ol class="insight-flow" role="list">
+              <li><strong>起录前对时</strong><span>向 EgoHalo 和两台腕部各做 5 次 NTP，取往返最短的一次；任一超限就不起录。</span></li>
+              <li><strong>录制中审计</strong><span>每 5 秒复测；超限不跳时钟、不丢数据，记进清单和质检。</span></li>
+              <li><strong>回传与合包</strong><span>4 MiB 分片取回并逐文件 SHA-256 校验，按原始采集时间（header.stamp）合并。</span></li>
+            </ol>
+            <figure class="data-table"><table><caption><strong>对时门限</strong>单机界限 = |偏差| + 往返时延/2；它基于 NTP 路径时延模型，不是曝光同步的测量。10 ms 是内部工程门槛。</caption><thead><tr><th>参数</th><th class="num">默认值</th></tr></thead><tbody>
+              <tr><td>单台设备相对 Jetson 的界限</td><td class="num">10 ms</td></tr>
+              <tr><td>任意两台设备界限之和</td><td class="num">10 ms</td></tr>
+              <tr><td>采纳的 NTP 往返时延上限</td><td class="num">10 ms</td></tr>
+              <tr><td>每轮每台采样数</td><td class="num">5</td></tr>
+              <tr><td>录制中测量间隔</td><td class="num">5 s</td></tr>
+              <tr><td>起录后的关键帧准备时间</td><td class="num">1.1 s</td></tr>
+            </tbody></table></figure>
+            <p>合包要求六路都有数据、时间单调；H.264 每路从带 SPS/PPS 的 IDR 开始，保留必要的解码前导帧，六路都能解码的共同区间单独写进 time_alignment.json。合包后重新读回核对全部消息计数，才进入录制库。</p>
+            <h3>一条实录的核对结果</h3>
             <dl class="insight-results" aria-label="单条录制的核对结果">
               <div><dt>共同可解码区间</dt><dd>32.48 秒</dd></div>
-              <div><dt>合包话题数</dt><dd>26</dd></div>
-              <div><dt>逐条核对的消息</dt><dd>66,698</dd></div>
+              <div><dt>合包话题 / 消息</dt><dd>26 / 66,698</dd></div>
+              <div><dt>8 轮 NTP 审计 · 设备间界限最大</dt><dd>3.74 ms</dd></div>
             </dl>
-            <p>合包后的每条消息都与两端原件逐条比对，带 Header 的消息索引时间等于原始采集时间。时序检查发现头部左前相机有三处采集时间戳缺口，这条录制因此被标为质量可疑，而不是因为合包成功就算合格。<a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/EGOHALO_DISTRIBUTED_RECORDING.md">双端录制说明</a></p>
+            <figure class="data-table"><table><caption><strong>逐项检查</strong>最近帧时间差反映的是自由运行相机之间的帧相位，不是时钟误差。</caption><thead><tr><th>检查</th><th>结果</th></tr></thead><tbody>
+              <tr><td>TF 卡原件 vs 取回文件</td><td>139,260,413 字节，SHA-256 一致</td></tr>
+              <tr><td>合包 vs 两端原件</td><td>66,698 条 CDR 逐条哈希一致；带 Header 的消息索引时间等于原始采集时间</td></tr>
+              <tr><td>头部 IMU</td><td>13,044 条，400 Hz 连续，估计缺失 0</td></tr>
+              <tr><td>相对头部前左路的最近帧时间差</td><td>其他头部视频 ≤ 0.203 ms；腕 A 14.026 ms，腕 B 7.178 ms</td></tr>
+              <tr><td>四路 H.264 编码参考</td><td>首帧均带 SPS/PPS/IDR，参考序列缺口 0</td></tr>
+              <tr><td>头部前左路采集时间戳</td><td>3 处缺口，估计 0.307%，超过 0.1% 门槛 → 该条标为质量可疑</td></tr>
+            </tbody></table></figure>
+            <p>合包成功不等于数据合格：这一条因为前左路的时间戳缺口被标成可疑。<a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/EGOHALO_DISTRIBUTED_RECORDING.md">双端录制说明</a></p>
           </section>
 
           <section class="chapter" id="next">
             <h2>局限与下一步</h2>
             <ul class="plain-list">
-              <li><strong>定位精度还没验收。</strong>实机只证明了地图匹配和坐标链路接通，不能给出毫米级精度或长时间漂移的结论。静止采样很稳，但不同重启后的首次匹配会差出约 1 cm，稳定不等于准确。下一步用固定标定板做独立观测来评估精度。</li>
-              <li><strong>双端录制只验证了一条。</strong>32 秒的实录说明存储、编号配对和时间戳合并路径可用，不能代替长时间无丢帧验收。</li>
-              <li><strong>预览延迟只量到 sink 入口。</strong>5–6 ms 不含真正上屏的时间，端到端延迟还需要另外测。</li>
+              <li><strong>在线定位精度没验收。</strong>离线对照只覆盖两个已录片段，在线整链路（双目建图、回环、VIO 融合）没有真值。下一步：现场复测时同时保留头部左右目、三路 VIO、完整 TF 和地图关键帧，用固定标定板做独立观测。</li>
+              <li><strong>双端录制只验证了一条。</strong>32 秒实录说明存储、编号配对和时间戳合并可用，不能代替长时间无丢帧验收；NTP 对齐时钟，不让六路相机同时曝光。</li>
+              <li><strong>预览延迟只量到 sink 入口。</strong>5–6 ms 不含曝光、传输和上屏时间，光学到屏幕的端到端延迟还没测。</li>
             </ul>
           </section>
 
           <section class="chapter" id="demos">
             <h2>团队演示</h2>
-            <p>以下是团队同一套设备上的其他演示，不属于我负责的部分，放在这里作为背景。</p>
+            <p>同一套设备上其他同事负责的部分，不属于我的工作。</p>
             <details class="insight-disclosure">
               <summary>建图导航与手套追踪</summary>
               <figure class="case-media">

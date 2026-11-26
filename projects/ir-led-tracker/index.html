@@ -16,7 +16,7 @@
     <title>红外 LED 定位 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/ir-led-tracker/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
+    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -35,70 +35,161 @@
       <header class="insight-hero">
         <div class="case-title">
           <h1>红外 LED 定位</h1>
-          <p class="lead">我用一台红外相机和 20 颗 LED 的几何模型，在 Monado 上做六自由度位姿估计。灯点明明都看得见却丢跟踪，原因是评分门限把均方误差当成了 RMS。</p>
-          <div class="actions"><a class="button primary" href="#loss">看失锁修复</a><a class="button" href="#pose">看定位流程</a></div>
+          <p class="lead">一台固定红外相机跟踪装有 20 颗 940 nm LED 的标记物，复用开源 XR 运行时 Monado 的 constellation（星座式灯点）跟踪器，实时输出六自由度位姿（三维位置加三维朝向）。10 颗灯都检测到却输不出位姿：内部评分把均方误差门限 3 px² 当成了 3 px，等效 RMS 门限只有 1.73 px，而实拍拟合 RMS 是 2.3–2.5 px。</p>
+          <div class="actions"><a class="button primary" href="#loss">看失锁修复</a><a class="button" href="#methods">看方法一览</a></div>
         </div>
         <figure class="case-media">
           <a class="screenshot-link" href="../../assets/project-media/ir-viewer.webp" aria-label="打开原图 · 实时三维位姿查看器"><img src="../../assets/project-media/ir-viewer.webp" width="1120" height="700" fetchpriority="high" decoding="async" alt="左侧红外画面与右侧三维坐标、标记模型和轨迹共用同一路跟踪结果。"></a>
-          <figcaption><strong class="insight-media-title">实时三维位姿查看器</strong>运行中的位姿查看器，可同时看灯点、轨迹、质量读数。</figcaption>
+          <figcaption><strong class="insight-media-title">实时三维位姿查看器</strong>红外画面、20 颗 LED 模型、轨迹和质量读数来自同一个跟踪进程，相机只打开一次。</figcaption>
         </figure>
       </header>
 
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>做什么</dt><dd>固定红外相机跟踪 20 颗 LED 的标记物，实时输出六自由度位姿</dd></div>
-        <div><dt>我做的</dt><dd>在参考设计上修改 LED 载体与 PCB；LED 模型接入 Monado、相机标定、实时适配器和三维查看器、失锁问题定位与修复</dd></div>
+        <div><dt>我做的</dt><dd>在参考设计上修改 LED 载体与 PCB；LED 模型接入 Monado、相机标定、曝光与光斑参数调试、实时适配器和三维查看器、失锁定位与修复</dd></div>
         <div><dt>技术栈</dt><dd>Monado · RANSAC PnP · AprilGrid 标定 · OpenCV / V4L2 · OpenGL</dd></div>
-        <div><dt>实测</dt><dd>相机到跟踪器约 29.6 FPS，当前视角可见灯 10/10 匹配，标定重投影 RMS 0.506 px</dd></div>
-        <div class="summary-key"><dt>难点与解决</dt><dd>实拍重投影 RMS 约 2.0–2.3 px，旧评分的门限折合 RMS 只有约 1.73 px，候选全被拒。统一为 3 px RMS 并按可视角筛灯后，60 帧回放从 0 帧可用变为 60 帧。</dd></div>
-        <div><dt>目前进展</dt><dd>实时链路可运行；动态精度和真实距离、角度误差还没有独立基准测量。</dd></div>
+        <div><dt>实测</dt><dd>1280×720 MJPEG，相机到跟踪器 29.6 FPS；当前视角可见灯 10/10 匹配；28 张标定图重投影 RMS 0.506 px</dd></div>
+        <div class="summary-key"><dt>难点与解决</dt><dd>评分门限统一为 3 px RMS，模型可视半角从 60° 放宽到 70° 后，失锁片段 60 帧从 0 帧输出变为 60 帧、每帧 10 灯；另一段 90 帧运动记录的合格帧从 21 升到 67。</dd></div>
+        <div><dt>目前进展</dt><dd>实时链路可运行；真实距离、角度误差和动态精度还没有独立基准测量。</dd></div>
       </dl>
 
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
-            <li><a href="#marker">LED 标记和相机标定</a></li>
-            <li><a href="#pose">从光斑到六自由度位姿</a></li>
+            <li><a href="#methods">方法一览</a></li>
+            <li><a href="#marker">LED 标记的建模</a></li>
+            <li><a href="#calib">相机标定</a></li>
+            <li><a href="#blobs">曝光与光斑阈值</a></li>
+            <li><a href="#pose">从光斑到位姿</a></li>
             <li><a href="#loss">灯点可见却丢跟踪</a></li>
+            <li><a href="#display">显示层滤波与时间戳</a></li>
             <li><a href="#next">局限与下一步</a></li>
           </ul>
         </nav>
         <div class="case-text">
+          <section class="chapter" id="methods">
+            <h2>方法一览</h2>
+            <figure class="data-table"><table style="min-inline-size:38rem"><caption><strong>流水线中用到的算法</strong>前五项直接链接 Monado 源码中的 constellation 静态库，后两项是我写的适配和显示部分。</caption><thead><tr><th>模块</th><th>怎么工作</th><th>输入 / 条件</th><th>出处</th></tr></thead><tbody>
+              <tr><td>blobwatch 光斑检测</td><td>在灰度图上按像素阈值找连通域（相邻亮像素组成的块），求中心、大小，并跨帧给光斑分配 ID、估计速度</td><td>8 位灰度图（MJPEG 解码后转换）；手动曝光</td><td>Monado t_rift_blobwatch</td></tr>
+              <tr><td>对应搜索</td><td>没有位姿先验时，枚举“哪个光斑是哪颗灯”的组合，用候选位姿投影模型来检验</td><td>光斑列表、LED 三维模型、相机内参</td><td>Monado correspondence_search</td></tr>
+              <tr><td>位姿评分</td><td>按法向与可视角判断每颗灯此刻应否可见，再比较光斑尺寸、匹配比例和重投影误差（模型点投影到图像后与实测光斑的像素距离），分成 GOOD / STRONG 等级</td><td>候选位姿、LED 的位置、法向、半径、可视角</td><td>Monado pose_metrics</td></tr>
+              <tr><td>RANSAC PnP</td><td>PnP（Perspective-n-Point）由 n 组二维–三维对应求相机相对物体的位姿；RANSAC（随机抽样一致）反复抽最小子集求解，保留内点最多的解并剔除错配</td><td>至少 4 组对应</td><td>OpenCV，经 Monado pose_optimize 调用</td></tr>
+              <tr><td>快 / 慢双路径跟踪</td><td>慢路径做全局对应搜索；快路径用上一帧位姿和光斑 ID 只检查附近的灯，两路径在两个线程并行</td><td>快路径需要可信的上一帧位姿</td><td>Monado t_constellation_tracker</td></tr>
+              <tr><td>恒速运动先验</td><td>按最近的线速度、角速度外推当前位姿，只用于缩小匹配搜索范围，最长外推 100 ms</td><td>连续合格的视觉位姿；没有 IMU（惯性测量单元）</td><td>本项目，经 Monado tracking_source 接口</td></tr>
+              <tr><td>速度自适应平滑</td><td>位置用低通滤波，静止时截止频率低、运动时提高；旋转用四元数球面插值（SLERP）</td><td>通过质量门限的位姿</td><td>本项目</td></tr>
+            </tbody></table></figure>
+          </section>
+
           <section class="chapter" id="marker">
-            <h2>LED 标记和相机标定</h2>
-            <p>标记物模型记录 20 颗 LED 的三维位置、法向、有效光学半径和可视角。标记转动时，每一帧根据视角判断当前应当看见哪些灯。相机用 4×4 AprilGrid 标定，得到 KM2010 红外相机在 1280×720 下的内参。</p>
+            <h2>LED 标记的建模</h2>
+            <p>标记物是一个四面锥台支架，四块灯板分别朝 ±X、±Y，各装 5 颗 LED，每面向上倾斜 8°，外形约 124.7 × 124.7 × 68.0 mm。LED 为 940 nm 红外贴片灯，规格书给出半光强全角 120°（单侧 60°）。从 PCB 外形图提取 20 颗灯的中心，结合支架几何得到每颗灯的三维位置和法向，再生成 Monado 的 LED 模型。</p>
             <div class="insight-media-grid"><figure class="case-media">
                 <a class="screenshot-link" href="../../assets/project-media/ir-carrier.webp" aria-label="打开原图 · LED 载体模型"><img src="../../assets/project-media/ir-carrier.webp" width="700" height="700" loading="lazy" decoding="async" alt="多面载体及用于固定发光点的位置"></a>
-                <figcaption><strong class="insight-media-title">LED 载体模型</strong>载体渲染。我在硬件参考工程的基础上修改了载体和 PCB。</figcaption>
+                <figcaption><strong class="insight-media-title">LED 载体模型</strong>四面锥台，开顶开底便于走线。在硬件参考工程基础上修改。</figcaption>
               </figure><figure class="case-media">
                 <a class="screenshot-link" href="../../assets/project-media/ir-detection.webp" aria-label="打开原图 · 红外灯点匹配"><img src="../../assets/project-media/ir-detection.webp" width="1120" height="630" loading="lazy" decoding="async" alt="红外实拍上的亮点及候选标签"></a>
-                <figcaption><strong class="insight-media-title">红外灯点匹配</strong>KM2010 实际输入，叠加检测与匹配结果。</figcaption>
+                <figcaption><strong class="insight-media-title">红外灯点匹配</strong>相机实际输入，叠加检测与匹配结果。</figcaption>
               </figure></div>
+            <figure class="data-table"><table style="min-inline-size:38rem"><caption><strong>模型参数：物理值与跟踪用值</strong>两个参数在 Monado 里不只描述灯本身，还决定评分时的容差，所以跟踪用值按实拍图像标定。</caption><thead><tr><th>参数</th><th class="num">物理 / 规格值</th><th class="num">跟踪用值</th><th>为什么不同</th></tr></thead><tbody>
+              <tr><td>LED 半径</td><td class="num">0.72 mm</td><td class="num">2.0 mm</td><td>半径参与计算允许的光斑尺寸和匹配半径。约 0.83 m 处实拍光斑宽高 9–11 px，用 0.72 mm 时只允许约 4.8 px，正确的灯会被拒。2.0 mm 是包含镜头模糊和传感器溢光的“有效光学半径”。</td></tr>
+              <tr><td>可视半角</td><td class="num">60°（半光强）</td><td class="num">70°</td><td>可视角决定一颗灯是否计入“应当可见”的集合。失锁片段中有 3 颗侧面灯的观察角约 62–66°，60° 模型会把它们排除。</td></tr>
+              <tr><td>发光点高出 PCB</td><td class="num">未测</td><td class="num">0</td><td>暂取 0，正式精度测量前需实测。</td></tr>
+            </tbody></table></figure>
+          </section>
+
+          <section class="chapter" id="calib">
+            <h2>相机标定</h2>
+            <p>相机为 KM2010 红外 USB 相机，1280×720、30 FPS。用 4×4 AprilGrid（tag36h11 码族，码边长 55 mm、间隙 16.5 mm）拍 28 张，覆盖画面中央、四角、远近和倾斜，每张检出 13–16 个码，没有图像被剔除。畸变用 OpenCV 五参数径向–切向模型。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/ir-calib-per-view.webp" aria-label="打开原图 · 每张标定图的重投影误差"><img src="../../assets/project-media/ir-calib-per-view.webp" width="1440" height="544" loading="lazy" decoding="async" alt="28 张标定图像的单张重投影误差柱状图，全部在 0.42 到 0.63 像素之间，整体 RMS 0.506 像素。"></a>
+              <figcaption><strong class="insight-media-title">每张标定图的重投影误差</strong>最小 0.42 px，最大 0.63 px，没有离群图像。</figcaption>
+            </figure>
+            <dl class="insight-results"><div><dt>焦距 fx / fy</dt><dd>1398.3 / 1397.2 px</dd></div><div><dt>主点 cx / cy</dt><dd>672.4 / 413.4 px</dd></div><div><dt>重投影 RMS</dt><dd>0.506 px</dd></div></dl>
+            <p>0.506 px 衡量的是标定图上角点的拟合误差，不是 LED 定位精度。</p>
+          </section>
+
+          <section class="chapter" id="blobs">
+            <h2>曝光与光斑阈值</h2>
+            <p>自动曝光会让桌面反光饱和、光斑数量不稳，所以改为手动曝光、增益 0。曝光值越大，LED 光斑越大，也越容易拖影和粘连；阈值越低，反光和粘连块越多。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/ir-blob-thresholds.webp" aria-label="打开原图 · 四组光斑阈值对比"><img src="../../assets/project-media/ir-blob-thresholds.webp" width="1280" height="720" loading="lazy" decoding="async" alt="同一帧红外图像在四组像素阈值和峰值阈值下的光斑检测结果，绿色框为接受的光斑，红色框为过大被拒的光斑。阈值最低时有 6 个过大光斑，最高时为 0。"></a>
+              <figcaption><strong class="insight-media-title">同一帧，四组光斑阈值</strong>绿框为接受的光斑，红框为宽度超过 40 px 被拒的粘连块。接受数包含桌面反光。</figcaption>
+            </figure>
+            <figure class="data-table"><table><caption><strong>光斑阈值对比</strong>同一帧，最大光斑宽度均为 40 px。像素阈值决定哪些像素算“亮”，峰值阈值要求光斑内至少有一个像素达到该亮度。</caption><thead><tr><th>像素阈值 / 峰值阈值</th><th class="num">接受光斑</th><th class="num">过大被拒</th></tr></thead><tbody>
+              <tr><td>100 / 180</td><td class="num">34</td><td class="num">6</td></tr>
+              <tr><td>140 / 200</td><td class="num">33</td><td class="num">2</td></tr>
+              <tr><td>180 / 220</td><td class="num">32</td><td class="num">0</td></tr>
+              <tr class="is-best"><td>200 / 240（采用）</td><td class="num">25</td><td class="num">0</td></tr>
+            </tbody></table></figure>
+            <p>最终取曝光 20（V4L2 驱动控制值，不是毫秒）。在 300 帧实机对照里，曝光 20 有 298 帧有效，位置波动 P95 比曝光 40 低约 21%。</p>
           </section>
 
           <section class="chapter" id="pose">
-            <h2>从光斑到六自由度位姿</h2>
-            <p>跟踪器先从图像提取光斑。已有可信位姿时，把 LED 模型投影到图像，优先检查当前位置应看到的灯；失去先验时扩大对应搜索。得到二维光斑与三维灯点的对应后，用 RANSAC PnP 剔除外点并精修姿态，再核对重投影残差。搜索与精修复用 <a href="https://monado.pages.freedesktop.org/monado/t__constellation__tracker__internal_8hpp_source.html">Monado 上游的 constellation 跟踪器</a>。</p>
-            <ol class="insight-flow" role="list"><li><strong>像素</strong><span>检测光斑中心与亮度</span></li><li><strong>几何</strong><span>投影 LED 模型，求相机相对位姿</span></li><li><strong>稳定</strong><span>验证残差、运动和时间顺序</span></li></ol>
-            <h3>快动与短时遮挡</h3>
-            <p>没有可信先验时至少匹配 5 颗灯；先验通过位置与朝向检查时，3～4 颗光斑即可验证。显示层用速度预测和四元数角差拦截跳变。静止时用较低截止频率抑制抖动，运动时提高截止频率，并用球面插值平滑旋转。</p>
+            <h2>从光斑到位姿</h2>
+            <ol class="insight-flow" role="list"><li><strong>取帧</strong><span>V4L2 读 MJPEG，解码为灰度</span></li><li><strong>光斑</strong><span>阈值连通域，跨帧 ID</span></li><li><strong>对应</strong><span>有先验走快路径，否则全局搜索</span></li><li><strong>求解</strong><span>RANSAC PnP，剔除错配后精修</span></li><li><strong>验证</strong><span>评分、运动一致性、显示门限</span></li></ol>
+            <figure class="data-table"><table><caption><strong>各级门限</strong>先验通过位置与朝向两项检查时才能降低灯数要求；先验过期或检查失败一律按无先验处理。</caption><thead><tr><th>条件</th><th>门限</th></tr></thead><tbody>
+              <tr><td>无可信先验时的最少匹配灯数</td><td>5 颗</td></tr>
+              <tr><td>先验已验证时的最少匹配灯数</td><td>3 颗（PnP 至少需 4 颗，3 颗走先验候选的光学验证）</td></tr>
+              <tr><td>显示层：匹配灯数 / 应可见灯数</td><td>≥ 45%</td></tr>
+              <tr><td>显示层：重投影误差</td><td>≤ 3 px</td></tr>
+              <tr><td>跳变后重新定位</td><td>连续 2 个一致的候选</td></tr>
+              <tr><td>运动一致性上限（排除错误候选，非实测性能）</td><td>平移 8 m/s，旋转 25 rad/s</td></tr>
+              <tr><td>无新有效结果，提示“可靠位姿中断”</td><td>250 ms</td></tr>
+              <tr><td>0.15–1 s 短中断后直接恢复</td><td>新测量距上次可靠位姿 6 cm、15° 以内</td></tr>
+            </tbody></table></figure>
+            <p>每个面只有 5 颗灯，正对单面冷启动时必须 5 颗全部检出，没有余量；斜视同时看到两面时，灯数和几何约束都更好。</p>
           </section>
 
           <section class="chapter" id="loss">
             <h2>灯点可见却丢跟踪</h2>
-            <p>一段实拍里已经检测到 10 个光斑，跟踪却一直输出不了位姿。回放发现，候选的重投影 RMS 约 2.0–2.3 px，而旧评分把 3 当作均方误差的上限，折合 RMS 只有约 1.73 px，正确的候选全被拒掉。</p>
-            <p>我把门限统一为 3 px 的 RMS，并按模型的有效可视角筛选参与匹配的灯点。</p>
-            <figure class="case-media comparison"><figcaption><strong class="insight-media-title">同一段实拍的可显示位姿帧数</strong>60 帧离线回放，改动后每帧匹配 10 颗灯。</figcaption><dl><div><dt>原版</dt><dd><b>0 帧</b><span class="comparison-track" aria-hidden="true"><span style="inline-size:0.0000%"></span></span></dd></div><div><dt>修正评分与可视角后</dt><dd><b>60 帧</b><span class="comparison-track" aria-hidden="true"><span style="inline-size:100.0000%"></span></span></dd></div></dl></figure>
-            <dl class="insight-results"><div><dt>相机到跟踪器</dt><dd>约 29.6 FPS</dd></div><div><dt>当前视角可见灯匹配</dt><dd>10 / 10</dd></div><div><dt>标定重投影 RMS</dt><dd>0.506 px</dd></div></dl>
-            <p>数据来自 KM2010 的 1280×720 MJPEG 实时链路和 AprilGrid 标定记录。0.506 px 衡量的是标定图像的拟合误差，不是定位精度。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/ir-lost-frame.webp" aria-label="打开原图 · 报告失锁时的一帧"><img src="../../assets/project-media/ir-lost-frame.webp" width="1280" height="720" loading="lazy" decoding="async" alt="黑色背景上 10 个清晰的红外 LED 光斑，分布在标记物的两个面上。"></a>
+              <figcaption><strong class="insight-media-title">报告失锁时的一帧</strong>10 颗灯清晰可见，阈值检测全部提取到，旧版却 60 帧都没有输出位姿。这帧现在是回归测试的输入。</figcaption>
+            </figure>
+            <p>回放发现，内部评分用的是均方像素误差（MSE，各灯误差平方的平均）：无先验时 GOOD 门限为 3，等效 RMS（均方根）只有 √3 ≈ 1.73 px；有先验时为 2，等效 1.41 px。适配器和 PnP 用的却是 3 px。这组灯点与模型的拟合 RMS 在 2.3–2.5 px，所有正确候选在输出前就被拒掉。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/ir-gate-vs-rms.webp" aria-label="打开原图 · 门限与实测重投影 RMS"><img src="../../assets/project-media/ir-gate-vs-rms.webp" width="1440" height="736" loading="lazy" decoding="async" alt="横轴为重投影 RMS。旧门限 1.41 和 1.73 像素以虚线表示，新门限 3.0 像素为实线。失锁片段的拟合 RMS 在 2.29 到 2.53 像素，全部落在两条旧门限右侧、新门限左侧；运动片段修复后 P95 为 2.62 像素。"></a>
+              <figcaption><strong class="insight-media-title">门限与实测重投影 RMS</strong>点为修复后拟合位姿的 RMS（P50 圆点，P95 菱形）。失锁片段的全部样本都落在旧门限之外。</figcaption>
+            </figure>
+            <p>修复：GOOD 判定改用 3.0² 的均方门限，即 3 px RMS；STRONG 仍要求 1.5 px 且至少 7 颗灯，避免低灯数候选过早结束搜索。模型可视半角调到 70°。同时修了四个求解器问题：</p>
+            <ul class="plain-list">
+              <li><strong>PnP 用单位四元数初始化时除零。</strong></li>
+              <li><strong>RANSAC 剔除的外点没有清掉 LED 身份</strong>，错误标签带到下一帧。</li>
+              <li><strong>精修变差时仍覆盖可靠位姿。</strong>现在精修结果不满足 GOOD 就保留之前通过验证的候选。</li>
+              <li><strong>慢线程的旧结果覆盖内部最新位姿。</strong></li>
+            </ul>
+            <figure class="data-table"><table><caption><strong>逐项消融：同一段 60 帧失锁记录</strong>离线回放相同图像。“合格”指通过质量判断，“显示”指通过显示层门限。不是真值精度测量。</caption><thead><tr><th>版本</th><th class="num">输出</th><th class="num">合格</th><th class="num">显示</th><th class="num">每帧匹配灯数</th><th class="num">RMS P50 / P95</th></tr></thead><tbody>
+              <tr><td>原版</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">—</td><td class="num">—</td></tr>
+              <tr><td>只修求解器，60° 模型</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">—</td><td class="num">—</td></tr>
+              <tr><td>只修求解器，70° 模型</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">—</td><td class="num">—</td></tr>
+              <tr><td>统一 RMS 门限，60° 模型</td><td class="num">60</td><td class="num">60</td><td class="num">60</td><td class="num">7</td><td class="num">2.49 / 2.53 px</td></tr>
+              <tr class="is-best"><td>统一 RMS 门限，70° 模型</td><td class="num">60</td><td class="num">60</td><td class="num">60</td><td class="num">10</td><td class="num">2.29 / 2.34 px</td></tr>
+            </tbody></table></figure>
+            <p>只修求解器和可视角都没有用，起决定作用的是门限。可视角放宽后匹配灯数从 7 升到 10，RMS 反而下降 0.2 px，说明多出的 3 颗是正确匹配。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/ir-motion90-matches.webp" aria-label="打开原图 · 90 帧运动记录的匹配灯数分布"><img src="../../assets/project-media/ir-motion90-matches.webp" width="1440" height="704" loading="lazy" decoding="async" alt="分组柱状图。修复前 90 帧中 65 帧无输出，匹配 10 颗灯的有 10 帧；修复后无输出降到 22 帧，匹配 10 颗灯的升到 46 帧。"></a>
+              <figcaption><strong class="insight-media-title">另一段 90 帧运动记录</strong>修复前 65 帧没有输出；修复后降到 22 帧，10 灯全匹配的帧从 10 升到 46。显示层接受数从 21 升到 64。</figcaption>
+            </figure>
+          </section>
+
+          <section class="chapter" id="display">
+            <h2>显示层滤波与时间戳</h2>
+            <p>旧显示层限制每帧最多移动 25 mm，快速运动时会被当成跳变拒绝。新版改为把原始测量与运动预测比较（而不是与滞后的显示位置比较），并用速度自适应平滑。下表是合成数据上的对照，不是相机实测精度。</p>
+            <figure class="data-table"><table><caption><strong>显示层滤波：合成数据对照</strong>30 Hz。运动：2 m/s 匀速 50 帧；静止：位置加 σ = 2 mm 高斯噪声，300 帧去掉前 30 帧，随机种子 42。</caption><thead><tr><th>指标</th><th class="num">旧版</th><th class="num">新版</th></tr></thead><tbody>
+              <tr><td>2 m/s 运动时接受的帧</td><td class="num">3 / 50</td><td class="num">50 / 50</td></tr>
+              <tr><td>2 m/s 运动时显示误差 P95</td><td class="num">3070 mm</td><td class="num">1.58 mm</td></tr>
+              <tr><td>静止时显示位置标准差</td><td class="num">1.04 mm</td><td class="num">0.98 mm</td></tr>
+            </tbody></table></figure>
+            <p>时间戳：相机申请 2 个 V4L2 缓冲区，取驱动给出的缓冲区时间戳，只有单调递增且与主机单调时钟相差小于 1 秒时才采用，否则退回主机取帧时间。实测缓冲区时间戳到主机取帧约 32 ms。这个时间戳不是曝光时刻，OpenCV 接口不提供曝光起止标志，因此没有做曝光中点补偿。位姿解出后立即在回调中输出，不等下一次取帧。</p>
           </section>
 
           <section class="chapter" id="next">
             <h2>局限与下一步</h2>
             <ul class="plain-list">
-              <li><strong>运动段还不稳。</strong>另一段含运动的 90 帧记录，修复后合格帧从 21 帧升到 67 帧，仍没做到全部有效。</li>
-              <li><strong>没有独立精度基准。</strong>真实距离和角度误差、动态精度，都需要移动 LED 目标并用独立基准来测。</li>
-              <li><strong>纯视觉，时间戳粗。</strong>没有接 IMU；相机时间戳是驱动缓冲区时间，不是曝光时刻，也没做曝光中点补偿。</li>
-              <li><strong>只在相机坐标系。</strong>要给机器人或场地使用，还需要相机到基座的外参标定。</li>
+              <li><strong>运动段仍有丢帧。</strong>90 帧运动记录修复后 67 帧合格，还有 22 帧无输出。</li>
+              <li><strong>没有独立精度基准。</strong>真实距离和角度误差、动态精度，需要移动 LED 目标并用独立基准测量。</li>
+              <li><strong>纯视觉。</strong>没有接 IMU，运动先验只来自视觉外推。</li>
+              <li><strong>只在相机坐标系。</strong>给机器人或场地使用还需要相机到基座的外参标定。</li>
             </ul>
           </section>
         </div>
