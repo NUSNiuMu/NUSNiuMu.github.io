@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="text-scale" content="scale">
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
@@ -16,7 +17,7 @@
     <title>牛牧 · 机器人项目</title>
     <link rel="canonical" href="https://nusniumu.github.io/">
     <link rel="icon" href="assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="assets/site.css?v=2170c578">
+    <link rel="stylesheet" href="assets/site.css?v=fc8c5d6a">
     <script src="assets/projects.js?v=7955873b" defer></script>
   </head>
   <body id="top">
@@ -34,10 +35,12 @@
     </header>
     <main id="main" class="shell" tabindex="-1">
       <section class="front">
-        <div class="intro" id="about">
+        <div class="intro">
           <img class="portrait" src="assets/niu-mu.webp" width="440" height="660" alt="牛牧的照片">
           <h1>牛牧</h1>
-          <p>我做机器人采集与数据处理，也用机械臂和移动机器人验证这些数据能做什么。</p>
+          <p class="tagline">软硬件都能打通的机器人工程师。</p>
+          <p>从电机、固件和传感器同步，到采集软件、数据处理和策略训练，我把一台机器人从硬件做到数据，再用机械臂和移动机器人验证它能做什么。</p>
+          <p class="intro-meta">南方科技大学 机器人工程 · 新加坡国立大学 机器人硕士</p>
           <a class="intro-link" href="#projects">浏览项目 <span aria-hidden="true">↓</span></a>
         </div>
         <article class="main-project">
@@ -69,44 +72,47 @@
             <article>
               <img class="archive-image kit-thumb" src="assets/project-media/insight-wearable-kit.webp" width="1200" height="676" alt="Insight 头部采集设备及两台腕部相机" loading="lazy">
               <div class="archive-copy">
+                <p class="tag">工作项目</p>
                 <h3 lang="en"><a href="projects/insight-capture/">Insight Capture Dashboard</a></h3>
-                <p>三设备同步采集，手机预览和校准，Qt 管理任务、回放和质检。</p>
+                <p>头部加双腕三相机同步采集，腕部画面匹配头部地图，统一到一个坐标系。</p>
                 <a class="repo-link" href="https://github.com/NUSNiuMu/insight-capture-dashboard" aria-label="GitHub 仓库：Insight Capture Dashboard">GitHub 仓库</a>
               </div>
             </article></li>
           <li class="archive-item" data-category="control">
             <article>
-
+              <img class="archive-image" src="assets/project-media/so101-cup-dual.webp" width="1078" height="480" alt="Codex 控制机械臂叠纸杯的双路画面" loading="lazy" decoding="async">
               <div class="archive-copy">
-                <h3 lang="en"><a href="projects/so101-lerobot/">SO101 LeRobot</a></h3>
-                <p>两路相机录制示教，用 ACT 训练策略，再回到机械臂上检查抓放和叠杯。</p>
-                <a class="repo-link" href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop" aria-label="GitHub 仓库：SO101 LeRobot">GitHub 仓库</a>
+                <h3><a href="projects/so101-lerobot/">大模型操控 SO101 机械臂</a></h3>
+                <p>让 Codex 自己看图、下发关节目标，在真机上闭环完成红块入箱和叠纸杯，再把成功轨迹交给 ACT 学习。</p>
+                <a class="repo-link" href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop" aria-label="GitHub 仓库：大模型操控 SO101 机械臂">GitHub 仓库</a>
               </div>
             </article></li>
           <li class="archive-item" data-category="navigation">
             <article>
-
+              <img class="archive-image" src="assets/project-media/ir-viewer.webp" width="1120" height="700" alt="红外相机的实时三维位姿查看器" loading="lazy" decoding="async">
               <div class="archive-copy">
+                <p class="tag">工作项目</p>
                 <h3><a href="projects/ir-led-tracker/">红外 LED 定位</a></h3>
-                <p>从红外画面识别灯点，与已知标记模型匹配，实时显示六自由度位姿。</p>
+                <p>20 颗红外 LED 的六自由度定位，修复灯点可见却丢跟踪的问题。</p>
 
               </div>
             </article></li>
           <li class="archive-item" data-category="control">
             <article>
-
+              <img class="archive-image" src="assets/project-media/muse-ui.webp" width="660" height="520" alt="Muse 触摸屏交互预览" loading="lazy" decoding="async">
               <div class="archive-copy">
                 <h3 lang="en"><a href="projects/muse/">Muse</a></h3>
-                <p>做了一个触摸屏语音终端，用它在电脑旁发起和查看 Codex 会话。</p>
+                <p>自己做的触摸屏语音终端，本地转写，确认后才提交给 Codex 会话。</p>
 
               </div>
             </article></li>
           <li class="archive-item" data-category="data">
             <article>
-
+              <img class="archive-image" src="assets/project-media/ego-action-review.webp" width="800" height="800" alt="录制画面与动作候选的对照" loading="lazy" decoding="async">
               <div class="archive-copy">
+                <p class="tag">工作项目</p>
                 <h3 lang="en"><a href="projects/ego-data-pipeline/">Ego Data Pipeline</a></h3>
-                <p>为原始录制生成动作标注，复核后导出到 Viewer。</p>
+                <p>把第一视角录制自动变成动作标注和手部三维数据。</p>
 
               </div>
             </article></li>
@@ -114,17 +120,19 @@
             <article>
 
               <div class="archive-copy">
+                <p class="tag">工作项目</p>
                 <h3><a href="projects/multi-x5-time-sync/">多 X5 蓝牙配对与对时</a></h3>
-                <p>在三台 X5 上验证配对、互信和组网对时，再用两台板试验控制器时钟。</p>
+                <p>蓝牙让多块 X5 自动组网对时，板间偏差从毫秒级降到微秒级估计。</p>
 
               </div>
             </article></li>
           <li class="archive-item" data-category="data">
             <article>
-
+              <img class="archive-image" src="assets/insight-v1/insight-egohalo-four-view.webp" width="1280" height="720" alt="EgoHalo 的四路实机相机与位姿" loading="lazy" decoding="async">
               <div class="archive-copy">
+                <p class="tag">工作项目</p>
                 <h3><a href="projects/egohalo/">EgoHalo 设备与数据工程</a></h3>
-                <p>我从零搭建采集控制台，也参与浏览器上传、OTA、相机运行时、固件和云端处理。</p>
+                <p>四路鱼眼头戴设备的采集控制台，设备端直写 MCAP 的多路对齐起录。</p>
 
               </div>
             </article></li>
@@ -133,11 +141,66 @@
               <img class="archive-image" src="assets/tinynav-map.webp" width="960" height="708" alt="TinyNav 上游地图示例" loading="lazy">
               <div class="archive-copy">
                 <h3 lang="en"><a href="projects/tinynav/">TinyNav</a></h3>
-                <p>我参与的开源机器人导航团队项目，用双目感知做建图、规划与移动机器人控制。</p>
+                <p>开源双目导航栈，我把它接到 LeKiwi 轮式底盘上。</p>
                 <a class="repo-link" href="https://github.com/UniflexAI/tinynav" aria-label="GitHub 仓库：TinyNav">GitHub 仓库</a>
               </div>
             </article></li>
+          <li class="archive-item" data-category="navigation">
+            <article>
+              <img class="archive-image" src="assets/slam-robot.webp" width="1200" height="640" alt="实验桌上的移动机器人底盘和 Livox MID360 激光雷达" loading="lazy" decoding="async">
+              <div class="archive-copy">
+                <h3 lang="en"><a href="projects/slam-navigation/">SLAM Navigation Benchmark</a></h3>
+                <p>同一台小车对比四种激光惯性 SLAM，发现点云接法决定避障表现。</p>
+              </div>
+            </article></li>
         </ul>
+      </section>
+
+      <section id="early" class="archive" aria-labelledby="early-title">
+        <h2 id="early-title">更早的项目</h2>
+        <ul class="early-list" role="list">
+          <li>
+            <span class="early-year">2025</span>
+            <div>
+              <h3><a href="projects/drone-swarm-planning/">无人机集群路径规划与协同避障</a></h3>
+              <p>中科院智能机械所实习时在 UE5 里写的集群规划器。2026 年移植成独立仿真重做，10 架交叉飞行时机间碰撞降到 0。</p>
+            </div>
+          </li>
+          <li>
+            <span class="early-year">2025</span>
+            <div>
+              <h3><a href="projects/drone-hover-rl/">强化学习无人机抗风悬停</a></h3>
+              <p>Isaac Lab 里的四旋翼风扰悬停，2026 年用统一环境重跑 PPO、TD3、DQN。阵风下 PPO 恢复最快，0.14 N 强风时成功率 49%，DQN 只有 10%。</p>
+            </div>
+          </li>
+          <li>
+            <span class="early-year">2025</span>
+            <div>
+              <h3><a href="projects/multi-robot-patrol/">多机器人协同巡逻</a></h3>
+              <p>南科大本科毕设，2026 年重写仿真。均衡分区加截止期约束的随机巡逻，有障碍环境下对蹲守型攻击者的防御率从 27% 提到 77%。</p>
+            </div>
+          </li>
+          <li>
+            <span class="early-year">2024</span>
+            <div>
+              <h3 lang="en">ROBOCON 2024</h3>
+              <p>电控组主力。电机控制、CAN 通信、遥控和 PID 调参，主赛全国二等奖、操作技能挑战赛一等奖。</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <section id="about" class="archive" aria-labelledby="about-title">
+        <h2 id="about-title">关于</h2>
+        <p class="about-text">我在 ROBOCON 的电控组入门机器人：调电机、写 CAN、一遍遍整定 PID。后来做过仿真里的规划和强化学习，也做过激光 SLAM 的实车评测。现在主要做具身智能的数据采集设备，从相机、IMU 和固件，到同步、采集软件和数据处理，再拿机械臂和移动机器人验证这些数据。</p>
+        <ol class="timeline" role="list">
+          <li><span>现在</span>具身智能数据采集设备与数据工程</li>
+          <li><span>2025–2026</span>新加坡国立大学 · 机器人硕士</li>
+          <li><span>2025</span>中科院智能机械所 · 无人机集群系统开发实习</li>
+          <li><span>2024–2025</span>新加坡国立大学 · 交换</li>
+          <li><span>2023–2024</span>ROBOCON 电控组 · 全国二等奖</li>
+          <li><span>2021–2025</span>南方科技大学 · 机器人工程本科，优秀毕业生</li>
+        </ol>
       </section>
 
       <section id="contact">

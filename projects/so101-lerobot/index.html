@@ -3,15 +3,20 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="text-scale" content="scale">
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <meta name="description" content="两路相机录制示教，用 ACT 训练策略，再回到机械臂上检查抓放和叠杯。">
-    <title>SO101 LeRobot · 牛牧</title>
+    <meta name="description" content="把 Codex 这类大模型编程智能体接上 SO101 机械臂和双相机，让它自己看图、规划、下发关节目标，在真机上闭环完成红块入箱和叠纸杯，再把成功轨迹交给 ACT 学习。">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="大模型操控 SO101 机械臂 · 牛牧">
+    <meta property="og:description" content="Codex 看图、规划、下发动作，在真机上闭环完成红块入箱和叠纸杯。">
+    <meta property="og:image" content="https://nusniumu.github.io/assets/project-media/so101-cup-dual.webp">
+    <title>大模型操控 SO101 机械臂 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/so101-lerobot/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=2170c578">
+    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -26,33 +31,129 @@
         </ul>
       </nav>
     </header>
-    <main id="main" class="shell case-shell" tabindex="-1">
-      <header class="case-title">
-        <h1 lang="en">SO101 LeRobot</h1>
-        <p class="lead">两路相机录制示教，用 ACT 训练策略，再回到机械臂上检查抓放和叠杯。</p>
-        <div class="actions"><a class="button primary" href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop">GitHub 仓库</a><a class="button" href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop/blob/main/README.md">硬件与复现说明</a>
+    <main id="main" class="shell case-shell insight-case insight-v1 portfolio-case" tabindex="-1">
+      <header class="insight-hero">
+        <div class="case-title">
+          <h1>大模型操控 SO101 机械臂</h1>
+          <p class="lead">我把 Codex（基于 GPT 的编程智能体）接上一台 SO101 机械臂和两路相机，不让它写网页，而是让它自己看图、规划、下发关节目标，在真机上闭环完成红块入箱和叠纸杯。成功的轨迹再交给 ACT 学习，往“大模型纠偏、小模型执行”的方向走。</p>
+          <div class="actions"><a class="button primary" href="#loop">看闭环怎么跑</a><a class="button" href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop">GitHub 仓库</a></div>
         </div>
+        <figure class="case-media">
+          <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/so101-cup-dual.webp" width="1078" height="480" aria-label="Codex 控制下的叠杯">
+            <source src="../../assets/project-media/so101-cup-dual.mp4" type="video/mp4">
+            <a href="../../assets/project-media/so101-cup-dual.mp4">打开视频 · Codex 控制下的叠杯</a>
+          </video>
+          <figcaption><strong class="insight-media-title">Codex 控制下的叠杯</strong>左侧外部相机，右侧腕部相机。每一段动作都由 Codex 看完画面后下发，32 秒片段。</figcaption>
+        </figure>
       </header>
+
+      <dl class="case-summary" aria-label="项目摘要">
+        <div><dt>做什么</dt><dd>让大模型智能体直接操控真机械臂，完成桌面抓放</dd></div>
+        <div><dt>我做的</dt><dd>搭建常驻控制进程和双相机链路、设计技能树与复盘格式、把智能体的成功轨迹整理成 ACT 训练数据</dd></div>
+        <div><dt>技术栈</dt><dd><span lang="en">Codex · LeRobot 0.6.1 · ROS 2 · ACT</span> · 双路 RGB</dd></div>
+        <div><dt>任务</dt><dd>红块入箱 20 条、叠纸杯 15 条成功记录；叠 T 恤（失败，还在试）</dd></div>
+        <div class="summary-key"><dt>关键发现</dt><dd>大模型能靠看图完成真实抓放，但慢：红块一次动作只有 17.7 秒，算上看图和思考要 223 秒。所以下一步是把它的成功经验蒸馏给本地小模型。</dd></div>
+        <div><dt>目前进展</dt><dd>大模型控制下两项任务都已跑通；ACT 只做到离线拟合，还没有自主上机成功。</dd></div>
+      </dl>
+
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
-            <li><a href="#demonstration">双路示教</a></li>
-            <li><a href="#act">ACT 训练</a></li>
-            <li><a href="#evaluation">真机评估</a></li>
+            <li><a href="#setup">给大模型一双眼睛和一只手</a></li>
+            <li><a href="#loop">看一步，走一步</a></li>
+            <li><a href="#tasks">两项任务</a></li>
+            <li><a href="#lessons">翻车与经验</a></li>
+            <li><a href="#speed">瓶颈在思考，不在电机</a></li>
+            <li><a href="#act">把经验交给 ACT</a></li>
+            <li><a href="#next">局限与下一步</a></li>
           </ul>
         </nav>
         <div class="case-text">
-          <section class="chapter" id="demonstration">
-            <h2>双路示教</h2>
-            <p>我用腕部和外部 RGB 相机录制桌面操作。腕部关注夹爪附近，外部相机记录桌面布局，同时保存关节状态和动作，按 episode 整理。</p>
+          <section class="chapter" id="setup">
+            <h2>给大模型一双眼睛和一只手</h2>
+            <p>大模型不能直接驱动舵机。我搭了一个常驻的控制录制进程，把机械臂包装成三条 JSON 指令：<code>observe</code> 返回腕部和外部两张图、六个关节的实际角度和健康状态；<code>step</code> 接收绝对关节目标、时长和这一步的理由，执行后再返回双图和反馈；<code>finish</code> 结束并保存整条 episode。</p>
+            <p>两路相机分工明确：腕部相机看夹爪和物体的接触细节，固定的外部相机看离桌高度、障碍物和撤离路径。只用 RGB，不用深度、IMU 或双目测距。</p>
+            <ol class="insight-flow" role="list"><li><strong>眼睛</strong><span>腕部 RGB + 外部 RGB</span></li><li><strong>手</strong><span>常驻控制进程：observe / step / finish</span></li><li><strong>脑</strong><span>Codex 读图、选关节目标、写理由</span></li></ol>
+            <p>任务组织参考 <a href="https://lab.noematrix.ai/blog/2-roborsi/">RoboRSI</a> 的技能树：桌面操作 → 摆底座、叠上杯、入箱等复合技能 → 观察、抓取、搬运、放置、撤离等原子技能 → 相机、运动、几何、策略建议等基础接口。每一步动作都标记它属于哪个技能节点，失败时能定位到具体环节。</p>
           </section>
+
+          <section class="chapter" id="loop">
+            <h2>看一步，走一步</h2>
+            <p>智能体按四种职责推进：Manager 选任务、排修订队列；Planner 读当前画面，确定物体和阶段；Engineer 下发动作，必要时改代码；Reviewer 看执行后的连续图像，判断成功或失败，定位最早出问题的节点。这四种职责由同一个 Codex 会话轮流承担。</p>
+            <ol class="insight-flow" role="list"><li><strong>观察</strong><span>双图 + 关节反馈</span></li><li><strong>决策</strong><span>确定这一阶段的关节目标</span></li><li><strong>执行</strong><span>分段运动，记录实际轨迹</span></li><li><strong>复看</strong><span>对照画面与反馈，修正或进入下一阶段</span></li></ol>
+            <p>关节反馈是它判断“动作有没有真的到位”的依据。叠杯第一次抬升时，肩关节目标约 −32.95°，实际只到 −26.42°，差了 6.54°；侧视画面显示杯子没离桌。它据此加大抬升，杯子才真正被提起来。</p>
+            <p>夹爪也一样：红块抓取时目标开合 16.00%，反馈停在 18.15%。它把保持目标放宽到 17.35%，让舵机不再一直追更小的开合量。这是位置层面的调节，不代表测量了夹持力。</p>
+          </section>
+
+          <section class="chapter" id="tasks">
+            <h2>两项任务</h2>
+            <h3>红块入箱</h3>
+            <p>沿红块长轴找中点夹取，确认离桌，整块越过箱沿，箱内松爪，高位撤离。难点是对中、越障和撤离时别把箱子带走。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/so101-agent-redblock-steps.webp" aria-label="打开原图 · 红块入箱四个阶段"><img src="../../assets/project-media/so101-agent-redblock-steps.webp" width="1600" height="465" loading="lazy" decoding="async" alt="外部相机拍到的四帧：夹爪对准红块中部、红块离桌、红块越过箱沿、松爪后高位撤离"></a>
+              <figcaption><strong class="insight-media-title">红块入箱：对中 → 抓起 → 越障 → 撤离</strong>第 25 次尝试，外部相机。复位后红块比上一次靠前，Codex 在闭爪前按当前画面重新对中。</figcaption>
+            </figure>
+            <h3>叠纸杯</h3>
+            <p>把一只倒扣的纸杯叠到另外两只上面。比红块难：杯子高、壁薄，低位侧向接近容易把杯子推走；放置时杯口要同时跨在两只杯子上。最终改为从杯身上侧夹持，借外部侧视确认接触和落位。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/so101-agent-cup-steps.webp" aria-label="打开原图 · 叠纸杯四个阶段"><img src="../../assets/project-media/so101-agent-cup-steps.webp" width="1280" height="728" loading="lazy" decoding="async" alt="外部相机拍到的四帧：夹爪在上侧夹住源杯、抬升搬运、杯口落向两只支撑杯、松爪后三杯成塔"></a>
+              <figcaption><strong class="insight-media-title">叠纸杯：上侧夹持 → 抬升 → 落位 → 释放</strong>这一次共 19 段运动，撤离后三杯保持两下一上，上层略偏左。</figcaption>
+            </figure>
+            <p>目前累计红块入箱 20 条、叠纸杯 15 条成功示范。每次尝试都保存当次的任务计划、每一步的决策理由、遥测和双图证据。实验之间由我摆回物体；任务中的每一步运动都由 Codex 调接口下发，不是我遥控。</p>
+          </section>
+
+          <section class="chapter" id="lessons">
+            <h2>翻车与经验</h2>
+            <p>早期失败几乎都有一个共同点：局部动作看起来完成了，但物体或路径并不满足任务。夹了红块尾部、抬得不够高撞箱沿、收臂时把箱子带走、接近纸杯时把杯子推走。</p>
+            <p>每次复盘后，可迁移的规则会写进项目的经验文档，下一轮读取。几条最有用的：</p>
+            <ul class="plain-list">
+              <li><strong>“对准”不等于“夹住”。</strong>杯口在腕部画面居中、俯视投影重叠、夹爪闭到目标开度，都不能证明杯壁在两指之间。必须看物体是否随夹爪离桌。</li>
+              <li><strong>历史成功姿态只是参考。</strong>物体被复位后位置会变，直接回放旧关节角会空抓，每次都要按当前画面重新定位。</li>
+              <li><strong>净空按物体最低点算。</strong>只看末端坐标会低估碰撞，越障要看整只夹爪和物体底部。</li>
+              <li><strong>相机摆位比数量重要。</strong>早期也有两路相机，但关键接触区被同时遮挡，夹爪照样推走杯子。调整外部相机后，侧面接触才看得清。</li>
+            </ul>
+          </section>
+
+          <section class="chapter" id="speed">
+            <h2>瓶颈在思考，不在电机</h2>
+            <p>真正动起来的时间很短，大部分时间花在看图、推理和调用工具上。</p>
+            <figure class="case-media bar-compare">
+              <figcaption><strong class="insight-media-title">动作时长与总时长</strong>动作时长按 30 Hz 录制帧数计算；总时长包含每一步之间的看图与决策。</figcaption>
+              <dl>
+                <div><dt>红块 · 动作</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:2.27%"></span></span><b>17.7 s</b></dd></div>
+                <div><dt>红块 · 总计</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:28.47%"></span></span><b>222.8 s</b></dd></div>
+                <div><dt>叠杯 · 动作</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:4.60%"></span></span><b>36.0 s</b></dd></div>
+                <div><dt>叠杯 · 总计</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:100%"></span></span><b>782.6 s</b></dd></div>
+              </dl>
+            </figure>
+            <p>叠杯时两条指令之间隔 15.5–58.2 秒，而本地 ACT 推理一次的中位数只要 45 ms。这个差距就是把大模型的经验交给小模型的理由：小模型负责连续执行，大模型只在接触、越障和环境变化时介入。</p>
+          </section>
+
           <section class="chapter" id="act">
-            <h2>ACT 训练</h2>
-            <p>把整理后的示教数据交给 LeRobot 训练 ACT 策略。离线回放可以检查动作走向，也有单独的检查流程帮助发现视角变化和抓取姿态带来的问题。</p>
+            <h2>把经验交给 ACT</h2>
+            <p>智能体每次成功都留下一条完整 episode：双路 RGB、六维关节与夹爪状态、实际下发的动作。我用其中两条叠杯成功轨迹（共 2,303 帧）在 LeRobot 上训练双 RGB 输入的 <a href="https://arxiv.org/abs/2304.13705">ACT</a>，一次预测未来 16 步动作。</p>
+            <p>整理数据时发现一个坑：有一条轨迹中途因舵机温度暂停了约 185 秒。按帧号连续取 16 步，会把暂停前的“保持”和恢复后的“释放”拼成一个现实里不存在的跳变。我按控制段和时间间隔截断动作块，越界的步用 ACT 自带的 <code>action_is_pad</code> 屏蔽，不计入损失。</p>
+            <figure class="case-media action-mask"><div class="mask-grid" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><figcaption>以暂停前最后一帧为起点的动作块：16 步里只有第 1 步进入训练，其余 15 步被屏蔽。</figcaption></figure>
+            <figure class="case-media bar-compare">
+              <figcaption><strong class="insight-media-title">肘关节首步动作的平均绝对误差</strong>同一批 114 个训练源观测，越短越好。</figcaption>
+              <dl>
+                <div><dt>保持当前关节（基线）</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:51.66%"></span></span><b>4.05°</b></dd></div>
+                <div class="is-best"><dt>ACT 1,500 步</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:50.64%"></span></span><b>3.97°</b></dd></div>
+                <div><dt>ACT 2,000 步</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:100%"></span></span><b>7.84°</b></dd></div>
+              </dl>
+            </figure>
+            <p>结论很诚实：两条轨迹不够，1,500 步检查点在肘关节上只和“不动”基线持平，多数关节还不如基线。所以 ACT 现在只作为动作建议接入，由 Codex 看图后决定是否采用。</p>
           </section>
-          <section class="chapter" id="evaluation">
-            <h2>真机评估</h2>
-            <p>回到 SO101 上检查红块入箱和纸杯叠放。每次尝试记录现场视角和任务状态，分析失败后再调整示教数据。</p>
+
+          <section class="chapter" id="next">
+            <h2>局限与下一步</h2>
+            <ul class="plain-list">
+              <li><strong>太慢。</strong>一次红块任务近 4 分钟，叠杯 13 分钟。下一步把稳定的分段流程固化成本地函数，大模型只在关键节点判断。</li>
+              <li><strong>小模型还没学会。</strong>先让 ACT 提动作、Codex 纠偏，把纠偏后的轨迹继续变成训练数据，再用独立场景比较成功率。</li>
+              <li><strong>柔性物体不行。</strong>叠 T 恤试了 7 次都没成功：夹爪闭合、短抬后布料不随动。需要先制造可夹的布边，或换夹持方式。</li>
+              <li><strong>还要人复位。</strong>每次尝试之间由我摆回物体，还谈不上连续自主运行。</li>
+              <li><strong>换一套技能试试。</strong>正在用 Google DeepMind 开源的机器人技能包走 real → sim → real：先在 MuJoCo 里按实测几何建模、仿真抓放，再回到真机，对比它和我自己这套流程的效果。</li>
+            </ul>
           </section>
         </div>
       </div>

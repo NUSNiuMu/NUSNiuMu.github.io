@@ -3,15 +3,20 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="text-scale" content="scale">
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <meta name="description" content="为原始录制生成动作标注，复核后导出到 Viewer。">
+    <meta name="description" content="把第一视角录制自动处理成带动作标注和手部三维关键点的数据集。Qwen 先给动作候选，审理按整条记录核对，证据不足时才回看疑点附近的图像。">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Ego Data Pipeline · 牛牧">
+    <meta property="og:description" content="第一视角录制到动作标注、手部三维和 Viewer 的自动化流水线。">
+    <meta property="og:image" content="https://nusniumu.github.io/assets/project-media/ego-action-review.webp">
     <title>Ego Data Pipeline · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/ego-data-pipeline/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=2170c578">
+    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -26,37 +31,74 @@
         </ul>
       </nav>
     </header>
-    <main id="main" class="shell case-shell" tabindex="-1">
-      <header class="case-title">
-        <h1 lang="en">Ego Data Pipeline</h1>
-        <p class="lead">为原始录制生成动作标注，复核后导出到 Viewer。</p>
+    <main id="main" class="shell case-shell insight-case insight-v1 portfolio-case" tabindex="-1">
+      <header class="insight-hero">
+        <div class="case-title">
+          <h1 lang="en">Ego Data Pipeline</h1>
+          <p class="lead">我把第一视角录制自动处理成带动作标注和手部三维关键点的数据集。Qwen 先给动作候选，审理按整条记录核对，证据不足时才回看疑点附近的图像；每个结果都能追回源帧。</p>
+          <div class="actions"><a class="button primary" href="#review">看动作分段与复核</a><a class="button" href="#deliver">看交付结果</a></div>
+        </div>
+        <figure class="case-media">
+          <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/ego-action-review.webp" width="800" height="800" aria-label="录制画面与动作候选">
+            <source src="../../assets/project-media/ego-action-review.mp4" type="video/mp4">
+            <a href="../../assets/project-media/ego-action-review.mp4">打开视频 · 录制画面与动作候选</a>
+          </video>
+          <figcaption><strong class="insight-media-title">录制画面与动作候选</strong>本地交付演示的 13 秒片段，标识已遮挡。左侧是录制画面，右侧是模型的初步分段。</figcaption>
+        </figure>
       </header>
-      <ol class="steps">
-        <li>录制输入</li>
-        <li>采样与标注</li>
-        <li>审核与手部处理</li>
-        <li>导出和浏览</li>
-      </ol>
+
+      <dl class="case-summary" aria-label="项目摘要">
+        <div><dt>做什么</dt><dd>多相机第一视角录制 → 动作区间、手部三维关键点、导出包和 Viewer 回放</dd></div>
+        <div><dt>我做的</dt><dd>采样与分窗、Qwen 动作分段与审理规则、双目手部三角化、导出发布，以及按阶段回执续跑</dd></div>
+        <div><dt>技术栈</dt><dd>MCAP · Qwen · 多视角三角化 · Python 常驻服务</dd></div>
+        <div><dt>规模</dt><dd>11 月 17 日运行检查时，Viewer 累计 1,138 条录制、17,336 个 episode</dd></div>
+        <div class="summary-key"><dt>难点与解决</dt><dd>模型分段随措辞摆动。我让文本审理把相邻窗口拼回整条记录核对，只在证据不足的疑点请求额外图像，并保留父候选 ID 以便追溯。</dd></div>
+        <div><dt>目前进展</dt><dd>叠衣服任务持续自动运行；叠杯子已完成小批试跑，27 个循环全部接纳。</dd></div>
+      </dl>
+
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
-            <li><a href="#input">采样和标注</a></li>
-            <li><a href="#review">复核和续跑</a></li>
-            <li><a href="#deliver">导出到 Viewer</a></li>
+            <li><a href="#input">按源时间戳采样</a></li>
+            <li><a href="#review">动作分段与证据复核</a></li>
+            <li><a href="#deliver">多视角手部与交付</a></li>
+            <li><a href="#next">局限与下一步</a></li>
           </ul>
         </nav>
         <div class="case-text">
           <section class="chapter" id="input">
-            <h2>采样和标注</h2>
-            <p>我维护从录制进系统到发布的自动化流程。先检查输入、抽取所需画面，再得到候选动作区间，保留来源和时间范围供复核。</p>
+            <h2>按源时间戳采样</h2>
+            <p>录制从 NAS 进入，按源内容查重。采样以参考相机的源时间戳为准，按 3 秒半开窗口切分，每 0.5 秒取不早于目标的第一个实际解码帧，再补窗口尾帧并去重。末尾不足 3 秒的窗口也保留。每张图都能回查源帧号和时间。</p>
+            <ol class="insight-flow" role="list"><li><strong>MCAP</strong><span>按参考相机源时间解码</span></li><li><strong>取样</strong><span>3 秒分窗，0.5 秒取帧</span></li><li><strong>模型输入</strong><span>图像、窗口和源帧映射</span></li></ol>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/ego-sample-frames.jpg" aria-label="打开原图 · 动作附近的候选图像"><img src="../../assets/project-media/ego-sample-frames.jpg" width="1050" height="1230" loading="lazy" decoding="async" alt="叠衣动作的连续采样图，每张上方有源时间和帧号。"></a>
+              <figcaption><strong class="insight-media-title">动作附近的候选图像</strong>预采样与动作检查记录。图中的源帧号可定位回实际录制。</figcaption>
+            </figure>
           </section>
+
           <section class="chapter" id="review">
-            <h2>复核和续跑</h2>
-            <p>按整段录制审核文本和分段，需要时再看片。已完成的步骤保留结果，失败后从有证据的阶段继续，减少重复采样和推理。</p>
+            <h2>动作分段与证据复核</h2>
+            <p>Qwen 对每个图像窗口给出动作候选。文本审理把相邻窗口拼回整条记录，检查任务边界、动作顺序和完成条件。证据不足时才请求疑点范围内的采样图，可以拆分、合并或记为待审理，并保留父候选 ID。</p>
+            <dl class="insight-facts"><div><dt>时间约束</dt><dd>用源帧半开区间检查重叠与越界，保留真实短动作和显式留白。</dd></div><div><dt>异常恢复</dt><dd>局部错误独立记录，其余合格片段继续。恢复按阶段回执复用已通过的结果。</dd></div><div><dt>实录抽查</dt><dd>一条录制初始推理用 88 张图，两个疑点额外复核 14 张图，最终接纳 7 个命名动作与 3 段留白。</dd></div></dl>
+            <p>接入叠杯子任务时，我用 5 条录制（Qwen 630 个窗口全部有效）迭代审理方法。前几轮的问题是循环之间的静止片段没有归属，整段被隔离，拆塔与套回交错处也只能留空；补上“静止片段须被引用”和两个组合动作后，第 6 轮 27 个循环全部接纳。</p>
           </section>
+
           <section class="chapter" id="deliver">
-            <h2>导出到 Viewer</h2>
-            <p>通过审核的片段进入手部处理和导出，输出可交付的数据包及对应索引。Viewer 读取发布结果，供浏览和下载。</p>
+            <h2>多视角手部与交付</h2>
+            <p>双目手部几何以相机采集时间配对，要求时间差在 1 ms 内。先对两路二维关键点去畸变，再用标定外参三角化。三维点投回两路画面，结合重投影残差、深度与骨长筛掉异常点，无效点随有效性掩码写入结果。</p>
+            <ol class="insight-flow" role="list"><li><strong>同步</strong><span>从已知来源时间一对一配帧</span></li><li><strong>三角化</strong><span>两路去畸变观测和相机外参</span></li><li><strong>核验</strong><span>双路回投影与骨长检验</span></li></ol>
+            <p>导出包保留分集 MCAP、源帧映射、关键点和预览。Viewer 并排回放各相机，在同一时间线查看手部叠加和动作。</p>
+            <dl class="insight-results"><div><dt>发布片段</dt><dd>33.53 秒</dd></div><div><dt>实际回读视角</dt><dd>3 路</dd></div><div><dt>已接纳动作</dt><dd>7 个</dd></div></dl>
+            <p>这是单样本走完整条 NAS → Viewer 链路的验收：三路各生成 1,006 个参考帧的预览，实测播放到约 18 秒时手部叠加和动作都随画面推进。</p>
+          </section>
+
+          <section class="chapter" id="next">
+            <h2>局限与下一步</h2>
+            <ul class="plain-list">
+              <li><strong>手部轨迹断点多。</strong>抽查一条叠衣服录制，单侧手缺失的缺口 88% 两端贴着画面边缘，主要是手出了画；跟踪 0.5 秒未匹配就换 ID，每路相机出现 24–27 个 ID。离线原型按左右手重连后降到 2–5 个，还没进生产。</li>
+              <li><strong>模型输出随措辞摆动。</strong>叠杯子试跑中，继续改提示词的收益已经递减；最终轮仍有 22% 的 episode 时长未标注，上塔类指令也偏笼统。</li>
+              <li><strong>验收样本有限。</strong>交付链的逐帧核对只做了单样本，叠杯子的手部、导出和发布还没在真实数据上跑过。</li>
+            </ul>
           </section>
         </div>
       </div>

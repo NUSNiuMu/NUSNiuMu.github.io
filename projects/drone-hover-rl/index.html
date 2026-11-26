@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="text-scale" content="scale">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="description" content="在 Isaac Lab 里给四旋翼加风和阵风，用强化学习直接输出四个电机转速来稳住悬停。2026 年用统一环境和评估重跑 PPO、TD3、DQN：阵风下 PPO 恢复最快，超出训练风力时掉得最慢。">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="强化学习无人机抗风悬停 · 牛牧">
+    <meta property="og:description" content="统一环境重跑 PPO / TD3 / DQN，3 个种子 × 5000 万步，阵风恢复与强风鲁棒性对比。">
+    <meta property="og:image" content="https://nusniumu.github.io/assets/project-media/hover-poster.webp">
+    <title>强化学习无人机抗风悬停 · 牛牧</title>
+    <link rel="canonical" href="https://nusniumu.github.io/projects/drone-hover-rl/">
+    <link rel="icon" href="../../assets/mark.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main">跳到正文</a>
+    <header class="shell masthead">
+      <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
+      <nav aria-label="主导航">
+        <ul class="nav-list">
+          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#about">关于</a></li>
+          <li><a href="../../#contact">联系</a></li>
+          <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main" class="shell case-shell insight-case insight-v1 portfolio-case" tabindex="-1">
+      <header class="insight-hero">
+        <div class="case-title">
+          <h1>强化学习无人机抗风悬停</h1>
+          <p class="lead">在 Isaac Lab 里给四旋翼加风和阵风，让策略直接输出四个电机的转速，把飞机稳在目标点。2025 年做的第一版里，三种算法其实不在同一个环境里训练，评估指标也有问题。2026 年我统一了环境和评估标准，把 PPO、TD3、DQN 重新跑了一遍。</p>
+          <div class="actions"><a class="button primary" href="#results">看结果</a><a class="button" href="https://github.com/NUSNiuMu/Drone-Stable-Hover-RL/tree/rerun-2026-11">GitHub 仓库</a></div>
+        </div>
+        <figure class="case-media">
+          <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/hover-poster.webp" width="1280" height="640" aria-label="PPO 与 DQN 在同一阵风下的悬停对比">
+            <source src="../../assets/project-media/hover-demo.mp4" type="video/mp4">
+            <a href="../../assets/project-media/hover-demo.mp4">打开视频 · PPO 与 DQN 阵风对比</a>
+          </video>
+          <figcaption><strong class="insight-media-title">同一阵风，两种策略</strong>左 PPO，右 DQN。0–3 秒无风，3 秒起吹 0.06 N 的基础风，7 秒再叠加 0.10 N 的阵风 0.5 秒，合计约为机重的 58%。红色箭头是风力，绿色方块是目标点。这段里 PPO 最大偏离 9.7 cm，DQN 14.2 cm。</figcaption>
+        </figure>
+      </header>
+
+      <dl class="case-summary" aria-label="项目摘要">
+        <div><dt>时间</dt><dd>2025 首版，2026 重跑</dd></div>
+        <div><dt>技术栈</dt><dd lang="en">Isaac Sim 4.5 · Isaac Lab 2.1 · PyTorch · PPO · TD3 · DQN</dd></div>
+        <div><dt>环境</dt><dd>Crazyflie 四旋翼，1024 架 GPU 并行，水平风加随机阵风，目标点 (0, 0, 1) 米</dd></div>
+        <div><dt>我做的</dt><dd>风扰环境、推力标定、状态与奖励设计，三种算法的训练、调参和统一评估</dd></div>
+        <div class="summary-key"><dt>结果</dt><dd>训练风力范围内三种算法悬停成功率都在 99.7% 以上。阵风下 PPO 偏离最小、恢复最快（0.54 秒，比 DQN 快 14%）；风力超出训练范围时 PPO 掉得最慢。稳态误差 DQN 最小。</dd></div>
+        <div><dt>评估</dt><dd>3 种算法 × 3 个训练种子 × 5000 万步，每个模型 512 个回合，固定评估种子</dd></div>
+      </dl>
+
+      <div class="case-layout">
+        <nav class="toc" aria-label="章节目录">
+          <ul>
+            <li><a href="#review">复查第一版</a></li>
+            <li><a href="#env">统一的风扰环境</a></li>
+            <li><a href="#reward">状态、动作与奖励</a></li>
+            <li><a href="#training">训练与调参</a></li>
+            <li><a href="#results">结果</a></li>
+            <li><a href="#wind">超出训练范围的风</a></li>
+            <li><a href="#next">局限</a></li>
+          </ul>
+        </nav>
+        <div class="case-text">
+          <section class="chapter" id="review">
+            <h2>复查第一版</h2>
+            <p>第一版的结论是“PPO 比 DQN 位置误差低 42%、恢复时间短 35%”。回头读代码时发现这个对比站不住：</p>
+            <ul class="plain-list">
+              <li><strong>不是同一个环境。</strong>DQN 只有 9 维状态、没有风；TD3 用的是另一套奖励；只有 PPO 在有风的环境里训练。</li>
+              <li><strong>“恢复时间”其实是回合时长。</strong>它按步数乘 0.01 秒计算，最长 3 秒，和受扰后多久回到目标点无关。</li>
+              <li><strong>物理参数不对。</strong>推力系数过大，电机最低转速时推力也有机重的 3.4 倍；风力加在机体坐标系里，会跟着飞机一起转；没有旋翼反扭矩，偏航不可控。</li>
+            </ul>
+            <p>所以这次不在旧代码上修补，而是重写了一套三种算法共用的训练和评估管线，旧数字全部作废。</p>
+          </section>
+
+          <section class="chapter" id="env">
+            <h2>统一的风扰环境</h2>
+            <p>环境基于 Isaac Lab 的 Crazyflie 模型，机重 0.277 N，物理 100 Hz、策略 50 Hz，1024 架在 GPU 上并行。推力系数重新标定，四个电机都在 5000 RPM 时正好悬停；每个旋翼加上反扭矩，偏航变得可控。</p>
+            <p>风固定在世界坐标系里水平吹：每回合随机抽 0.02–0.08 N 的基础风（机重的 7–29%）和风向，每秒小幅波动一次；训练时再随机叠加 0.03–0.10 N 的短时阵风。第一次试训没加阵风，评估时一个 +0.15 N 的阵风就让 98% 的回合坠机。</p>
+            <ol class="insight-flow" role="list"><li><strong>每回合</strong><span>随机基础风力和风向</span></li><li><strong>飞行中</strong><span>风力波动，随机阵风</span></li><li><strong>目标</strong><span>稳定悬停在 (0, 0, 1) 米</span></li></ol>
+          </section>
+
+          <section class="chapter" id="reward">
+            <h2>状态、动作与奖励</h2>
+            <p>状态是 18 维，全部换成机体坐标系下的量：位置、目标位置、机体系重力方向、机体系线速度、角速度和位置误差，各 3 维。第一版用欧拉角，初始偏航随机后 ±π 处会跳变；改成重力方向后，试训中 PPO 的坠机率从 15% 降到 0.2%。</p>
+            <p>PPO 和 TD3 输出 4 维连续动作，映射到每个电机 4500–5500 RPM。DQN 需要离散动作，每个电机取 4500、5000、5500 三档，共 81 种组合。三种算法共用同一个奖励：靠近目标点得分，再扣掉线速度和角速度的平方项，让飞机不只追位置，还要稳。</p>
+            <ol class="insight-flow" role="list"><li><strong>状态</strong><span>18 维机体系位置、姿态和速度</span></li><li><strong>策略</strong><span>PPO、TD3 或 DQN</span></li><li><strong>动作</strong><span>4 个电机的转速</span></li></ol>
+          </section>
+
+          <section class="chapter" id="training">
+            <h2>训练与调参</h2>
+            <p>每种算法预算相同：5000 万步、3 个训练种子，评估的是训练结束时的最终策略，不挑最好的存档。</p>
+            <p>DQN 最难训。照搬 TD3 的更新频率和学习率，大约 800 万步时 Q 值发散；降低更新比例、加 3 步回报后能学到 6 cm 误差，但 1100 万步左右又崩了。最后改成 Double DQN、学习率 1e-4、目标网络软更新系数 0.001，三个种子都稳定训练到 5000 万步。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/hover-rerun-training.webp" aria-label="打开原图 · 训练曲线"><img src="../../assets/project-media/hover-rerun-training.webp" width="1760" height="640" loading="lazy" decoding="async" alt="左：三种算法的每回合累计奖励随训练步数上升，PPO 最快，最终都在 850 左右；右：训练中的坠机率，三者都在 500 万步内降到接近 0，DQN 在 1000 万步附近有一段回升。"></a>
+              <figcaption><strong class="insight-media-title">训练曲线</strong>左为每回合累计奖励，右为坠机或出界比例，阴影是 3 个种子的标准差。PPO 收敛最快，DQN 起步晚、中途有一段波动。</figcaption>
+            </figure>
+          </section>
+
+          <section class="chapter" id="results">
+            <h2>结果</h2>
+            <p>评估时每个回合 12 秒：前 6 秒是训练范围内的随机基础风，第 6 秒从随机方向加一个 0.10 N、持续 0.5 秒的阵风。恢复时间从阵风开始算，到误差回到 5 cm 以内并保持 0.5 秒为止。</p>
+            <dl class="insight-results"><div><dt>阵风峰值误差</dt><dd>PPO 7.1 cm · TD3 7.5 cm · DQN 8.4 cm</dd></div><div><dt>恢复时间</dt><dd>PPO 0.54 s · TD3 0.62 s · DQN 0.63 s</dd></div><div><dt>稳态位置误差</dt><dd>DQN 0.80 cm · PPO 1.13 cm · TD3 1.84 cm</dd></div><div><dt>悬停成功率</dt><dd>PPO 99.7% · TD3 100% · DQN 100%</dd></div></dl>
+            <p>三种算法在训练范围内都能稳住。区别在扰动：PPO 的阵风峰值误差比 DQN 低 16%，恢复快 14%。DQN 的稳态误差反而最小，因为它的三档开关式控制训练好后会在目标点附近非常小幅地来回抖动；TD3 最保守，没有坠机，但稳态误差最大。</p>
+          </section>
+
+          <section class="chapter" id="wind">
+            <h2>超出训练范围的风</h2>
+            <p>把基础风固定在不同大小，从 0 一直加到 0.14 N（机重的 51%，训练时最大只到 0.08 N），同样在第 6 秒加阵风。</p>
+            <figure class="case-media bar-compare">
+              <figcaption><strong class="insight-media-title">0.14 N 强风下的悬停成功率</strong>3 个种子的平均值，越长越好。</figcaption>
+              <dl>
+                <div class="is-best"><dt>PPO</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:48.8%"></span></span><b>49%</b></dd></div>
+                <div><dt>TD3</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:42.8%"></span></span><b>43%</b></dd></div>
+                <div><dt>DQN</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:10.4%"></span></span><b>10%</b></dd></div>
+              </dl>
+            </figure>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/hover-rerun-wind.webp" aria-label="打开原图 · 风力扫描"><img src="../../assets/project-media/hover-rerun-wind.webp" width="2240" height="640" loading="lazy" decoding="async" alt="三张图的横轴都是风力 0 到 0.14 N，灰色区域是训练范围 0.02 到 0.08 N。左：稳态位置误差，0.12 N 起快速上升，DQN 最陡；中：阵风峰值误差，PPO 基本最低；右：成功率在 0.10 N 前都接近 100%，0.12 N 时 PPO 约 90%，0.14 N 时 DQN 跌到约 10%。"></a>
+              <figcaption><strong class="insight-media-title">风力扫描</strong>左为稳态位置误差，中为阵风峰值误差，右为成功率；灰色区域是训练范围。误差只统计没有坠机的回合。</figcaption>
+            </figure>
+            <p>0.10 N 以内三者都在 97% 以上；到 0.12 N，PPO 还有 89.5%，TD3 和 DQN 约 80%；0.14 N 时 DQN 只剩 10%。离散动作在强风下余量不够，是 DQN 掉得快的主要原因。</p>
+          </section>
+
+          <section class="chapter" id="next">
+            <h2>局限</h2>
+            <ul class="plain-list">
+              <li><strong>只在仿真里。</strong>风被简化成作用在机身质心的水平外力，没有桨叶气动和地面效应，也还没有上实机。</li>
+              <li><strong>风力上限受推力限制。</strong>电机推力最多是机重的 1.21 倍，能顶住的水平力约 0.19 N，所以风力是几十毫牛的量级。</li>
+              <li><strong>DQN 的动作是粗离散的。</strong>每个电机只有三档，换成更细的离散化或者分支式 Q 网络，结论可能会变。</li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
+  </body>
+</html>

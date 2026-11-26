@@ -3,15 +3,20 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="text-scale" content="scale">
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <meta name="description" content="在 X5 上采集，使用浏览器直传录制，再交给云端做多视角处理。">
+    <meta name="description" content="我从零搭建并持续负责 EgoHalo 四路鱼眼采集设备的控制台和浏览器上传，也参与了 OTA、相机运行时、固件和云端手部处理。">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="EgoHalo 设备与数据工程 · 牛牧">
+    <meta property="og:description" content="四路鱼眼采集控制台，以及设备端直接写 MCAP 时的多路起录处理。">
+    <meta property="og:image" content="https://nusniumu.github.io/assets/insight-v1/insight-egohalo-four-view.webp">
     <title>EgoHalo 设备与数据工程 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/egohalo/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=2170c578">
+    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -26,75 +31,105 @@
         </ul>
       </nav>
     </header>
-    <main id="main" class="shell case-shell" tabindex="-1">
-      <header class="case-title">
-        <h1>EgoHalo 设备与数据工程</h1>
-        <p class="lead">在 X5 上采集，使用浏览器直传录制，再交给云端做多视角处理。</p>
+    <main id="main" class="shell case-shell insight-case insight-v1 portfolio-case" tabindex="-1">
+      <header class="insight-hero">
+        <div class="case-title">
+          <h1><span lang="en">EgoHalo</span> <span class="case-title-line">设备与数据工程</span></h1>
+          <p class="lead">EgoHalo 是一台四路鱼眼的头戴采集设备。我从零搭建并持续负责它的采集控制台，主导了浏览器上传，也参与了 OTA、相机运行时、固件和云端手部处理。</p>
+          <div class="actions"><a class="button primary" href="#direct-mcap">看多路起录</a><a class="button" href="#console">看采集控制台</a></div>
+        </div>
+        <figure class="case-media">
+          <video class="sample-video" controls playsinline preload="none" poster="../../assets/insight-v1/insight-egohalo-four-view.webp" width="1280" height="720" aria-label="EgoHalo H1 四路相机和位姿">
+            <source src="../../assets/insight-v1/insight-egohalo-four-view.mp4" type="video/mp4">
+            <a href="../../assets/insight-v1/insight-egohalo-four-view.mp4">打开视频 · EgoHalo H1 四路相机和位姿</a>
+          </video>
+          <figcaption><strong class="insight-media-title">EgoHalo H1 四路相机和位姿</strong>左侧是位姿视图，右侧是四路鱼眼输入。团队演示素材。</figcaption>
+        </figure>
       </header>
+
+      <dl class="case-summary" aria-label="项目摘要">
+        <div><dt>做什么</dt><dd>头戴采集设备从连接、预览、录制到取回和上传数据的整条链路</dd></div>
+        <div><dt>我做的</dt><dd>从零搭建并负责采集控制台（网页 + 原生 Android）；主导浏览器上传；参与 OTA、相机运行时、固件和云端手部处理</dd></div>
+        <div><dt>技术栈</dt><dd lang="en">MCAP · ROS CDR · H.264/H.265 · MJPEG · WebRTC · Android BLE/Wi-Fi · Buildroot</dd></div>
+        <div><dt>实测</dt><dd>单台 X5 上 4 轮 × 180 秒 H.264 对照，每轮 13 个话题、16 路视频全量解码通过；直接写包的进程 CPU 均值约降 30%</dd></div>
+        <div class="summary-key"><dt>难点与解决</dt><dd>设备端直接写 MCAP 时，从任意编码帧开录会让回放器在首个关键帧前解不出画面。我让每路等到参数集和 IDR 齐备，取共同边界后才确认开录。</dd></div>
+        <div><dt>目前进展</dt><dd>控制台覆盖 EgoHalo、Insight 7 / Duo 和独立 RDK 双 UVC 三类机型；长时、满卡和多设备同步还没有实机验收。</dd></div>
+      </dl>
+
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
             <li><a href="#console">采集控制台</a></li>
-            <li><a href="#upload">浏览器上传</a></li>
-            <li><a href="#ota">OTA 服务</a></li>
-            <li><a href="#looperhub">LooperHub</a></li>
-            <li><a href="#quadcap">QuadCap 固件</a></li>
-            <li><a href="#hands">云端手部处理</a></li>
+            <li><a href="#direct-mcap">多路起录</a></li>
+            <li><a href="#take-data">存储、频率与机型</a></li>
+            <li><a href="#pipeline">链路上的其他环节</a></li>
+            <li><a href="#next">局限与下一步</a></li>
           </ul>
         </nav>
         <div class="case-text">
           <section class="chapter" id="console">
             <h2>采集控制台</h2>
-            <p>我从零搭建并持续负责 EgoHalo 采集控制台。它运行在 X5 上，现场用网页或原生 Android App 就能连接设备、预览、录制和取回数据。</p>
-            <h3>连接、预览与控制</h3>
-            <p>安卓端通过蓝牙发现设备并连接 Wi-Fi，网页和 App 共享设备状态，可以看多路画面和实时轨迹、切换任务并控制录制。录制由设备端执行，客户端切页或断开后还能继续。</p>
+            <div class="insight-text-media">
+              <div>
+                <p>我从初版 Web 控制台做起，把连接设备、实时查看相机和轨迹、任务录制、取回数据放进同一套操作入口。后来加了原生 Android 端，用蓝牙发现设备、Wi-Fi 连接，网页和 App 共用设备的状态与录制接口。</p>
+                <p>现场用四宫格看每路相机朝向，也能单独放大某一路确认画面。实时轨迹用来看设备运动和定位状态。</p>
+              </div>
+              <figure class="case-media portrait-media">
+                <a class="screenshot-link" href="../../assets/project-media/egohalo-four-cameras.webp" aria-label="打开原图 · 控制台四路预览"><img src="../../assets/project-media/egohalo-four-cameras.webp" width="480" height="680" loading="lazy" decoding="async" alt="采集控制台同时显示四路相机画面"></a>
+                <figcaption><strong class="insight-media-title">控制台四路预览</strong>控制台实机画面。</figcaption>
+              </figure>
+            </div>
+          </section>
+
+          <section class="chapter" id="direct-mcap">
+            <h2>多路起录</h2>
+            <p>EgoHalo 在设备本机直接写 MCAP，不经过 ROS 录制。问题在于四路视频是各自编码的：如果按下录制就开始写包，某一路可能从一个 P 帧开始，回放器在它的第一个关键帧之前什么也解不出来，四路的有效起点也对不齐。</p>
+            <p>我的处理是开录前先等。H.264/H.265 每一路都要收到完整参数集和 IDR，所有选中的相机都到达可解码起点后，取共同的起录边界，再向用户确认“已开始录制”。写包沿用源时间戳、ROS 消息类型和原有话题，与 ROS 录制的包结构一致。MJPEG 每帧都是独立 JPEG，原样写入即可。</p>
+            <ol class="insight-flow" role="list"><li><strong>就绪判定</strong><span>每路等到参数集和 IDR</span></li><li><strong>相机本地写包</strong><span>源时间戳、CDR 和原有话题</span></li><li><strong>终止与落盘</strong><span>排空写队列，报告实际结果</span></li></ol>
+            <p>结束时也不能只看“停止”按钮有没有响应。写队列要排空、文件关闭、刷盘成功，才算这条 Take 保存完成。录制缓存耗尽时尽量写完已收到的数据，并把这条标为异常，不会在丢帧之后仍显示成功。</p>
+            <h3>单台 X5 的实录对照</h3>
+            <dl class="insight-results"><div><dt>H.264 录制</dt><dd>4 × 180 秒</dd></div><div><dt>每轮保存话题</dt><dd>13 个</dd></div><div><dt>全量解码</dt><dd>16 路</dd></div></dl>
+            <p>对照顺序是 ROS → 直接 → 直接 → ROS。四轮都正常保存，全部消息能反序列化，相机内参和静态 TF 内容一致。直接写包的进程 CPU 均值约降低 30%，但停止保存并没有变快，源时间戳缺口和 VIO 频率波动也仍然存在。另有一次单台 X5 的 MJPEG 实验，检查了原始 JPEG、WebRTC 四宫格与单路，以及实时轨迹。</p>
+          </section>
+
+          <section class="chapter" id="take-data">
+            <h2>存储、频率与机型</h2>
+            <p><strong>实际采集频率。</strong>Take 详情按话题显示平均记录频率。为了不读整个文件，我先读 MCAP 摘要里的消息计数和各块的时间上下界，再只读可能包含首尾消息的索引。合并各分包的总数和全局首尾时间，按 (N − 1) / (t末 − t首) 算出 Hz。这只是平均值，逐帧缺口交给单独的诊断检查。</p>
+            <p><strong>存储与恢复。</strong>Take 按任务归档。换 TF 卡后可以扫描重建索引；空间不足时尽量把正在录的这条保存完，之后可只读导出。</p>
+            <dl class="insight-facts"><div><dt>EgoHalo</dt><dd>四路鱼眼，Buildroot 系统，固定使用本机直接写 MCAP。</dd></div><div><dt>Insight 7 / Duo</dt><dd>Insight 7 三路，Duo 双路，各自保留配置与校准。</dd></div><div><dt>独立 RDK 双 UVC</dt><dd>按 UVC 设备配置采集。</dd></div></dl>
+          </section>
+
+          <section class="chapter" id="pipeline">
+            <h2>链路上的其他环节</h2>
+            <p>下面几块是团队共同维护的系统。浏览器上传由我主导，其余几块我参与了一部分。</p>
+            <h3>浏览器上传</h3>
+            <p>用浏览器把已录 Take 从设备传到云存储。我主导了这部分：设备数据导出、分片直传和续传，以及浏览器兼容、账号绑定和多标签页会话隔离。刷新页面后可以复用已经传完的分片。</p>
             <figure class="case-media">
-              <video class="sample-video" width="1280" height="450" controls playsinline preload="none" loading="lazy" poster="../../assets/project-media/egohalo-quad-demo.webp" aria-label="EgoHalo H1 实机四路鱼眼与位姿演示">
-                <source src="../../assets/project-media/egohalo-quad-demo.mp4" type="video/mp4">
-                <a href="../../assets/project-media/egohalo-quad-demo.mp4">打开 EgoHalo H1 演示视频</a>
-              </video>
-              <figcaption>团队的 EgoHalo H1 实机演示。左侧显示位姿，右侧是四路鱼眼相机画面。</figcaption>
+              <a class="screenshot-link" href="../../assets/project-media/egohalo-upload.webp" aria-label="打开原图 · 上传进度"><img src="../../assets/project-media/egohalo-upload.webp" width="366" height="236" loading="lazy" decoding="async" alt="网页中的单条上传进度和取消入口"></a>
+              <figcaption><strong class="insight-media-title">上传进度</strong>上传界面局部，已裁掉账号与录制标识。</figcaption>
             </figure>
-            <h3>起录和保存</h3>
-            <p>录制从早期 rosbag 演进到 X5 本机 Direct MCAP。对 H.264、H.265 视频，起录等待各路完整的可解码边界。Direct 路径上，保存录制的同时可以继续看本地预览。</p>
-            <h3>记录、恢复与导出</h3>
-            <p>按任务和 Take 管理记录。换卡后可以扫描恢复索引，储存空间不足时提前收尾保存。设备保存的 Take 可以通过只读导出交给浏览器上传。</p>
-            <h3>机型与验证</h3>
-            <p>同一控制台维护 EgoHalo 四路、Insight 7 三路、Duo 双路和独立 RDK 双 UVC 的不同配置。单台 X5 做过 H.264 的 ROS 与 Direct MCAP 实录对照，也实测过 MJPEG 录制中重连、实时轨迹和原始 JPEG 读包。</p>
+            <h3>OTA 服务</h3>
+            <p>设备交付后通过 OTA 网页管理发布。我的改动让一条发布可以关联多个产品 ID，设备仍按自身机型匹配更新。我也参与了运行时升级和恢复流程，升级时保留用户数据和已有录制。</p>
+            <h3>相机运行时</h3>
+            <p>相机运行时负责感知、编码和 ROS 输出。我维护机型识别与校准配置，把预览和录制拆成两条队列：编码数据从硬件缓冲拷出一次，两边共享同一份只读帧。预览积压时只断开预览，录制按自己的缓存预算写入。另外接出与相机源时间同步的 VIO 位姿，带序号和进程代次，控制台据此去重并识别设备端轨迹重启。</p>
+            <h3>设备固件</h3>
+            <p>设备系统由 Buildroot 构建。我参与了 Insight 7 Duo 的产品配置打包、与机型一致的 BLE 名称、低电量状态灯，以及把匹配的采集应用装进发布包。</p>
+            <h3>云端手部处理</h3>
+            <p>服务从设备录制接收任务，分派给 GPU worker。我扩展了 HEVC 输入和多相机处理，按视角输出结果，并维护长录制重试时的结果保留。复核时可以回到某一路相机，看手部关键点是否对得上原画面。</p>
+            <figure class="case-media portrait-media">
+              <a class="screenshot-link" href="../../assets/project-media/egohalo-hand-overlay.webp" aria-label="打开原图 · 手部关键点叠加"><img src="../../assets/project-media/egohalo-hand-overlay.webp" width="488" height="600" loading="lazy" decoding="async" alt="一帧录制画面上的手部关键点"></a>
+              <figcaption><strong class="insight-media-title">手部关键点叠加</strong>云端手部处理结果裁图。</figcaption>
+            </figure>
           </section>
-          <section class="chapter" id="upload">
-            <h2>浏览器上传</h2>
-            <p>采集完成后，团队用浏览器把 Take 交给云端处理。我参与设备导出和云存储直传，维护浏览器兼容和多标签页会话隔离。使用者可以选中 Take，查看每次上传的进度和结果。</p>
-          </section>
-          <section class="chapter" id="ota">
-            <h2>OTA 服务</h2>
-            <p>设备交付后，团队用 OTA 管理版本和恢复。我加入了单次发布关联多个机型的能力，也维护升级时的数据保留流程。维护者可以在一次发布中选好适用机型，设备升级时可保留已录数据。</p>
-          </section>
-          <section class="chapter" id="looperhub">
-            <h2>LooperHub</h2>
-            <p>LooperHub 管理相机、感知和编码输出。我维护机型识别，拆分本地预览与录制路径，并接出本地 VIO 位姿。控制台可以在录制中读取画面和轨迹。</p>
-            <ul class="steps parallel" role="list">
-              <li>相机输入 → 本地预览与轨迹</li>
-              <li>相机输入 → 录制数据输出</li>
+
+          <section class="chapter" id="next">
+            <h2>局限与下一步</h2>
+            <ul class="plain-list">
+              <li><strong>验收范围还窄。</strong>直接写包的实机对照都在单台 X5 上完成。长时录制、拔卡、满卡、慢卡、功耗和多设备绝对同步都还待验收。</li>
+              <li><strong>H.265 只验证到源就绪。</strong>四路本机 H.265 源已能就绪，手机硬解和长时运行还要实机验证。</li>
+              <li><strong>省了 CPU，没省保存时间。</strong>直接写包降低了 CPU，但停止保存没有更快，源时间戳缺口也仍在，需要单独定位原因。</li>
+              <li><strong>频率是平均值。</strong>Take 详情里的 Hz 只反映平均记录频率，逐帧缺口要看诊断报告。</li>
             </ul>
-          </section>
-          <section class="chapter" id="quadcap">
-            <h2>QuadCap 固件</h2>
-            <p>团队用 Buildroot 维护设备系统。我改过产品配置、BLE 名称生成和低电量提示，也参与把采集应用打包进系统。设备可以通过对应机型的固件获得采集应用和设备侧配置。</p>
-            <ol class="steps">
-              <li>机型配置</li>
-              <li>打包采集应用</li>
-              <li>生成对应的系统镜像</li>
-            </ol>
-          </section>
-          <section class="chapter" id="hands">
-            <h2>云端手部处理</h2>
-            <p>云端服务把录制分发到 GPU 处理，生成各视角的手部结果。我扩展了 HEVC 输入兼容和多相机处理。后续复核可以定位是哪一路漏检，以及跨视角是否匹配。</p>
-            <ol class="steps">
-              <li>录制入队</li>
-              <li>按视角处理</li>
-              <li>输出手部结果</li>
-            </ol>
           </section>
         </div>
       </div>

@@ -3,15 +3,20 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="text-scale" content="scale">
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <meta name="description" content="在三台 X5 上验证配对、互信和组网对时，再用两台板试验控制器时钟。">
+    <meta name="description" content="用蓝牙让多块 X5 自动组网并对齐系统时间。PAN 上跑 NTP 只能到毫秒级；改为读取两板共享的蓝牙控制器时钟后，软件估计的偏差降到几十微秒。">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="多 X5 蓝牙配对与对时 · 牛牧">
+    <meta property="og:description" content="蓝牙 PAN + chrony 的毫秒级对时，以及基于共享蓝牙时钟的微秒级尝试。">
+    <meta property="og:image" content="https://nusniumu.github.io/assets/project-media/x5-pan-offsets.png">
     <title>多 X5 蓝牙配对与对时 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/multi-x5-time-sync/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=2170c578">
+    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -26,45 +31,66 @@
         </ul>
       </nav>
     </header>
-    <main id="main" class="shell case-shell" tabindex="-1">
-      <header class="case-title">
-        <h1>多 X5 蓝牙配对与对时</h1>
-        <p class="lead">在三台 X5 上验证配对、互信和组网对时，再用两台板试验控制器时钟。</p>
+    <main id="main" class="shell case-shell insight-case insight-v1 portfolio-case" tabindex="-1">
+      <header class="insight-hero">
+        <div class="case-title">
+          <h1>多 X5 蓝牙配对与对时</h1>
+          <p class="lead">我用蓝牙让多块 X5 自动组网，并对齐它们的系统时间。PAN 上跑 NTP 只能到毫秒级；改为读取两板共享的蓝牙控制器时钟后，软件估计的偏差降到几十微秒。</p>
+          <div class="actions"><a class="button primary" href="#clock">看共享时钟方案</a><a class="button" href="#pan">看三板结果</a></div>
+        </div>
+        <figure class="case-media">
+          <a class="screenshot-link" href="../../assets/project-media/x5-pan-offsets.png" aria-label="打开原图 · 三板 PAN 对时的实际读数"><img src="../../assets/project-media/x5-pan-offsets.png" width="1286" height="658" fetchpriority="high" decoding="async" alt="两块从板的 chrony 绝对偏差时间序列，EgoHalo 的 P95 为 4.13 毫秒，RDK 的 P95 为 6.41 毫秒。"></a>
+          <figcaption><strong class="insight-media-title">三板 PAN 对时的实际读数</strong>三板原始日志。图中两条曲线各含 37 次采样，时间窗为实验第 60–240 秒。</figcaption>
+        </figure>
       </header>
-      <ol class="steps">
-        <li>逐对配对与互信</li>
-        <li>发现与选主</li>
-        <li>连接 PAN</li>
-        <li>板间估计对时</li>
-      </ol>
+
+      <dl class="case-summary" aria-label="项目摘要">
+        <div><dt>目标</dt><dd>多块 X5 靠近后自动发现、选主，板间相对时间一致，目标 10 ms 以内</dd></div>
+        <div><dt>我做的</dt><dd>自动选主与组网程序、三板 PAN + chrony 部署和实板问题修复、共享蓝牙时钟映射实验</dd></div>
+        <div><dt>技术栈</dt><dd>BlueZ · PAN · chrony / NTP · HCI Read Clock · L2CAP · Python</dd></div>
+        <div><dt>数据</dt><dd>三板约 4 分钟，每块从板 37 次读数；两板 185 秒，185 轮测量</dd></div>
+        <div class="summary-key"><dt>关键发现</dt><dd>PAN 上的 NTP 绝对偏差 P95 为 4–6 ms。两块板连在同一条经典蓝牙链路上时，可以把各自系统时间映射到同一个控制器时钟，软件估计的偏差 P95 降到 57.1 µs。</dd></div>
+        <div><dt>目前进展</dt><dd>实验室原型。微秒级数字是同源软件估计，还没有用独立的共同触发验证。</dd></div>
+      </dl>
+
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
-            <li><a href="#pairing">三台 X5 配对与选主</a></li>
-            <li><a href="#pan">三板 PAN 短测</a></li>
-            <li><a href="#clock">两板控制器时钟实验</a></li>
+            <li><a href="#pairing">先配对，再自动组网</a></li>
+            <li><a href="#pan">三板 PAN 的毫秒级结果</a></li>
+            <li><a href="#clock">映射到同一蓝牙时钟</a></li>
+            <li><a href="#next">局限与下一步</a></li>
           </ul>
         </nav>
         <div class="case-text">
           <section class="chapter" id="pairing">
-            <h2>三台 X5 配对与选主</h2>
-            <p>我在三台 RDK X5 上逐对完成蓝牙配对和互信。节点发现彼此并选出主板后，通过经典蓝牙 PAN 组网，由 chrony 跟随组内时间源。</p>
+            <h2>先配对，再自动组网</h2>
+            <p>三块板逐对完成数字比较配对并互设可信，运行相同程序，不预设主从。每块板发现邻居后按蓝牙地址选出同一台主板。主板注册 BlueZ NAP，从板加入 PAN；原有的 BLE 配网仍由原服务处理。</p>
+            <dl class="insight-facts"><div><dt>首次接入</dt><dd>补做定向 SDP 服务发现，以识别配对后才注册的 NAP。</dd></div><div><dt>两块从板</dt><dd>主板在连接加密前建立合适的 ACL 角色，避免并发接入时出现角色切换失败。</dd></div><div><dt>保持连接</dt><dd>已连接节点不因扫描漏报过期，已有 PAN 连接可继续给 chrony 提供样本。</dd></div></dl>
           </section>
+
           <section class="chapter" id="pan">
-            <h2>三板 PAN 短测</h2>
-            <p>约四分钟的功能短测，统计收敛后的两台从板。图中是软件估计的相对偏差 P95，横条按 0–10 ms 绘制。</p>
-            <ul class="metrics" role="list">
-              <li><span>从板 A · P95</span><strong>4.13 ms</strong><span class="bar" aria-hidden="true"><span style="--fraction:0.4130"></span></span></li>
-              <li><span>从板 B · P95</span><strong>6.41 ms</strong><span class="bar" aria-hidden="true"><span style="--fraction:0.6410"></span></span></li>
-            </ul>
+            <h2>三板 PAN 的毫秒级结果</h2>
+            <p>两块从板通过 PAN 上的 NTP 跟随同一台离线主板。NTP 用收发双方的四个时间戳估计时差与往返延迟，chrony 过滤历次样本并调整本机时钟。实测约 4 分钟，去掉最初 60 秒后，每块从板保留 37 次读数。</p>
+            <dl class="insight-results"><div><dt>EgoHalo 从板绝对偏差 P95</dt><dd>4.13 ms</dd></div><div><dt>RDK 从板绝对偏差 P95</dt><dd>6.41 ms</dd></div><div><dt>观测时长</dt><dd>约 4 分钟</dd></div></dl>
+            <p>这里衡量的是从板相对同一主板的 chrony 估计。两块板在这个窗口的最大读数分别是 5.82 ms 和 7.31 ms，都在 10 ms 目标内。</p>
           </section>
+
           <section class="chapter" id="clock">
-            <h2>两板控制器时钟实验</h2>
-            <p>用经典蓝牙连接两端共享的控制器时钟建立时间映射。约 185 秒内的绝对软件估计偏差如下，横条按 0–100 µs 绘制。真实板间偏差有待独立共同触发测量。</p>
-            <ul class="metrics" role="list">
-              <li><span>中位数</span><strong>22.6 µs</strong><span class="bar" aria-hidden="true"><span style="--fraction:0.2260"></span></span></li>
-              <li><span>P95</span><strong>57.1 µs</strong><span class="bar" aria-hidden="true"><span style="--fraction:0.5710"></span></span></li>
-              <li><span>最大</span><strong>89.4 µs</strong><span class="bar" aria-hidden="true"><span style="--fraction:0.8940"></span></span></li>
+            <h2>映射到同一蓝牙时钟</h2>
+            <p>经典蓝牙连接的两端共享同一个 BR/EDR 时钟。另一轮实验只用两块 X5：用 HCI Read Clock 读这个时钟，取调用前后系统时间的中点。多次读取的结果按 312.5 µs 每 tick 归一到同一个参考 tick，再取中位数，估计该 tick 对应的系统时间。tick 回绕用有符号最短距离处理。</p>
+            <ol class="insight-flow" role="list"><li><strong>重复读钟</strong><span>记 tick 与 HCI 调用中点</span></li><li><strong>映射到同一 tick</strong><span>换算各次读数并取中位数</span></li><li><strong>求两板偏差</strong><span>映射相减，合格样本交给 chrony</span></li></ol>
+            <p>主板通过已配对的 L2CAP 发送参考 tick 及其主机时间，从板换算到同一 tick 后相减。任一端的读钟离散度超过 2 ms 就拒绝整轮。185 秒共 185 轮，其中 184 轮入选。</p>
+            <dl class="insight-results"><div><dt>绝对偏差中位数</dt><dd>22.6 µs</dd></div><div><dt>绝对偏差 P95</dt><dd>57.1 µs</dd></div><div><dt>绝对偏差最大值</dt><dd>89.4 µs</dd></div></dl>
+          </section>
+
+          <section class="chapter" id="next">
+            <h2>局限与下一步</h2>
+            <ul class="plain-list">
+              <li><strong>微秒数字是自估。</strong>它来自同一套读钟和 chrony 反馈，控制器也没有给出读钟精度保证。下一步给两块板接共同的 GPIO 触发，各自记时间戳，测真实偏差。</li>
+              <li><strong>测试时间短。</strong>两组实验分别只有约 4 分钟和 185 秒，还没做 30 分钟、高 CPU 负载和遮挡下的验收。</li>
+              <li><strong>断链恢复慢。</strong>三板实验中一块从板断链后约 17.5 秒才自动恢复 PAN，没达到 5 秒目标。</li>
+              <li><strong>只保证相对时间。</strong>离线主板没有外部 UTC 源，同步的是板间一致，不是绝对时间。</li>
             </ul>
           </section>
         </div>

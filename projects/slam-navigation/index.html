@@ -1,59 +1,180 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <meta name="description" content="在同一台移动机器人上比较四种激光惯性 SLAM 方法。新加坡国立大学毕业设计。">
-  <title>SLAM Navigation Benchmark · 牛牧</title>
-  <link rel="canonical" href="https://nusniumu.github.io/projects/slam-navigation/">
-  <link rel="icon" href="../../assets/mark.png" type="image/png">
-  <link rel="stylesheet" href="../../assets/site.css?v=2170c578">
-</head>
-<body id="top">
-  <a class="skip-link" href="#main">跳到正文</a>
-  <header class="shell case-header">
-    <a class="brand" href="../../">牛牧</a>
-    <nav aria-label="主导航">
-      <ul class="nav-list">
-        <li><a href="../../#projects">项目</a></li>
-        <li><a href="../../#about">关于</a></li>
-        <li><a href="../../#contact">联系</a></li>
-        <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <main id="main" class="shell case-shell" tabindex="-1">
-    <header class="case-intro">
-      <h1 lang="en">SLAM Navigation Benchmark</h1>
-      <p>在同一台移动机器人上比较四种激光惯性 SLAM 方法。新加坡国立大学毕业设计。</p>
-      <ul class="case-links">
-        <li><a href="https://github.com/NUSNiuMu/slam-navigation-benchmark">GitHub 仓库</a></li>
-        <li><a href="https://github.com/NUSNiuMu/slam-navigation-benchmark/blob/main/README.md#benchmark-design">实验设计</a></li>
-      </ul>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="text-scale" content="scale">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="description" content="在同一台 TurtleBot3 + Livox MID360 上，把四种激光惯性 SLAM 接入同一套 ROS 导航栈，比较离线轨迹精度和真实导航表现。新加坡国立大学硕士毕业项目。">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="SLAM Navigation Benchmark · 牛牧">
+    <meta property="og:description" content="四种激光惯性 SLAM 接同一套导航栈：轨迹误差之外，点云和坐标系决定避障。">
+    <meta property="og:image" content="https://nusniumu.github.io/assets/slam-robot.webp">
+    <title>SLAM Navigation Benchmark · 牛牧</title>
+    <link rel="canonical" href="https://nusniumu.github.io/projects/slam-navigation/">
+    <link rel="icon" href="../../assets/mark.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main">跳到正文</a>
+    <header class="shell masthead">
+      <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
+      <nav aria-label="主导航">
+        <ul class="nav-list">
+          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#about">关于</a></li>
+          <li><a href="../../#contact">联系</a></li>
+          <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
+        </ul>
+      </nav>
     </header>
+    <main id="main" class="shell case-shell insight-case insight-v1 portfolio-case" tabindex="-1">
+      <header class="insight-hero">
+        <div class="case-title">
+          <h1 lang="en">SLAM Navigation Benchmark</h1>
+          <p class="lead">在同一台小车上，把四种开源激光惯性 SLAM 接进同一套 ROS 导航栈，比较离线轨迹精度和真实导航表现。我最大的收获是：轨迹误差排名预测不了导航表现，SLAM 交给导航的是哪一路点云、在哪个坐标系，同样决定避障。</p>
+          <div class="actions"><a class="button primary" href="#contract">看统一导航接口</a><a class="button" href="https://github.com/NUSNiuMu/slam-navigation-benchmark">GitHub 仓库</a></div>
+        </div>
+        <figure class="case-media">
+          <img src="../../assets/slam-robot.webp" width="1200" height="640" fetchpriority="high" decoding="async" alt="实验桌上的移动机器人底盘和 Livox MID360 激光雷达">
+          <figcaption><strong class="insight-media-title">实验平台</strong>TurtleBot3 差速底盘，车载树莓派 3，顶部是 Livox MID360 激光雷达（内置 IMU）。</figcaption>
+        </figure>
+      </header>
 
-    <figure class="case-media">
-      <img src="../../assets/slam-robot.webp" width="1200" height="640" fetchpriority="high" alt="实验桌上的移动机器人底盘和 Livox MID360 激光雷达">
-      <figcaption><a href="https://github.com/NUSNiuMu/slam-navigation-benchmark/blob/main/docs/assets/readme/hardware_platform.jpeg">实验平台原图</a></figcaption>
-    </figure>
+      <dl class="case-summary" aria-label="项目摘要">
+        <div><dt>问题</dt><dd>四种开源激光惯性 SLAM 接到同一套导航上，表现差在哪里、为什么</dd></div>
+        <div><dt>我做的</dt><dd>新加坡国立大学硕士毕业项目，独立完成：平台搭建与传感器适配、统一导航接口、录包与切换脚本、评测工具、全部实验和报告</dd></div>
+        <div><dt>技术栈</dt><dd lang="en">ROS Noetic · move_base · DWA · pointcloud_to_laserscan · evo</dd></div>
+        <div><dt>实验规模</dt><dd>4 种算法；3 个场景共 6 段离线回放；实验室与走廊 5 组在线导航实验</dd></div>
+        <div class="summary-key"><dt>关键发现</dt><dd>SLAM 本身运行正常，局部代价地图却可能失效：点云太稀、坐标系不对，障碍就进不了代价地图。导航只认两个统一话题，每种算法桥接哪一路原生输出，直接影响避障。</dd></div>
+        <div><dt>结论</dt><dd>LIO-SAM 整体最稳健；FAST-LIO 效率和导航质量最均衡；FASTER-LIO 能完成任务但离障碍最近；Point-LIO 在线导航最不稳定。</dd></div>
+      </dl>
 
-    <section class="case-section">
-      <h2>对照实验</h2>
-      <p>把 LIO-SAM、FAST-LIO、Point-LIO 和 FASTER-LIO 接入同一套 ROS 导航接口。每次只换 SLAM 后端，机器人、地图、规划参数和航点路线保持一致。</p>
-      <p>离线回放比较轨迹误差和资源开销，实机运行观察局部代价地图、避障和航点到达。</p>
-    </section>
-    <figure class="case-media">
-      <img src="../../assets/slam-navigation.webp" width="960" height="440" loading="lazy" alt="RViz 中的导航地图、代价地图和机器人路线">
-      <figcaption>RViz 中的导航地图与路线。</figcaption>
-    </figure>
+      <div class="case-layout">
+        <nav class="toc" aria-label="章节目录">
+          <ul>
+            <li><a href="#platform">平台与约束</a></li>
+            <li><a href="#contract">统一导航接口</a></li>
+            <li><a href="#workflow">可重复的实验流程</a></li>
+            <li><a href="#offline">离线回放</a></li>
+            <li><a href="#online">在线导航与避障</a></li>
+            <li><a href="#next">局限与下一步</a></li>
+          </ul>
+        </nav>
+        <div class="case-text">
+          <section class="chapter" id="platform">
+            <h2>平台与约束</h2>
+            <p>实验室能提供的只有一台 TurtleBot3 差速底盘，所以整个对比都在这一台车上做。车上的树莓派 3 负责底盘通信和传感器驱动，SLAM、可视化和批量评测放在外部工作站上，两边用 ROS 多机配置连起来。</p>
+            <p>低成本平台的问题在搭建阶段就暴露了：</p>
+            <ul class="plain-list">
+              <li><strong>编译会把树莓派拖死。</strong>并行编译容易耗尽内存，只能保守设置编译参数，必要时临时加大 swap。</li>
+              <li><strong>MID360 要做格式适配。</strong>不同算法对 IMU 维度、点云消息格式的假设不一样，有的还需要雷达不提供的 ring 信息。</li>
+              <li><strong>装好就不方便本地操作。</strong>雷达和线缆装上后，日常操作改为 SSH 远程，网线连接的稳定性也变得重要。</li>
+            </ul>
+          </section>
 
-    <p class="case-return"><a class="case-back" href="../../#projects">返回项目</a></p>
-  </main>
+          <section class="chapter" id="contract">
+            <h2>统一导航接口</h2>
+            <p>四种算法输出的里程计话题、点云话题和 TF 树都不一样。如果直接各自接导航，比出来的差异说不清是算法的，还是接法的。我的做法是固定导航这一侧：导航只读 <code>/slam/odom</code> 和 <code>/slam/cloud_registered</code> 两个话题，机体坐标统一为 <code>base_link</code>，全局坐标链统一为 map → odom → base_link。每种算法用 relay 节点把选定的原生输出转到这两个话题上。</p>
+            <dl class="insight-facts">
+              <div><dt lang="en">LIO-SAM</dt><dd>里程计 <code>/odometry/imu</code>；点云 <code>/lio_sam/mapping/cloud_registered_raw</code></dd></div>
+              <div><dt lang="en">FAST-LIO</dt><dd>里程计 <code>/Odometry</code>；点云 <code>/cloud_registered</code></dd></div>
+              <div><dt lang="en">Point-LIO</dt><dd>里程计 <code>/aft_mapped_to_init</code>；点云 <code>/cloud_registered_body</code></dd></div>
+              <div><dt lang="en">FASTER-LIO</dt><dd>里程计 <code>/Odometry</code>；点云 <code>/cloud_registered_body</code></dd></div>
+            </dl>
+            <p>避障走的是一条固定链路：</p>
+            <ol class="insight-flow" role="list"><li><strong>SLAM 点云</strong><span>桥接到统一话题</span></li><li><strong>转激光</strong><span>pointcloud_to_laserscan 生成 /scan</span></li><li><strong>代价地图</strong><span>障碍层更新，DWA 绕行</span></li></ol>
+            <p>大部分调试时间花在这条链路上，而不是 SLAM 本身。好几次后端运行正常、轨迹看着也对，局部代价地图却没有正确更新：点云太稀，或者发在错误的坐标系里，转成二维激光后障碍就丢了。这也是为什么“公平”在这里不意味着四种算法输出完全一样，而是同一台车、同一张图、同一套规划参数和航点，加上每种算法桥接选择有记录、有理由。</p>
+            <div class="insight-media-grid">
+              <figure class="case-media">
+                <img src="../../assets/project-media/slam-costmap-liosam.webp" width="960" height="540" loading="lazy" decoding="async" alt="LIO-SAM 运行时的 RViz 俯视图：局部代价地图上有大片黑色障碍区域和彩色点云。">
+                <figcaption><strong class="insight-media-title">LIO-SAM</strong>人员干扰实验录屏截帧，局部代价地图里障碍连成片。</figcaption>
+              </figure>
+              <figure class="case-media">
+                <img src="../../assets/project-media/slam-costmap-pointlio.webp" width="960" height="540" loading="lazy" decoding="async" alt="Point-LIO 运行时的 RViz 俯视图：局部代价地图大部分为空，只有几小块障碍。">
+                <figcaption><strong class="insight-media-title">Point-LIO</strong>同一实验的录屏截帧，代价地图里只剩零星几块障碍。两帧取自不同时刻，只作直观对照。</figcaption>
+              </figure>
+            </div>
+          </section>
 
-  <footer class="shell site-footer">
-    <a href="#top">回到顶部</a>
-  </footer>
-</body>
+          <section class="chapter" id="workflow">
+            <h2>可重复的实验流程</h2>
+            <p>四种算法、多个场景、反复重跑，流程不固定就没法比。我把它做成了几个固定入口：</p>
+            <ul class="plain-list">
+              <li><strong>录包。</strong>统一的录包 launch 同时记录雷达、IMU、里程计和 TF。键盘遥控的阶跃指令先经过限加速度的平滑节点再给底盘，减少冲击和晃动。早期有一次录的包只有雷达、IMU 和静态 TF，没有参考里程计，ATE/RPE 根本算不出来，之后录包前会先检查参考话题。</li>
+              <li><strong>一键切换。</strong>一条脚本按名字启动指定 SLAM、建桥接、起导航。每次启动前清理残留的 launch、relay 和导航进程，避免重复 TF 树和代价地图告警造成假失败。</li>
+              <li><strong>离线评测。</strong>同一段包依次回放给四种算法，导出 TUM 格式轨迹，用 evo 算 ATE/RPE，同时记录 CPU、内存和每帧耗时。</li>
+              <li><strong>航点评测。</strong>评测器读取 map 坐标系下的航点文件，依次发目标，记录成功率、用时、路程、到障碍的最小距离、险些碰撞次数、恢复次数和 CPU/GPU。可以自动把起点追加为最后一个目标，测回到起点的误差。</li>
+              <li><strong>建图复用。</strong>把保存的三维 PCD 地图转成二维占据栅格，不覆盖作为基线的默认地图。</li>
+            </ul>
+          </section>
+
+          <section class="chapter" id="offline">
+            <h2>离线回放</h2>
+            <p>离线回放在实验室、走廊、室外三个场景各录了两段包，四种算法吃同样的传感器输入。需要先说清楚：ATE/RPE 是相对于包里的轮式里程计参考算的，不是动捕或测绘级真值，只能用来做相对比较。</p>
+            <figure class="case-media bar-compare">
+              <figcaption><strong class="insight-media-title">室内平均 ATE RMSE</strong>实验室两段回放的平均值，单位米，越短越好。</figcaption>
+              <dl>
+                <div class="is-best"><dt lang="en">LIO-SAM</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:61.64%"></span></span><b>0.099</b></dd></div>
+                <div><dt lang="en">FAST-LIO</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:63.90%"></span></span><b>0.103</b></dd></div>
+                <div><dt lang="en">FASTER-LIO</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:64.52%"></span></span><b>0.104</b></dd></div>
+                <div><dt lang="en">Point-LIO</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:100%"></span></span><b>0.161</b></dd></div>
+              </dl>
+            </figure>
+            <figure class="case-media bar-compare">
+              <figcaption><strong class="insight-media-title">室内平均 CPU 占用</strong>同样两段回放，越短越省。</figcaption>
+              <dl>
+                <div><dt lang="en">LIO-SAM</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:49.96%"></span></span><b>47.1%</b></dd></div>
+                <div><dt lang="en">FAST-LIO</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:30.61%"></span></span><b>28.8%</b></dd></div>
+                <div><dt lang="en">FASTER-LIO</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:100%"></span></span><b>94.2%</b></dd></div>
+                <div class="is-best"><dt lang="en">Point-LIO</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:24.47%"></span></span><b>23.1%</b></dd></div>
+              </dl>
+            </figure>
+            <p>室内 LIO-SAM 的 ATE 最低；FAST-LIO 只差几毫米，CPU 却低得多；FASTER-LIO 的 ATE 与 FAST-LIO 相当，CPU 和内存却最高；Point-LIO 最省，精度也最差。</p>
+            <p>走廊的两段回放最能说明单次结果不可靠：在走廊 A，Point-LIO 直接发散，ATE 达到 3135 m，比其他三种高出几个数量级；到了走廊 B，它又回到和其他算法同一水平。室外两段四种算法的 ATE 都在 2.7～4.0 m，彼此很接近，差别主要体现在 RPE 和计算开销上。</p>
+          </section>
+
+          <section class="chapter" id="online">
+            <h2>在线导航与避障</h2>
+            <p>在线实验只在实验室和走廊做。室外有坡、轮子打滑，轮胎也明显磨损，轮式里程计已经不可靠，在线对比不再公平，室外只保留离线回放。</p>
+            <figure class="case-media">
+              <img src="../../assets/slam-navigation.webp" width="960" height="440" loading="lazy" decoding="async" alt="RViz 中的导航地图、代价地图和机器人路线">
+              <figcaption><strong class="insight-media-title">共用的导航地图</strong>RViz 中的静态地图、机器人坐标和规划路线。</figcaption>
+            </figure>
+            <dl class="insight-facts">
+              <div><dt>实验室，静态布局</dt><dd>重复 3 次取平均，四种算法成功率都是 100%。差别在安全余量：LIO-SAM 离障碍最近时仍有 0.678 m，FASTER-LIO 只有 0.200 m，且平均每次 5 次险些碰撞。</dd></div>
+              <div><dt>实验室，障碍重新摆放</dt><dd>沿途手动改变障碍布局。LIO-SAM、FAST-LIO、FASTER-LIO 都走完 5 个目标；Point-LIO 只到达第 1 个，回到起点误差超过 7.4 m。FASTER-LIO 最快，但有 15 次险些碰撞。</dd></div>
+              <div><dt>走廊，静态布局</dt><dd>单次往返，四种算法都成功，没有险些碰撞。FAST-LIO 用时最短、回起点误差最小；LIO-SAM 保持的距离最大。</dd></div>
+              <div><dt>走廊，人员干扰</dt><dd>最难的一组：只有 LIO-SAM 和 FASTER-LIO 到达终点。FAST-LIO 保守地停在目标前，Point-LIO 速度最低并触发了 2 次恢复。</dd></div>
+            </dl>
+            <figure class="case-media bar-compare">
+              <figcaption><strong class="insight-media-title">实验室人员干扰：到障碍的最小距离</strong>同一目标，操作者 5 次走进机器人路线，每次都留出绕行空间。单位米，越长越安全。</figcaption>
+              <dl>
+                <div class="is-best"><dt lang="en">LIO-SAM</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:100%"></span></span><b>0.338</b></dd></div>
+                <div><dt lang="en">FAST-LIO</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:46.15%"></span></span><b>0.156</b></dd></div>
+                <div><dt>Point-LIO（未到达）</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:47.04%"></span></span><b>0.159</b></dd></div>
+                <div><dt lang="en">FASTER-LIO</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:29.59%"></span></span><b>0.100</b></dd></div>
+              </dl>
+            </figure>
+            <p>这一组里三种算法都在 41 秒左右到达；Point-LIO 超时未到，约 150 秒的运行里停了 117 秒以上。规划参数一行没改，机器人的行为却明显不同：规划器只能对它收到的位姿和障碍观测做反应，所以该比较的是从感知到规划的整条链路，而不是孤立的估计器。</p>
+          </section>
+
+          <section class="chapter" id="next">
+            <h2>局限与下一步</h2>
+            <ul class="plain-list">
+              <li><strong>没有外部真值。</strong>离线 ATE/RPE 以轮式里程计为参考，只能做相对比较，不能当作绝对精度。</li>
+              <li><strong>走廊样本少。</strong>实验室的静态布局重复了 3 次，走廊每种算法只跑了一次，结论要更谨慎。下一步先补走廊的重复实验。</li>
+              <li><strong>Point-LIO 的结果和接法有关。</strong>它在线表现最差，但这是在当前桥接配置下的结果，不能直接说算法本身不行。</li>
+              <li><strong>动态避障还有调参空间。</strong>下一步细化导航参数和机器人外形建模；室外在线对比要等轮子和里程计状况改善后再做。</li>
+              <li><strong>定性证据不够规整。</strong>部分定性结果目前只有录屏和截图，还没整理成统一的图组。</li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
+  </body>
 </html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="text-scale" content="scale">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="description" content="本科毕设的重做版：多台机器人分区巡逻，对抗会蹲守时机的攻击者。均衡分区让最长巡逻周期变短，截止期约束的随机巡逻在不牺牲覆盖的前提下保持不可预测。">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="多机器人协同巡逻 · 牛牧">
+    <meta property="og:description" content="均衡分区 + 截止期约束的随机巡逻，对抗等待型攻击者。">
+    <meta property="og:image" content="https://nusniumu.github.io/assets/project-media/patrol-poster.webp">
+    <title>多机器人协同巡逻 · 牛牧</title>
+    <link rel="canonical" href="https://nusniumu.github.io/projects/multi-robot-patrol/">
+    <link rel="icon" href="../../assets/mark.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main">跳到正文</a>
+    <header class="shell masthead">
+      <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
+      <nav aria-label="主导航">
+        <ul class="nav-list">
+          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#about">关于</a></li>
+          <li><a href="../../#contact">联系</a></li>
+          <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main" class="shell case-shell insight-case insight-v1 portfolio-case" tabindex="-1">
+      <header class="insight-hero">
+        <div class="case-title">
+          <h1>多机器人协同巡逻</h1>
+          <p class="lead">几台机器人分片巡逻一片区域，对手会先观察、再挑最久没人去的点下手。我的本科毕设做了两件事：把区域分得更均衡，让巡逻路线更难预测。2026 年我按原思路重写了仿真，并找到一个比原方案更好的随机巡逻规则。</p>
+          <div class="actions"><a class="button primary" href="#dcmep">看改进的巡逻规则</a><a class="button" href="#results">看结果</a></div>
+        </div>
+        <figure class="case-media">
+          <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/patrol-poster.webp" width="1280" height="720" aria-label="基线与改进策略的对抗巡逻对比">
+            <source src="../../assets/project-media/patrol-demo.mp4" type="video/mp4">
+            <a href="../../assets/project-media/patrol-demo.mp4">打开视频 · 对抗巡逻对比</a>
+          </video>
+          <figcaption><strong class="insight-media-title">同一张地图，两种策略</strong>左：K-means 分区 + 固定 TSP 路线；右：均衡分区 + 截止期约束随机巡逻。20 秒里左边 20 次攻击全部得逞，右边 28 次全部拦截。</figcaption>
+        </figure>
+      </header>
+
+      <dl class="case-summary" aria-label="项目摘要">
+        <div><dt>问题</dt><dd>多机器人巡逻：分区不均导致有的点太久没人去；固定路线容易被摸清规律</dd></div>
+        <div><dt>我做的</dt><dd>IMIC 均衡分区、马尔可夫随机巡逻（毕设）；2026 重写仿真，新增截止期约束的最大熵巡逻</dd></div>
+        <div><dt>技术栈</dt><dd>Python · A* · TSP · 马尔可夫链 · 蒙特卡洛评估</dd></div>
+        <div><dt>评估</dt><dd>30 张随机地图 × 有无障碍两种环境，4 台机器人，等待型攻击者</dd></div>
+        <div class="summary-key"><dt>结果</dt><dd>有障碍环境下防御成功率从 27% 提到 77%；无障碍从 50% 提到 98%。达到 90% 防御率所需机器人减少约 21%。</dd></div>
+        <div><dt>说明</dt><dd>原代码和论文已遗失，现版本按毕设方法重写；原方案中的纯马尔可夫巡逻在本攻击模型下不如 TSP，页面如实给出。</dd></div>
+      </dl>
+
+      <div class="case-layout">
+        <nav class="toc" aria-label="章节目录">
+          <ul>
+            <li><a href="#setting">场景与攻击者</a></li>
+            <li><a href="#partition">均衡分区</a></li>
+            <li><a href="#random">随机巡逻的陷阱</a></li>
+            <li><a href="#dcmep">截止期约束的随机巡逻</a></li>
+            <li><a href="#results">结果</a></li>
+            <li><a href="#next">局限</a></li>
+          </ul>
+        </nav>
+        <div class="case-text">
+          <section class="chapter" id="setting">
+            <h2>场景与攻击者</h2>
+            <p>40×40 栅格上有 30 个巡逻点，一半地图带约 20% 的矩形障碍，机器人之间的距离和路线都用 A* 计算。4 台机器人各负责一组点。</p>
+            <p>攻击者是“等待型”的：先旁观 3000 步，找出最容易得手的点；之后每当机器人离开这个点就开始攻击，攻击要持续 T = 75 步。这期间只要有机器人回到该点，就算防御成功。加强版攻击者还会挑选等待多久再动手。</p>
+            <ol class="insight-flow" role="list"><li><strong>分区</strong><span>把 30 个点分给 4 台机器人</span></li><li><strong>巡逻</strong><span>每台在自己的组里决定下一站</span></li><li><strong>评估</strong><span>攻击者观察后挑最弱的点</span></li></ol>
+          </section>
+
+          <section class="chapter" id="partition">
+            <h2>均衡分区</h2>
+            <p>K-means 只看点的远近，分出来的组工作量差很多：有的组绕一圈要 90 步，有的只要 26 步。攻击者只需要盯住最长那组。</p>
+            <p>IMIC（改进的最小增量聚类）用最远点做种子，再把每个点分给“当前工作量 + 插入增量”最小的组，工作量就是组内 TSP 回路的长度。分完再从最重的组往外迁点。重写时我加了多组种子重启，以及组间换点（IMIC+）。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/patrol-partition.webp" aria-label="打开原图 · 分区对比"><img src="../../assets/project-media/patrol-partition.webp" width="1280" height="700" loading="lazy" decoding="async" alt="同一张有障碍地图上，K-means 分区四组巡逻周期为 90、78、68、26；IMIC+ 分区为 70、68、70、70"></a>
+              <figcaption><strong class="insight-media-title">同一张地图的两种分区</strong>K-means 最长周期 90 步，IMIC+ 四组都在 68–70 步。30 张图平均，组间工作量方差下降约 93%。</figcaption>
+            </figure>
+          </section>
+
+          <section class="chapter" id="random">
+            <h2>随机巡逻的陷阱</h2>
+            <p>毕设里，每台机器人在组内按马尔可夫链随机选下一站，越久没去、越近的点概率越大。路线确实难猜了，路径熵从 TSP 的 0 升到约 2.5 bit。</p>
+            <p>但重写后的评估发现，这样做防御率反而更低：有障碍环境下只有 24%，比固定路线的 67% 差很多。原因是随机游走的回访间隔有长尾，总有某个点偶尔很久才被访问一次；攻击者不需要猜路线，只要等这个长尾出现。</p>
+          </section>
+
+          <section class="chapter" id="dcmep">
+            <h2>截止期约束的随机巡逻</h2>
+            <p>我的改进叫 DC-MEP：随机，但只在“安全”的选项里随机。机器人每到一个点，先列出下一站的候选，只保留去了之后仍然来得及把组内所有点在 T 步内都访问到的那些（判断方法是：去完之后，从某个点出发、沿组内 TSP 回路走一圈，能否让每个点的空闲时间都不超过 T），再在其中均匀随机选。</p>
+            <p>可以证明，只要组的回路长度不超过 T，这个规则下就没有点会空闲超过 T 步，同时路线依然随机，熵约 1.0–1.2 bit。回路长于 T 时，退化为按距离加权的随机游走；这个回退规则是在单独的调参地图上选的，不参与评估。</p>
+            <p>两部分是互补的：均衡分区让更多组的回路短于 T，DC-MEP 在这些组里“免费”换来不可预测性。</p>
+          </section>
+
+          <section class="chapter" id="results">
+            <h2>结果</h2>
+            <figure class="case-media bar-compare">
+              <figcaption><strong class="insight-media-title">有障碍环境的防御成功率</strong>T = 75 步，4 台机器人，30 张随机地图的平均值，越长越好。</figcaption>
+              <dl>
+                <div><dt>K-means + TSP（基线）</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:26.7%"></span></span><b>27%</b></dd></div>
+                <div><dt>IMIC + 马尔可夫（毕设原方案）</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:23.7%"></span></span><b>24%</b></dd></div>
+                <div><dt>IMIC + TSP</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:66.7%"></span></span><b>67%</b></dd></div>
+                <div class="is-best"><dt>IMIC + DC-MEP（改进）</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:77.3%"></span></span><b>77%</b></dd></div>
+              </dl>
+            </figure>
+            <p>无障碍环境下，IMIC+ 分区加 DC-MEP 达到 98%，基线是 50%。要让防御率达到 90%，有障碍环境下基线平均需要 5.5 台机器人（有 2 张图用 8 台也达不到），改进后约 4.3 台。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/patrol-defense.webp" aria-label="打开原图 · 防御率对比"><img src="../../assets/project-media/patrol-defense.webp" width="1280" height="540" loading="lazy" decoding="async" alt="左：两种环境下五种策略的防御成功率柱状图；右：有障碍环境下防御率随攻击时长 T 的变化曲线"></a>
+              <figcaption><strong class="insight-media-title">各策略的防御率</strong>左：T = 75 时两种环境的对比，误差线为均值的 95% 置信区间。右：攻击时长 T 从 50 到 110 步时的变化，T ≥ 70 时结论一致。</figcaption>
+            </figure>
+            <p>固定路线在单张地图上几乎是全有或全无：最长回路不超过 T 就全部防住，否则被选中的点必破。所以 TSP 类策略的方差很大，平均值要结合右图一起看。</p>
+          </section>
+
+          <section class="chapter" id="next">
+            <h2>局限</h2>
+            <ul class="plain-list">
+              <li><strong>不是原始代码。</strong>毕设的代码和论文已经找不到，IMIC 细节、马尔可夫转移形式和攻击者模型都是按毕设思路重新实现的，数字和当年的不能直接对比。</li>
+              <li><strong>攻击时间很短时谁都防不住。</strong>T ≤ 60 步时所有策略都无法保证，随机策略略好于 TSP，但防御率都在 35% 以下。</li>
+              <li><strong>模型简化。</strong>没有机器人之间的碰撞和感知范围，假设全局空闲信息实时共享、没有通信延迟。</li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
+  </body>
+</html>

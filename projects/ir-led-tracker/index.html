@@ -3,15 +3,20 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="text-scale" content="scale">
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <meta name="description" content="从红外画面识别灯点，与已知标记模型匹配，实时显示六自由度位姿。">
+    <meta name="description" content="用一台红外相机和 20 颗 LED 的几何模型，在 Monado 上做六自由度位姿估计。灯点明明都看得见却丢跟踪，原因是评分门限把均方误差当成了 RMS。">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="红外 LED 定位 · 牛牧">
+    <meta property="og:description" content="20 颗 LED 标记物接入 Monado 做六自由度定位，以及一次“灯点可见却丢跟踪”的修复。">
+    <meta property="og:image" content="https://nusniumu.github.io/assets/project-media/ir-viewer.webp">
     <title>红外 LED 定位 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/ir-led-tracker/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=2170c578">
+    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -26,31 +31,75 @@
         </ul>
       </nav>
     </header>
-    <main id="main" class="shell case-shell" tabindex="-1">
-      <header class="case-title">
-        <h1>红外 LED 定位</h1>
-        <p class="lead">从红外画面识别灯点，与已知标记模型匹配，实时显示六自由度位姿。</p>
+    <main id="main" class="shell case-shell insight-case insight-v1 portfolio-case" tabindex="-1">
+      <header class="insight-hero">
+        <div class="case-title">
+          <h1>红外 LED 定位</h1>
+          <p class="lead">我用一台红外相机和 20 颗 LED 的几何模型，在 Monado 上做六自由度位姿估计。灯点明明都看得见却丢跟踪，原因是评分门限把均方误差当成了 RMS。</p>
+          <div class="actions"><a class="button primary" href="#loss">看失锁修复</a><a class="button" href="#pose">看定位流程</a></div>
+        </div>
+        <figure class="case-media">
+          <a class="screenshot-link" href="../../assets/project-media/ir-viewer.webp" aria-label="打开原图 · 实时三维位姿查看器"><img src="../../assets/project-media/ir-viewer.webp" width="1120" height="700" fetchpriority="high" decoding="async" alt="左侧红外画面与右侧三维坐标、标记模型和轨迹共用同一路跟踪结果。"></a>
+          <figcaption><strong class="insight-media-title">实时三维位姿查看器</strong>运行中的位姿查看器，可同时看灯点、轨迹、质量读数。</figcaption>
+        </figure>
       </header>
+
+      <dl class="case-summary" aria-label="项目摘要">
+        <div><dt>做什么</dt><dd>固定红外相机跟踪 20 颗 LED 的标记物，实时输出六自由度位姿</dd></div>
+        <div><dt>我做的</dt><dd>在参考设计上修改 LED 载体与 PCB；LED 模型接入 Monado、相机标定、实时适配器和三维查看器、失锁问题定位与修复</dd></div>
+        <div><dt>技术栈</dt><dd>Monado · RANSAC PnP · AprilGrid 标定 · OpenCV / V4L2 · OpenGL</dd></div>
+        <div><dt>实测</dt><dd>相机到跟踪器约 29.6 FPS，当前视角可见灯 10/10 匹配，标定重投影 RMS 0.506 px</dd></div>
+        <div class="summary-key"><dt>难点与解决</dt><dd>实拍重投影 RMS 约 2.0–2.3 px，旧评分的门限折合 RMS 只有约 1.73 px，候选全被拒。统一为 3 px RMS 并按可视角筛灯后，60 帧回放从 0 帧可用变为 60 帧。</dd></div>
+        <div><dt>目前进展</dt><dd>实时链路可运行；动态精度和真实距离、角度误差还没有独立基准测量。</dd></div>
+      </dl>
+
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
-            <li><a href="#marker">红外标记和相机</a></li>
-            <li><a href="#pose">从灯点到位姿</a></li>
-            <li><a href="#checks">实验结果</a></li>
+            <li><a href="#marker">LED 标记和相机标定</a></li>
+            <li><a href="#pose">从光斑到六自由度位姿</a></li>
+            <li><a href="#loss">灯点可见却丢跟踪</a></li>
+            <li><a href="#next">局限与下一步</a></li>
           </ul>
         </nav>
         <div class="case-text">
           <section class="chapter" id="marker">
-            <h2>红外标记和相机</h2>
-            <p>我搭建了用红外相机追踪 LED 标记的实验。先标定相机内参，再描述标记上各灯点的位置、方向和可视角，供后面做匹配。</p>
+            <h2>LED 标记和相机标定</h2>
+            <p>标记物模型记录 20 颗 LED 的三维位置、法向、有效光学半径和可视角。标记转动时，每一帧根据视角判断当前应当看见哪些灯。相机用 4×4 AprilGrid 标定，得到 KM2010 红外相机在 1280×720 下的内参。</p>
+            <div class="insight-media-grid"><figure class="case-media">
+                <a class="screenshot-link" href="../../assets/project-media/ir-carrier.webp" aria-label="打开原图 · LED 载体模型"><img src="../../assets/project-media/ir-carrier.webp" width="700" height="700" loading="lazy" decoding="async" alt="多面载体及用于固定发光点的位置"></a>
+                <figcaption><strong class="insight-media-title">LED 载体模型</strong>载体渲染。我在硬件参考工程的基础上修改了载体和 PCB。</figcaption>
+              </figure><figure class="case-media">
+                <a class="screenshot-link" href="../../assets/project-media/ir-detection.webp" aria-label="打开原图 · 红外灯点匹配"><img src="../../assets/project-media/ir-detection.webp" width="1120" height="630" loading="lazy" decoding="async" alt="红外实拍上的亮点及候选标签"></a>
+                <figcaption><strong class="insight-media-title">红外灯点匹配</strong>KM2010 实际输入，叠加检测与匹配结果。</figcaption>
+              </figure></div>
           </section>
+
           <section class="chapter" id="pose">
-            <h2>从灯点到位姿</h2>
-            <p>红外图像里的亮点与标记模型对应后，估计目标的三维位置和朝向。实时查看器一起显示原始画面和 3D 位姿，也会检查相邻结果是否突然跳变。</p>
+            <h2>从光斑到六自由度位姿</h2>
+            <p>跟踪器先从图像提取光斑。已有可信位姿时，把 LED 模型投影到图像，优先检查当前位置应看到的灯；失去先验时扩大对应搜索。得到二维光斑与三维灯点的对应后，用 RANSAC PnP 剔除外点并精修姿态，再核对重投影残差。搜索与精修复用 <a href="https://monado.pages.freedesktop.org/monado/t__constellation__tracker__internal_8hpp_source.html">Monado 上游的 constellation 跟踪器</a>。</p>
+            <ol class="insight-flow" role="list"><li><strong>像素</strong><span>检测光斑中心与亮度</span></li><li><strong>几何</strong><span>投影 LED 模型，求相机相对位姿</span></li><li><strong>稳定</strong><span>验证残差、运动和时间顺序</span></li></ol>
+            <h3>快动与短时遮挡</h3>
+            <p>没有可信先验时至少匹配 5 颗灯；先验通过位置与朝向检查时，3～4 颗光斑即可验证。显示层用速度预测和四元数角差拦截跳变。静止时用较低截止频率抑制抖动，运动时提高截止频率，并用球面插值平滑旋转。</p>
           </section>
-          <section class="chapter" id="checks">
-            <h2>实验结果</h2>
-            <p>已有单视角的实时输入和可见灯匹配记录。这个实验观察的是当前装置和视角条件，运动中的定位误差需要独立参考继续测量。</p>
+
+          <section class="chapter" id="loss">
+            <h2>灯点可见却丢跟踪</h2>
+            <p>一段实拍里已经检测到 10 个光斑，跟踪却一直输出不了位姿。回放发现，候选的重投影 RMS 约 2.0–2.3 px，而旧评分把 3 当作均方误差的上限，折合 RMS 只有约 1.73 px，正确的候选全被拒掉。</p>
+            <p>我把门限统一为 3 px 的 RMS，并按模型的有效可视角筛选参与匹配的灯点。</p>
+            <figure class="case-media comparison"><figcaption><strong class="insight-media-title">同一段实拍的可显示位姿帧数</strong>60 帧离线回放，改动后每帧匹配 10 颗灯。</figcaption><dl><div><dt>原版</dt><dd><b>0 帧</b><span class="comparison-track" aria-hidden="true"><span style="inline-size:0.0000%"></span></span></dd></div><div><dt>修正评分与可视角后</dt><dd><b>60 帧</b><span class="comparison-track" aria-hidden="true"><span style="inline-size:100.0000%"></span></span></dd></div></dl></figure>
+            <dl class="insight-results"><div><dt>相机到跟踪器</dt><dd>约 29.6 FPS</dd></div><div><dt>当前视角可见灯匹配</dt><dd>10 / 10</dd></div><div><dt>标定重投影 RMS</dt><dd>0.506 px</dd></div></dl>
+            <p>数据来自 KM2010 的 1280×720 MJPEG 实时链路和 AprilGrid 标定记录。0.506 px 衡量的是标定图像的拟合误差，不是定位精度。</p>
+          </section>
+
+          <section class="chapter" id="next">
+            <h2>局限与下一步</h2>
+            <ul class="plain-list">
+              <li><strong>运动段还不稳。</strong>另一段含运动的 90 帧记录，修复后合格帧从 21 帧升到 67 帧，仍没做到全部有效。</li>
+              <li><strong>没有独立精度基准。</strong>真实距离和角度误差、动态精度，都需要移动 LED 目标并用独立基准来测。</li>
+              <li><strong>纯视觉，时间戳粗。</strong>没有接 IMU；相机时间戳是驱动缓冲区时间，不是曝光时刻，也没做曝光中点补偿。</li>
+              <li><strong>只在相机坐标系。</strong>要给机器人或场地使用，还需要相机到基座的外参标定。</li>
+            </ul>
           </section>
         </div>
       </div>

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="text-scale" content="scale">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="description" content="把实习时在 UE5 里写的无人机集群规划器移植成独立仿真，复盘原版为什么会撞，再用 CBS、管道平滑、动作依赖图和速度障碍法把 10 架无人机交叉飞行的机间碰撞降到 0。">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="无人机集群路径规划 · 牛牧">
+    <meta property="og:description" content="复盘 UE5 集群规划器，并把 10 架无人机交叉飞行的机间碰撞降到 0。">
+    <meta property="og:image" content="https://nusniumu.github.io/assets/project-media/swarm-poster.webp">
+    <title>无人机集群路径规划 · 牛牧</title>
+    <link rel="canonical" href="https://nusniumu.github.io/projects/drone-swarm-planning/">
+    <link rel="icon" href="../../assets/mark.png" type="image/png">
+    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main">跳到正文</a>
+    <header class="shell masthead">
+      <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
+      <nav aria-label="主导航">
+        <ul class="nav-list">
+          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#about">关于</a></li>
+          <li><a href="../../#contact">联系</a></li>
+          <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main" class="shell case-shell insight-case insight-v1 portfolio-case" tabindex="-1">
+      <header class="insight-hero">
+        <div class="case-title">
+          <h1>无人机集群路径规划</h1>
+          <p class="lead">2025 年实习时，我在 UE5 里写了一套多无人机协同规划器。2026 年我把它逐函数移植成独立仿真，复盘原版在交叉飞行时为什么会撞，再重做规划、平滑和执行三层，让 10 架无人机互换位置时机间碰撞降到 0。</p>
+          <div class="actions"><a class="button primary" href="#review">看原版的问题</a><a class="button" href="https://github.com/NUSNiuMu/UE5-Drone-Swarm">原 UE5 仓库</a></div>
+        </div>
+        <figure class="case-media">
+          <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/swarm-poster.webp" width="1280" height="640" aria-label="原版与优化版的集群飞行对比">
+            <source src="../../assets/project-media/swarm-demo.mp4" type="video/mp4">
+            <a href="../../assets/project-media/swarm-demo.mp4">打开视频 · 集群飞行对比</a>
+          </video>
+          <figcaption><strong class="insight-media-title">同一场景，两套规划器</strong>10 架无人机穿过城市街区互换位置，场上有移动障碍。左：原版移植，10 次机间碰撞；右：优化版，0 次。橙线是小于 100 cm 的近距离，红圈是碰撞。</figcaption>
+        </figure>
+      </header>
+
+      <dl class="case-summary" aria-label="项目摘要">
+        <div><dt>问题</dt><dd>6–10 架无人机在有建筑和移动障碍的三维空间里同时飞向各自目标，互不相撞</dd></div>
+        <div><dt>我做的</dt><dd>原版：UE5 C++ 集群管理、A* 规划、预约表、平滑和雷达扫描。重做：移植仿真、复盘、CBS 规划与执行层</dd></div>
+        <div><dt>技术栈</dt><dd>UE5 C++ · 时空 A* · CBS / ECBS · 动作依赖图 · 速度障碍法 · Python</dd></div>
+        <div><dt>评估</dt><dd>6 / 8 / 10 架，每档 30 张随机城市地图，起终点交叉，强制产生冲突</dd></div>
+        <div class="summary-key"><dt>结果</dt><dd>10 架时，至少碰撞一次的飞行从 93% 降到 0；拐点减少约 21%，加速度能量代理降一半，完成时间缩短 8%。</dd></div>
+        <div><dt>代价</dt><dd>规划耗时约为原版 3 倍（Python 下 10 架约 2 秒）；移动障碍突然掉头时仍偶有碰撞。</dd></div>
+      </dl>
+
+      <div class="case-layout">
+        <nav class="toc" aria-label="章节目录">
+          <ul>
+            <li><a href="#original">原版做了什么</a></li>
+            <li><a href="#review">回头看：为什么会撞</a></li>
+            <li><a href="#plan">规划：CBS 与真正的时空 A*</a></li>
+            <li><a href="#execute">平滑与执行</a></li>
+            <li><a href="#results">结果</a></li>
+            <li><a href="#next">局限</a></li>
+          </ul>
+        </nav>
+        <div class="case-text">
+          <section class="chapter" id="original">
+            <h2>原版做了什么</h2>
+            <p>原工程是 UE5 的 C++ 组件：三维栅格地图、每架无人机一个 A* 规划器、全局预约表记录别的无人机何时在哪，规划时避开预约冲突；规划出的折线经过迭代平滑，飞行中用多线雷达扫描移动障碍，必要时重规划。</p>
+            <p>UE5 工程依赖 Windows 和完整的场景资产，没法在现在的机器上直接跑。所以我把 <code>Source/Drone/</code> 下的规划、预约、平滑、扫描逻辑逐函数移植到 Python，场景换成随机生成的体素城市，作为基线。</p>
+            <ol class="insight-flow" role="list"><li><strong>规划</strong><span>A* + 预约表</span></li><li><strong>平滑</strong><span>迭代平滑 + 净空检查</span></li><li><strong>执行</strong><span>雷达扫描、近距离急停、重规划</span></li></ol>
+          </section>
+
+          <section class="chapter" id="review">
+            <h2>回头看：为什么会撞</h2>
+            <p>让 10 架无人机互换位置，原版几乎每张地图都会撞。逐行对照代码，问题出在几处设计上：</p>
+            <ul class="plain-list">
+              <li><strong>A* 没有时间维。</strong>搜索状态只有空间格子，也没有“原地等待”这个动作，预约表只能剪掉邻居，不能让一架机停下来让路。冲突检测只比较点，不检查两架机沿线段对穿。</li>
+              <li><strong>时间轴对不上。</strong>所有无人机 t = 0 同时起飞；规划器按 100 cm/s 算预约时间，实际飞行速度不同；中途重规划时时间又从 0 开始。</li>
+              <li><strong>平滑太脆。</strong>只要有一个点不安全，整条路径就退回原始折线；膨胀半径接近 0 且允许对角穿角，会贴着楼角飞。</li>
+              <li><strong>急停规则会连锁。</strong>“110 cm 内停 0.5 秒”的规则对已经到达终点的无人机也生效，附近的无人机被反复急停，打乱原定的先后顺序。</li>
+            </ul>
+            <p>这些问题在少量无人机、路线不交叉时不明显；场景一拥挤，就全部暴露出来。</p>
+          </section>
+
+          <section class="chapter" id="plan">
+            <h2>规划：CBS 与真正的时空 A*</h2>
+            <p>底层换成真正的时空 A*：状态是“格子 × 时间”，可以原地等待，禁止对角穿角。两架机在同一时刻不能处于相邻格（间距至少 100 cm），跨时刻的跟随和对穿也算冲突。</p>
+            <p>上层用 CBS（基于冲突的搜索）协调：先各自规划，找到第一处冲突，就分别给两架机加约束重新规划，直到无冲突。普通 CBS 在 10 架时 20 秒都解不出来；加上邻域约束、ECBS 式的次优焦点搜索和冲突回避表后，90 个场景全部在 1–2 秒内解出。</p>
+          </section>
+
+          <section class="chapter" id="execute">
+            <h2>平滑与执行</h2>
+            <p><strong>管道平滑。</strong>每个航点最多偏离格心 0.35 格，同时保持与建筑的净空。不安全的点只在管道内局部调整，不会整条退回折线。</p>
+            <p><strong>动作依赖图（ADG）。</strong>取代近距离急停规则。无人机按计划中的先后顺序通过冲突区域：轮到自己才进，否则等前一架过去。这样即使某架机因为躲障碍慢了，也不会打乱机间顺序。</p>
+            <p><strong>速度障碍法避让移动障碍。</strong>雷达配置与基线相同（16 线、10 Hz）。障碍在盲区或视野外时按恒速预测，不确定半径随时间扩大；候选动作沿路径往前推演 3.5 秒，再过一层安全过滤。消融实验里关掉这一层，10 架时 87% 的飞行会撞上移动障碍。</p>
+          </section>
+
+          <section class="chapter" id="results">
+            <h2>结果</h2>
+            <figure class="case-media bar-compare">
+              <figcaption><strong class="insight-media-title">至少发生一次机间碰撞的飞行比例</strong>每档 30 张随机地图，越短越好。原版 / 优化版。</figcaption>
+              <dl>
+                <div><dt>6 架 · 原版</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:57%"></span></span><b>57%</b></dd></div>
+                <div><dt>8 架 · 原版</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:77%"></span></span><b>77%</b></dd></div>
+                <div><dt>10 架 · 原版</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:93%"></span></span><b>93%</b></dd></div>
+                <div class="is-best"><dt>6 / 8 / 10 架 · 优化版</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:0%"></span></span><b>0%</b></dd></div>
+              </dl>
+            </figure>
+            <p>最小机间距离从 15–32 cm 提到 80–93 cm，建筑擦碰从每次飞行 3.6–5.1 次降到 0。全部到达且零碰撞的任务成功率，原版在 6 架时只有 3%，优化版为 100% / 90% / 97%（6 / 8 / 10 架），失败的几次都是撞上了突然掉头的移动障碍。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/swarm-safety.webp" aria-label="打开原图 · 安全性对比"><img src="../../assets/project-media/swarm-safety.webp" width="1280" height="400" loading="lazy" decoding="async" alt="四个柱状图：机间碰撞次数、至少一次碰撞的比例、移动障碍碰撞、建筑擦碰，按 6、8、10 架分组，原版为橙色、优化版为蓝色"></a>
+              <figcaption><strong class="insight-media-title">安全性</strong>橙色为原版移植，蓝色为优化版，均为 30 张地图的均值 ± 标准差。</figcaption>
+            </figure>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/swarm-efficiency.webp" aria-label="打开原图 · 效率对比"><img src="../../assets/project-media/swarm-efficiency.webp" width="1280" height="400" loading="lazy" decoding="async" alt="五个柱状图：平均飞行路径、拐点数、加速度能量代理、完成时间、规划耗时，原版与优化版对比"></a>
+              <figcaption><strong class="insight-media-title">效率与平顺性</strong>路径长度基本不变；拐点减少 20–29%，加速度能量代理降 53–56%，完成时间缩短 8–10%；代价是规划耗时约 3 倍。</figcaption>
+            </figure>
+          </section>
+
+          <section class="chapter" id="next">
+            <h2>局限</h2>
+            <ul class="plain-list">
+              <li><strong>不是 UE5 物理。</strong>这是 20 Hz 的质点运动学仿真，没有空气动力学和真实飞控。</li>
+              <li><strong>感知理想化。</strong>雷达射线命中即得到障碍中心，真实雷达还需要点云聚类和跟踪。</li>
+              <li><strong>安全保证有边界。</strong>动作依赖图只对沿规划路径飞行的无人机严格无碰撞；躲避移动障碍时的横向偏移靠采样和安全过滤，属于经验上的安全。</li>
+              <li><strong>参数没有留出测试集。</strong>避障参数是在同一批场景上调的，下一步换一批新地图再验证一次。</li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
+  </body>
+</html>

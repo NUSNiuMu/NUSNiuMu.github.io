@@ -3,15 +3,20 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="text-scale" content="scale">
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <meta name="description" content="做了一个触摸屏语音终端，用它在电脑旁发起和查看 Codex 会话。">
+    <meta name="description" content="一个按住说话的触摸屏终端：电脑本机用 Whisper 转写，我在屏幕上核对文字后才提交给选定的 Codex 会话，回复再送回屏幕。">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Muse · 牛牧">
+    <meta property="og:description" content="触摸屏语音终端：本地 Whisper 转写，确认后提交给指定 Codex 会话。">
+    <meta property="og:image" content="https://nusniumu.github.io/assets/project-media/muse-ui.webp">
     <title>Muse · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/muse/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=2170c578">
+    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -26,31 +31,107 @@
         </ul>
       </nav>
     </header>
-    <main id="main" class="shell case-shell" tabindex="-1">
-      <header class="case-title">
-        <h1 lang="en">Muse</h1>
-        <p class="lead">做了一个触摸屏语音终端，用它在电脑旁发起和查看 Codex 会话。</p>
+    <main id="main" class="shell case-shell insight-case insight-v1 portfolio-case" tabindex="-1">
+      <header class="insight-hero">
+        <div class="case-title">
+          <h1 lang="en">Muse</h1>
+          <p class="lead">一个按住说话的触摸屏终端：电脑本机用 Whisper 转写，我在屏幕上核对文字后，才提交给选定的 Codex 会话，回复再送回屏幕。设计上最在意的一点，是一次语音只对应一次确定的提交。</p>
+          <div class="actions"><a class="button primary" href="#one-submit">看提交怎样绑定</a><a class="button" href="#verification">看实测</a></div>
+        </div>
+        <figure class="case-media">
+          <a class="screenshot-link" href="../../assets/project-media/muse-ui.webp" aria-label="打开原图 · 触摸界面预览"><img src="../../assets/project-media/muse-ui.webp" width="660" height="520" fetchpriority="high" decoding="async" alt="四幅界面展示会话、语音转写预览、项目对话列表和回复。"></a>
+          <figcaption><strong class="insight-media-title">触摸界面预览</strong>固件开发时的界面预览：会话、转写预览、对话列表和回复。</figcaption>
+        </figure>
       </header>
+
+      <dl class="case-summary" aria-label="项目摘要">
+        <div><dt>做什么</dt><dd>用语音给电脑上的 Codex 会话派任务，在小屏上看回复、回答选择题、处理审批</dd></div>
+        <div><dt>我做的</dt><dd>个人项目：硬件接线、ESP32 触摸固件、电脑端 Agent、本地语音识别、USB 与无线连接</dd></div>
+        <div><dt>技术栈</dt><dd lang="en">ESP32-S3 · LVGL · faster-whisper · Codex App Server · TLS WebSocket</dd></div>
+        <div><dt>硬件</dt><dd>XIAO ESP32S3 Plus、2.8 寸 ILI9341 屏（XPT2046 电阻触摸）、INMP441 数字麦克风</dd></div>
+        <div class="summary-key"><dt>难点与解决</dt><dd>打开项目时，默认的会话列表扫描 15 秒内没跑完，等待期间串口缓冲会写满。改为只查状态库（本机约 2 ms），并把 USB 收包和业务处理拆成两个任务。</dd></div>
+        <div><dt>目前进展</dt><dd>USB 和局域网下的语音往返已实测；手机热点能联网，热点下的语音往返还没验收。</dd></div>
+      </dl>
+
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
-            <li><a href="#interaction">终端上怎么用</a></li>
-            <li><a href="#bridge">终端和电脑之间</a></li>
-            <li><a href="#verification">原型验证</a></li>
+            <li><a href="#interaction">触摸界面与确认</a></li>
+            <li><a href="#asr">本地识别</a></li>
+            <li><a href="#one-submit">一次语音，一次提交</a></li>
+            <li><a href="#usb-stall">打开项目时的卡顿</a></li>
+            <li><a href="#network">USB、局域网与热点</a></li>
+            <li><a href="#verification">实机验证</a></li>
+            <li><a href="#next">局限与下一步</a></li>
           </ul>
         </nav>
         <div class="case-text">
           <section class="chapter" id="interaction">
-            <h2>终端上怎么用</h2>
-            <p>我做了一个带触摸屏和麦克风的终端。可以先选电脑上的项目和会话，按住录音，松开后看转写，确认文字再发送，随后在屏幕上读回复。</p>
+            <h2>触摸界面与确认</h2>
+            <p>原型由 XIAO ESP32S3 Plus、2.8 寸触摸屏和 INMP441 数字麦克风组成，界面用 LVGL。项目和会话列表从电脑读取。按住录音、松开识别，屏幕先显示转写文字，我点确认后才提交给选定的会话。</p>
+            <ol class="insight-flow" role="list"><li><strong>录音</strong><span>按住屏幕说话，边录边传</span></li><li><strong>预览</strong><span>电脑识别，屏幕核对文字</span></li><li><strong>发送</strong><span>确认后运行，设备收到回复</span></li></ol>
+            <p>同一块屏幕还能滑动阅读回复、回答选择题、批准电脑端的操作请求。录音和任务进行时锁定当前项目与会话；返回菜单和停止任务是两个独立操作，停止需要再确认一次。</p>
           </section>
-          <section class="chapter" id="bridge">
-            <h2>终端和电脑之间</h2>
-            <p>语音交给自己的 Linux 电脑识别，任务也在电脑上的 Codex 会话里执行。终端负责录音和显示，电脑负责转写、会话和任务状态。</p>
+
+          <section class="chapter" id="asr">
+            <h2>本地识别</h2>
+            <p>设备发送 16 kHz、16 bit 单声道 PCM，单次 0.5～30 秒。电脑把音频交给 faster-whisper：VAD 先过滤无语音区间，再由 Whisper 解码。GPU 用 FP16，CPU 用 INT8。GPU 初始化或实际推理失败时，用 CPU 重跑这段输入。不调用任何语音云服务，音频只留在内存里。</p>
+            <ol class="insight-flow" role="list"><li><strong>音频</strong><span>PCM 流送到电脑</span></li><li><strong>本地转写</strong><span>VAD、Whisper、失败时 CPU 回退</span></li><li><strong>会话</strong><span>确认后提交给绑定的对话</span></li></ol>
+            <p>模型在服务启动后后台预加载并常驻，默认 beam size 为 1，可以在配置里调到 5。</p>
           </section>
+
+          <section class="chapter" id="one-submit">
+            <h2>一次语音，一次提交</h2>
+            <p>语音终端最怕的不是识别错，而是“说了一句，执行了两次”，或者确认点到了别的会话上。我把一次语音从头到尾绑在同一个请求上：</p>
+            <ol class="insight-flow" role="list"><li><strong>录音开始</strong><span>锁定项目与会话</span></li><li><strong>生成预览</strong><span>带身份，五分钟过期</span></li><li><strong>确认到达</strong><span>校验预览身份与状态后提交</span></li></ol>
+            <p>确认只对应那一条具体的预览，过期的确认不能重放。提交后的任务标识写进本机 SQLite；断线时已启动的任务继续跑，设备重连后恢复状态，但不会自动重复提交。电脑端程序重启后，未完成的任务标为 unknown，同样不自动重试。</p>
+            <p>Codex 通过本机 stdio 的 App Server 运行，不暴露到网络上，只能选择配置里登记过的项目。账号凭据始终留在电脑上，设备只持有自己的配对令牌。</p>
+          </section>
+
+          <section class="chapter" id="usb-stall">
+            <h2>打开项目时的卡顿</h2>
+            <p>实机联调时，在屏幕上点开一个项目要等很久才出对话列表。查下来是两件事叠在一起：</p>
+            <ul class="plain-list">
+              <li><strong>列表查询太慢。</strong>默认的会话列表查询会扫描全部历史记录，15 秒内没有完成。改为只查状态库后，本机对照查询约 2 ms；同时给列表请求设 10 秒上限，超时保留连接，提示重试。</li>
+              <li><strong>等待时没人收包。</strong>原来 USB 收包和业务处理在同一个流程里，等 Codex 的这段时间设备发来的状态没人读，串口缓冲一旦写满就会丢帧、触发重连。我把收包和业务处理拆成两个独立任务，业务队列限定容量，断开时取消还在等的处理。</li>
+            </ul>
+            <p>修完后在真实设备上测：连续三次会话列表查询约 4.5～5.3 ms，屏幕显示 9 个对话，之后 15 秒内收到 7 次新的屏幕状态，始终保持同一个 USB 会话，没有再退回项目列表。</p>
+          </section>
+
+          <section class="chapter" id="network">
+            <h2>USB、局域网与热点</h2>
+            <p>同一个电脑端程序同时接 USB 和无线，共用会话、预览和任务记录。设备优先用已建立的 USB 数据会话，没有 USB 时走 Wi-Fi。</p>
+            <dl class="insight-facts">
+              <div><dt>USB</dt><dd>串口承载设备事件与音频，也用来首次写入 Wi-Fi 和可信端点。</dd></div>
+              <div><dt>局域网</dt><dd>设备通过 TLS WebSocket 直连电脑，使用单独的本机 CA，校验证书和主机名，并持有配对令牌。</dd></div>
+              <div><dt>手机热点</dt><dd>设备经热点上网，再由电脑上的 Tailscale Funnel 转发到本机回环端口。ESP32 本身不跑 Tailscale。</dd></div>
+            </dl>
+            <p>无令牌的请求会被拒绝，同一设备的重复连接也会被拒绝。对外入口只有健康检查和受认证的设备协议。</p>
+          </section>
+
           <section class="chapter" id="verification">
-            <h2>原型验证</h2>
-            <p>XIAO 外接触摸屏原型已完成 USB 语音闭环。局域网连接已实际同步项目列表。</p>
+            <h2>实机验证</h2>
+            <p>XIAO 实机完成了 USB 下的录音、识别、确认提交和屏幕阅读回复。断开 USB 数据通道、只用无线时，设备通过局域网 TLS 同步项目，并在屏幕上录音、发送、收到了回复。经 Funnel 的远程连接和手机热点联网也已实测可用。</p>
+            <figure class="case-media bar-compare">
+              <figcaption><strong class="insight-media-title">同一段 3.968 秒语音的转写耗时</strong>同一台电脑，Whisper small / CUDA，只含电脑端识别，单位毫秒，越短越好。各组识别文本一致。</figcaption>
+              <dl>
+                <div><dt>beam 5，冷启动含加载</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:100%"></span></span><b>1942</b></dd></div>
+                <div><dt>beam 5，热机</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:8.14%"></span></span><b>158</b></dd></div>
+                <div><dt>beam 1，预加载后首次</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:17.40%"></span></span><b>338</b></dd></div>
+                <div class="is-best"><dt>beam 1，热机</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:5.97%"></span></span><b>116</b></dd></div>
+              </dl>
+            </figure>
+            <p>热机后 beam 5 也只要 158 ms，冷启动慢主要慢在模型加载。现在的版本在服务启动时后台预加载（另耗 667 ms，不占用户等待），默认 beam 1，两次热机识别分别为 116 和 117 ms。这些数字不含无线往返和 Codex 响应。</p>
+          </section>
+
+          <section class="chapter" id="next">
+            <h2>局限与下一步</h2>
+            <ul class="plain-list">
+              <li><strong>热点语音往返未验收。</strong>热点下设备已能联网并同步项目，但完整的录音、发送、收回复还没单独确认。</li>
+              <li><strong>识别准确率只看过少量样本。</strong>噪声、说话距离、连续多轮和英文技术名词的准确率还要用真实录音系统地测。</li>
+              <li><strong>桌面会话共享。</strong>目前不建议桌面和设备同时写同一个会话，不同客户端之间的状态共享还需逐一实测。</li>
+              <li><strong>硬件还很原型。</strong>背光常亮，固件只能经 USB 更新，没有 OTA；没有电池管理，靠充电宝供电，暂不给续航指标。</li>
+            </ul>
           </section>
         </div>
       </div>

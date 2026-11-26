@@ -3,15 +3,20 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="text-scale" content="scale">
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <meta name="description" content="我参与的开源机器人导航团队项目，用双目感知做建图、规划与移动机器人控制。">
+    <meta name="description" content="TinyNav 是团队维护的开源双目导航项目。我的部分是把它接到 LeKiwi 轮式底盘上：给规划器描述新底盘的外形和相机位置，并把速度指令可靠地交给底盘。">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="TinyNav · 牛牧">
+    <meta property="og:description" content="开源双目导航栈，以及我做的 LeKiwi 轮式底盘适配。">
+    <meta property="og:image" content="https://nusniumu.github.io/assets/tinynav-map.webp">
     <title>TinyNav · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/tinynav/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=2170c578">
+    <link rel="stylesheet" href="../../assets/site.css?v=fc8c5d6a">
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -26,38 +31,120 @@
         </ul>
       </nav>
     </header>
-    <main id="main" class="shell case-shell" tabindex="-1">
-      <header class="case-title">
-        <h1 lang="en">TinyNav</h1>
-        <p class="lead">我参与的开源机器人导航团队项目，用双目感知做建图、规划与移动机器人控制。</p>
-        <div class="actions"><a class="button primary" href="https://github.com/UniflexAI/tinynav">GitHub 仓库</a>
+    <main id="main" class="shell case-shell insight-case insight-v1 portfolio-case" tabindex="-1">
+      <header class="insight-hero">
+        <div class="case-title">
+          <h1 lang="en">TinyNav</h1>
+          <p class="lead">TinyNav 是团队维护的开源双目导航项目。我的部分是把它接到 LeKiwi 轮式底盘上：告诉规划器新底盘的外形和相机位置，并把速度指令可靠地交给底盘。</p>
+          <div class="actions"><a class="button primary" href="#lekiwi">看 LeKiwi 适配</a><a class="button" href="https://github.com/UniflexAI/tinynav">上游仓库</a></div>
         </div>
+        <figure class="case-media">
+          <a class="screenshot-link" href="../../assets/tinynav-map.webp" aria-label="打开原图 · TinyNav 地图"><img src="../../assets/tinynav-map.webp" width="960" height="708" fetchpriority="high" decoding="async" alt="在室内环境生成的 TinyNav 导航地图"></a>
+          <figcaption><strong class="insight-media-title">TinyNav 地图</strong>上游仓库的地图示例。<a href="https://github.com/UniflexAI/tinynav/blob/main/docs/map.png">上游原图</a></figcaption>
+        </figure>
       </header>
-      <figure class="case-media map">
-        <img src="../../assets/tinynav-map.webp" width="960" height="708" fetchpriority="high" alt="TinyNav 的导航地图示例">
-        <figcaption>地图来自 <a href="https://github.com/UniflexAI/tinynav/blob/master/docs/map.png">TinyNav 上游仓库</a>。</figcaption>
-      </figure>
+
+      <dl class="case-summary" aria-label="项目摘要">
+        <div><dt>项目</dt><dd>开源双目导航栈：双目深度、视觉惯性里程计、建图、局部规划，一直到底盘控制</dd></div>
+        <div><dt>我做的</dt><dd>LeKiwi 底盘适配：规划器的外形与相机偏置配置、速度指令桥接和超时停车、键盘遥控与远程 RViz 脚本</dd></div>
+        <div><dt>技术栈</dt><dd lang="en">ROS 2 · Python · numba · LeRobot LeKiwi · RViz</dd></div>
+        <div><dt>团队上游部分</dt><dd>TensorRT 双目深度与特征匹配、GTSAM 的 IMU 预积分优化、DINOv2 回环、ESDF 轨迹打分</dd></div>
+        <div class="summary-key"><dt>适配要点</dt><dd>规划器从相机位姿反推底盘中心，再按足迹检查碰撞。换到 LeKiwi，相机前移量从 Go2 的 0.2 m 改为 0.05 m，外形改为半径 0.15 m 的圆，安全余量 0.1 m。</dd></div>
+        <div><dt>目前进展</dt><dd>已在 LeKiwi 实机上跑通；适配代码还在我的本地分支，没有提交上游</dd></div>
+      </dl>
+
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
-            <li><a href="#overview">项目怎么工作</a></li>
-            <li><a href="#source">项目资料</a></li>
+            <li><a href="#stack">上游导航栈</a></li>
+            <li><a href="#planner">局部规划怎样避障</a></li>
+            <li><a href="#lekiwi">接入 LeKiwi</a></li>
+            <li><a href="#other">其他本地改动</a></li>
+            <li><a href="#demos">上游实机演示</a></li>
+            <li><a href="#next">局限与下一步</a></li>
           </ul>
         </nav>
         <div class="case-text">
-          <section class="chapter" id="overview">
-            <h2>项目怎么工作</h2>
-            <p>我参与了 TinyNav 开源团队项目。它把感知、建图和导航接起来，给移动机器人提供从观察环境到沿路径行进的工具。</p>
-          </section>
-          <section class="chapter" id="source">
-            <h2>项目资料</h2>
+          <section class="chapter" id="stack">
+            <h2>上游导航栈</h2>
+            <p>这一章和下一章介绍的是团队的上游代码，我在适配时需要读懂它。感知节点用 TensorRT 推理的立体匹配网络从左右图得到深度，SuperPoint 与 LightGlue 提取并关联跨帧特征，结合 PnP 和 IMU 预积分，用 GTSAM 在一个小滑动窗口里连续优化位姿。建图端用 DINOv2 特征找潜在回环，再做位姿图优化。</p>
             <figure class="case-media">
-              <video controls playsinline loading="lazy" preload="none" width="1280" height="720" aria-label="TinyNav 上游的 Unitree Go2 导航演示">
-                <source src="https://github.com/user-attachments/assets/f4ff4842-f0ca-4299-b3d5-5d097de1f2ba" type="video/mp4">
-                <a href="https://github.com/user-attachments/assets/f4ff4842-f0ca-4299-b3d5-5d097de1f2ba">打开演示视频</a>
-              </video>
-              <figcaption>Unitree Go2 导航演示。<a href="https://github.com/UniflexAI/tinynav#readme">上游 README</a> · <a href="https://github.com/user-attachments/assets/f4ff4842-f0ca-4299-b3d5-5d097de1f2ba">视频原件</a></figcaption>
+              <a class="screenshot-link" href="../../assets/project-media/tinynav-rviz.png" aria-label="打开原图 · 深度、位姿和地图同屏"><img src="../../assets/project-media/tinynav-rviz.png" width="3838" height="2160" loading="lazy" decoding="async" alt="左侧相机与深度图，右侧建图点云和机器人坐标轴。"></a>
+              <figcaption><strong class="insight-media-title">深度、位姿和地图同屏</strong>来自 TinyNav <a href="https://github.com/UniflexAI/tinynav/tree/main/docs">上游部署文档</a>。</figcaption>
             </figure>
+          </section>
+
+          <section class="chapter" id="planner">
+            <h2>局部规划怎样避障</h2>
+            <p>规划器用深度和位姿更新一张跟着机器人滚动的占据栅格，从障碍掩码算出欧氏距离场（ESDF）。候选轨迹按前进速度 0～0.5 m/s、转向角速度 ±π/3 rad/s 采样，再加一组预定义轨迹。每条轨迹沿途检查机器人中心和四个角到最近障碍的距离：相撞的直接淘汰，能走的再按到目标的距离、速度变化和障碍间距打分。</p>
+            <ol class="insight-flow" role="list"><li><strong>滚动栅格</strong><span>深度点投到机器人周围</span></li><li><strong>距离场</strong><span>每格到障碍物的距离</span></li><li><strong>轨迹选择</strong><span>按足迹和目标排序，输出速度</span></li></ol>
+            <p>全部候选都碰撞时，规划节点输出停止。<a href="https://github.com/UniflexAI/tinynav/blob/main/tinynav/core/planning_node.py">上游规划源码</a>。</p>
+          </section>
+
+          <section class="chapter" id="lekiwi">
+            <h2>接入 LeKiwi</h2>
+            <p>从上面的流程能看出，换底盘时规划器需要知道两件事：相机装在机身哪里，机身占多大地方。规划器拿到的是相机位姿，要先减去相机相对控制中心的偏移，才得到底盘中心；碰撞检查又按机身前后长度和半宽去取四个角。偏移或外形填错，避障就会整体偏掉。</p>
+            <dl class="insight-facts">
+              <div><dt>Go2 默认</dt><dd>方形 0.4 × 0.3 m，相机在控制中心前方 0.2 m，安全余量 0.2 m。</dd></div>
+              <div><dt>LeKiwi</dt><dd>圆形，半径 0.15 m，相机前移 0.05 m，安全余量 0.1 m。</dd></div>
+            </dl>
+            <p>第二件事是把规划器输出的速度交给底盘。我写了一个 ROS 2 桥接节点，订阅 <code>/cmd_vel</code>，转换后调用 LeRobot 的 LeKiwi 接口：</p>
+            <ol class="insight-flow" role="list"><li><strong>单位换算</strong><span>角速度从 rad/s 换成底盘要的 °/s</span></li><li><strong>只用两维</strong><span>前进和转向，横向速度固定为 0</span></li><li><strong>超时停车</strong><span>0.5 s 没有新指令就下发零速</span></li></ol>
+            <p>超时检查每 0.1 s 跑一次，防止规划节点卡住或退出时底盘按最后一条指令继续走。节点退出时停底盘、断开连接。实际下发的指令同时发布到单独的话题上，方便回看。</p>
+            <p>适配完成后，我在 LeKiwi 实机上跑通了这条链路。配套还写了几个脚本：键盘遥控节点直接发 <code>/cmd_vel</code>，可以绕开规划器单独驱动底盘；一键启动感知、规划、桥接和 RViz；以及在另一台电脑上通过 ROS 2 网络发现机载计算机上的话题、远程打开 RViz。</p>
+          </section>
+
+          <section class="chapter" id="other">
+            <h2>其他本地改动</h2>
+            <ul class="plain-list">
+              <li><strong>numba 缓存损坏后自动恢复。</strong>规划器的几个 numba 函数在加载缓存失败时，删掉对应的缓存文件再重新编译，而不是让节点直接崩掉。</li>
+              <li><strong>建图开始时清掉旧标记。</strong>启动建图节点时先发一次删除全部标记，避免 RViz 里残留上一次的地图。</li>
+              <li><strong>全局点云的体素确认。</strong>可选开关：把点按 5 cm 体素归并，一个体素至少被 2 个关键帧看到才发布，用来压住双目深度的飞点。默认关闭，不改变原有行为。</li>
+            </ul>
+          </section>
+
+          <section class="chapter" id="demos">
+            <h2>上游实机演示</h2>
+            <p>以下四段都是团队上游仓库的公开演示，不是我拍的：四足 Go2 与轮式 LeKiwi 的实机导航，以及 3D Gaussian Splatting 地图和纯视觉建图。</p>
+            <div class="insight-media-grid">
+              <figure class="case-media">
+                <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/tinynav-go2.webp" width="1280" height="720" aria-label="Unitree Go2 导航">
+                  <source src="../../assets/project-media/tinynav-go2.mp4" type="video/mp4">
+                  <a href="../../assets/project-media/tinynav-go2.mp4">打开视频 · Unitree Go2 导航</a>
+                </video>
+                <figcaption><strong class="insight-media-title">Unitree Go2 导航</strong>上游演示，四足平台。<a href="https://github.com/user-attachments/assets/f4ff4842-f0ca-4299-b3d5-5d097de1f2ba">上游原片</a></figcaption>
+              </figure>
+              <figure class="case-media">
+                <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/tinynav-lekiwi.webp" width="1280" height="720" aria-label="LeKiwi 导航">
+                  <source src="../../assets/project-media/tinynav-lekiwi.mp4" type="video/mp4">
+                  <a href="../../assets/project-media/tinynav-lekiwi.mp4">打开视频 · LeKiwi 导航</a>
+                </video>
+                <figcaption><strong class="insight-media-title">LeKiwi 导航</strong>上游演示，轮式平台。<a href="https://github.com/user-attachments/assets/c9b4b949-943b-4910-92f0-0337ef26d0b0">上游原片</a></figcaption>
+              </figure>
+              <figure class="case-media">
+                <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/tinynav-3dgs.webp" width="960" height="720" aria-label="3DGS 地图导航">
+                  <source src="../../assets/project-media/tinynav-3dgs.mp4" type="video/mp4">
+                  <a href="../../assets/project-media/tinynav-3dgs.mp4">打开视频 · 3DGS 地图导航</a>
+                </video>
+                <figcaption><strong class="insight-media-title">3DGS 地图导航</strong>上游演示，三维地图与导航。<a href="https://github.com/user-attachments/assets/5e0d5846-ab3f-4a57-8bdd-067473e758a9">上游原片</a></figcaption>
+              </figure>
+              <figure class="case-media">
+                <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/tinynav-vision.webp" width="1280" height="800" aria-label="纯视觉建图">
+                  <source src="../../assets/project-media/tinynav-vision.mp4" type="video/mp4">
+                  <a href="../../assets/project-media/tinynav-vision.mp4">打开视频 · 纯视觉建图</a>
+                </video>
+                <figcaption><strong class="insight-media-title">纯视觉建图</strong>上游演示，Vision Only Mapping。<a href="https://github.com/user-attachments/assets/578baeb2-63f7-444c-a9cd-e6a8036151d3">上游原片</a></figcaption>
+              </figure>
+            </div>
+          </section>
+
+          <section class="chapter" id="next">
+            <h2>局限与下一步</h2>
+            <ul class="plain-list">
+              <li><strong>还没提交上游。</strong>LeKiwi 配置和桥接都在本地分支。上游已经有自己的 LeKiwi 控制节点，下一步先对照两者，再决定哪些改动值得提 PR。</li>
+              <li><strong>圆形底盘按外接方形检查。</strong>碰撞检查取的是中心加四个角，圆形外形会被当成边长 0.3 m 的外接正方形，转弯贴边时偏保守。</li>
+              <li><strong>页面上还没有我自己的实机录像。</strong>适配已经在实机上跑过，但这页的视频都来自上游。之后补一段 LeKiwi 适配后的导航录像和超时停车的测试记录。</li>
+            </ul>
           </section>
         </div>
       </div>
