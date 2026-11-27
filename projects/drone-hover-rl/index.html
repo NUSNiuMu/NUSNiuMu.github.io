@@ -8,10 +8,10 @@
     <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <meta name="description" content="四旋翼抗风悬停控制器对比：串级 PID、LQR/LQI 与 PPO、TD3、DQN、RMA 风自适应策略，在理想和接近真实（电机滞后、延迟、参数随机、传感器噪声）两套 Isaac Lab 仿真里用同一协议评估。">
+    <meta name="description" content="四旋翼抗风悬停的控制器对比研究：串级 PID、LQR/LQI 与 PPO、TD3、DQN、RMA 风自适应策略，在理想和接近真实（电机滞后、延迟、参数随机、传感器噪声）两套 Isaac Lab 仿真里用同一协议评估，附 TD3 超参数研究。">
     <meta property="og:type" content="article">
     <meta property="og:title" content="无人机抗风悬停：PID、LQR 与强化学习对比 · 牛牧">
-    <meta property="og:description" content="RMA 自适应策略阵风峰值误差 9.2 cm，PID 21.0 cm；但 80% 机重的强风下 PID 成功率 93%，RL 只有 12–54%。">
+    <meta property="og:description" content="RMA 自适应策略阵风峰值误差 9.2 cm，PID 21.0 cm；但 80% 机重的强风下 PID 成功率 93%，RL 只有 0–54%。">
     <meta property="og:image" content="https://nusniumu.github.io/assets/project-media/hover-v2-poster.webp">
     <title>无人机抗风悬停：PID、LQR 与强化学习 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/drone-hover-rl/">
@@ -35,8 +35,8 @@
       <header class="insight-hero">
         <div class="case-title">
           <h1>无人机抗风悬停：PID、LQR 与强化学习</h1>
-          <p class="lead">在阵风里把一架 Crazyflie 级四旋翼稳在一个点上，该用手调的串级 PID、LQR，还是强化学习策略？我把 8 种控制器放进同一套 Isaac Lab 环境、用同一套评估协议比较。先在理想仿真里比一次，再换成有电机滞后、指令延迟、参数随机和传感器噪声的仿真重比。RL 输的地方也照实列出来。</p>
-          <div class="actions"><a class="button primary" href="#v2">看主要结果</a><a class="button" href="#compare">PID、LQR、RL 怎么选</a><a class="button" href="https://github.com/NUSNiuMu/Drone-Stable-Hover-RL">GitHub 仓库</a></div>
+          <p class="lead">在阵风里把一架 Crazyflie 级四旋翼稳在一个点上，该用串级 PID、LQR，还是强化学习策略？这项研究把 PID、LQR、LQI、PPO、TD3、DQN、RMA 七类控制器放进同一套 Isaac Lab 环境，按同一协议在理想和接近真实的两套仿真里评估，并给出 RL 输给 PID 的条件。</p>
+          <div class="actions"><a class="button primary" href="#results">看主要结果</a><a class="button" href="#discussion">PID、LQR、RL 怎么选</a><a class="button" href="https://github.com/NUSNiuMu/Drone-Stable-Hover-RL">GitHub 仓库</a></div>
         </div>
         <figure class="case-media">
           <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/hover-v2-poster.webp" width="1280" height="640" aria-label="串级 PID 与 RMA 自适应策略在同一阵风下的悬停对比">
@@ -51,48 +51,80 @@
         <div><dt>时间</dt><dd>2025–2026</dd></div>
         <div><dt>技术栈</dt><dd lang="en">Isaac Sim 4.5 · Isaac Lab 2.1 · PyTorch · PID · LQR/LQI · PPO · TD3 · DQN · RMA</dd></div>
         <div><dt>环境</dt><dd>Crazyflie 2.x（28.2 g），1024 架 GPU 并行；v1 理想电机，v2 加入电机滞后、20–40 ms 延迟、±10% 质量和推力、传感器噪声，推重比 1.9</dd></div>
-        <div><dt>我做的</dt><dd>两套风扰环境；PID、LQR、LQI 的实现和 CEM 自动调参；PPO、TD3、DQN 训练；CTBR 动作接口；RMA 教师–学生训练；统一评估和录像</dd></div>
-        <div class="summary-key"><dt>结果</dt><dd>v2 训练风力范围内，RMA 自适应策略三项指标都最好：稳态误差 0.90 cm、阵风峰值 9.2 cm、恢复 0.84 s，PID 分别是 1.66 cm、21.0 cm、1.58 s。但到 80% 机重的强风，PID 成功率 93%，RMA 54%，普通 PPO 12%。</dd></div>
+        <div><dt>我做的</dt><dd>两套风扰环境；PID、LQR、LQI 的实现和 CEM 自动调参；PPO、TD3、DQN 训练与 TD3 诊断、超参数研究；CTBR 动作接口；RMA 教师–学生训练；统一评估、作图和录像</dd></div>
+        <div class="summary-key"><dt>结果</dt><dd>v2 训练风力范围内，RMA 自适应策略三项指标都最好：稳态误差 0.90 cm、阵风峰值 9.2 cm、恢复 0.84 s，PID 分别是 1.66 cm、21.0 cm、1.58 s。但到 80% 机重的强风，PID 成功率 93%，RMA 54%，PPO 12%，TD3 0%。</dd></div>
         <div><dt>评估</dt><dd>每个控制器 3 个种子（RL 是训练种子，PID/LQR/LQI 是独立调参种子）× 512 个回合，固定评估种子；外加 0–80% 机重的风力扫描</dd></div>
       </dl>
 
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
-            <li><a href="#methods">方法一览</a></li>
-            <li><a href="#env">两套仿真环境</a></li>
-            <li><a href="#v1">v1：理想仿真</a></li>
-            <li><a href="#v2">v2：接近真实的仿真</a></li>
-            <li><a href="#compare">PID、LQR、RL 对比</a></li>
-            <li><a href="#ctbr">动作接口：电机指令还是 CTBR</a></li>
-            <li><a href="#rma">RMA：在线估计风力</a></li>
-            <li><a href="#claims">哪些结论成立</a></li>
-            <li><a href="#training">训练与调参</a></li>
-            <li><a href="#next">局限</a></li>
+            <li><a href="#abstract">摘要</a></li>
+            <li><a href="#intro">1 引言</a></li>
+            <li><a href="#related">2 相关工作</a></li>
+            <li><a href="#method">3 方法</a></li>
+            <li><a href="#setup">4 实验设置</a></li>
+            <li><a href="#results">5 结果</a></li>
+            <li><a href="#td3">6 TD3 超参数研究</a></li>
+            <li><a href="#discussion">7 讨论：PID、LQR、RL</a></li>
+            <li><a href="#limits">8 局限</a></li>
+            <li><a href="#refs">参考文献</a></li>
           </ul>
         </nav>
         <div class="case-text">
 
-          <section class="chapter" id="methods">
-            <h2>方法一览</h2>
-            <figure class="data-table"><table><caption><strong>参与对比的 8 种控制器和 1 种动作接口</strong>所有控制器拿到的是同样的测量值（v2 里带噪声）；只有 RMA 教师能看到真实风力，所以它只作为上界参考，不算可部署的控制器。</caption><thead><tr><th>方法</th><th>怎么工作</th><th>输入 → 输出</th><th>需要调的东西</th></tr></thead><tbody>
-              <tr><td>串级 PID<br>（比例–积分–微分，多环嵌套）</td><td>位置 PID 算出期望推力向量（限制最大倾角）→ 倾角优先的姿态 P 环 → 角速度 P 环 → 混控分配到四个电机。PX4 和 Crazyflie 固件用的就是这种结构</td><td>位置、速度、姿态、陀螺仪 → 4 个电机指令（或 CTBR）</td><td>8 个增益，用 CEM 自动调</td></tr>
-              <tr><td>LQR<br>（线性二次型调节器，Kalman 1960）</td><td>在悬停点把动力学线性化成 12 状态的小角度模型，按 50 Hz 离散化后解 Riccati 方程，得到一个固定的状态反馈增益矩阵；位置误差做限幅防饱和</td><td>12 维状态 → 总推力 + 3 个力矩 → 电机</td><td>Q/R 权重（按 Bryson 法则设 10 个最大允许值）+ 限幅</td></tr>
-              <tr><td>LQI<br>（带积分的 LQR）</td><td>在 LQR 状态里再加 3 维位置误差积分，用来消除恒定扰动造成的稳态偏差；条件积分防积分饱和</td><td>状态 + 位置误差积分 → 推力 + 力矩</td><td>LQR 的参数 + 2 个积分权重</td></tr>
-              <tr><td>PPO<br>（近端策略优化，Schulman 2017）</td><td>同策略 actor-critic：每轮用当前策略采样，更新时裁剪新旧策略的比值，防止一步改得太多</td><td>18 维（v1）/ 26 维（v2）观测 → 4 维连续动作</td><td>1024 环境 × 32 步，裁剪 0.2，γ 0.99，网络 256-128-64</td></tr>
-              <tr><td>TD3<br>（双延迟 DDPG，Fujimoto 2018）</td><td>异策略、确定性策略：用两个 Q 网络取较小值抑制高估，目标动作加噪声平滑，actor 隔一步才更新一次</td><td>同上 → 4 维连续动作</td><td>200 万回放池，batch 4096，网络 256-256</td></tr>
-              <tr><td>DQN<br>（深度 Q 网络，Mnih 2015；这里用 Double DQN + 3 步回报）</td><td>只能输出离散动作：每个电机三档转速，共 81 种组合，学每种组合的 Q 值</td><td>同上 → 81 选 1</td><td>学习率 1e-4，目标网络软更新 0.001</td></tr>
-              <tr><td>CTBR 动作接口<br>（Collective Thrust + Body Rates）</td><td>策略不直接给电机指令，而是给总推力和三个机体角速度设定值，再由机上 100 Hz 的角速度 P 环和混控转成电机指令。真机飞控普遍接受这种指令</td><td>[推力, ω<sub>x</sub>, ω<sub>y</sub>, ω<sub>z</sub>] → 电机</td><td>角速度增益 20/20/10 s⁻¹，最大角速度 4/4/2 rad/s</td></tr>
-              <tr><td>RMA 教师<br>（Rapid Motor Adaptation，Kumar 2021）</td><td>PPO-CTBR 策略额外看到 7 维“特权信息”：机体系风力、质量、推力系数、电机时间常数、延迟</td><td>观测 + 真实环境参数 → CTBR</td><td>同 PPO，1 亿步</td></tr>
-              <tr><td>RMA 学生</td><td>冻结教师；另训练一个适配模块，只用过去 1 秒（50 步）的观测和动作去估计那 7 维特权信息，估计值喂给教师。按 DAgger 方式用学生自己飞出来的数据做回归</td><td>50 × 26 维历史 → 估计参数 → 教师 → CTBR</td><td>MLP 1300-256-128-7，3000 万步</td></tr>
-            </tbody></table></figure>
-            <p>CEM（交叉熵方法）是 PID/LQR/LQI 的调参方式：每轮随机采样一批参数，各在 1024 个并行回合里飞一遍，取最好的一部分更新采样分布。调参用种子 11–13，从不使用评估种子，保证和 RL 的比较是公平的。</p>
+          <section class="chapter" id="abstract">
+            <h2>摘要</h2>
+            <p>四旋翼的抗风悬停在工程上通常由串级 PID 完成，学术上则有 LQR 和强化学习（RL）两条路线，但三者很少在同一仿真、同一评估协议、同样的调参预算下比较。本文在 Isaac Lab 中搭建两套风扰悬停环境：v1 为理想执行器，v2 加入一阶电机滞后、指令延迟、质量与推力随机化和传感器噪声。对比对象为 CEM 自动调参的串级 PID、LQR、LQI，以及 PPO、TD3、DQN 和 RMA 风自适应教师–学生策略，每个控制器 3 个种子 × 512 个评估回合。结果：(1) 训练风力范围内，RMA 学生策略的稳态误差、阵风峰值和恢复时间分别比 PID 低 46%、56%、47%；(2) 风力超出训练范围后结论反转，80% 机重稳态风下 PID 成功率 93.4%，最好的 RL 策略 54.3%；(3) LQR/LQI 只在理想模型中有优势，加入执行器滞后后最脆弱；(4) TD3 在 v2 中的稳态偏差来自 1 步 TD 目标给 actor 的梯度过弱，改用 3 步回报后成功率从约 55% 升到 99.9%，但仍不及 PPO。</p>
           </section>
 
-          <section class="chapter" id="env">
-            <h2>两套仿真环境</h2>
-            <p>共用部分：Crazyflie 2.x（28.2 g，重力 0.277 N），目标点 (0, 0, 1) m，起点随机偏离 ±0.2 m、偏航随机；物理 100 Hz、控制 50 Hz。风是世界坐标系下的水平力，每秒随机波动 ±20%，训练时还会随机出现阵风脉冲。奖励在 v1 和 v2 里相同：靠近目标加分，扣掉速度和角速度的平方项；v2 再扣一项动作变化量，抑制抖动。</p>
-            <figure class="data-table"><table><caption><strong>v1 与 v2 的区别</strong>v2 的参数按 Crazyflie 2.1 实机量级设定。</caption><thead><tr><th></th><th>v1 理想仿真</th><th>v2 接近真实</th></tr></thead><tbody>
+          <section class="chapter" id="intro">
+            <h2>1 引言</h2>
+            <p>悬停是四旋翼最基本的任务。风对机体的作用近似为一个未知、时变的外力：稳定风造成恒定偏差，阵风造成瞬时大偏离。PX4、Crazyflie 等开源飞控用位置–姿态–角速度三级串级 PID 处理它，靠积分项抵消恒定风；模型类方法（LQR）利用全状态反馈更快地响应扰动，但依赖模型；RL 策略可以直接从仿真数据学到非线性反馈，近年在四旋翼上已有不少成功案例 [7][8][9]。</p>
+            <p>已有对比往往只覆盖其中两类，或者在理想仿真中进行，RL 的优势是否在执行器滞后和延迟下仍然成立并不清楚。本文要回答三个问题：</p>
+            <ul class="plain-list">
+              <li><strong>Q1</strong>：在同样的调参/训练预算下，RL 比调好的串级 PID 和 LQR 好在哪里、差在哪里？</li>
+              <li><strong>Q2</strong>：从理想仿真换到接近真实的仿真（sim gap），各类方法的性能分别损失多少？</li>
+              <li><strong>Q3</strong>：让 RL 在线估计风力（RMA）、或换一种动作接口（CTBR），能补上多少差距？</li>
+            </ul>
+            <p><strong>贡献</strong>：一套开源的两级保真度风扰悬停基准，所有方法共享观测、评估种子和成功判据；全部控制器的 3 种子对比（表 3–6，图 2–5）；一个 RMA 风力估计器，在训练范围内以 2% 机重的 RMSE 跟踪真实风力（图 7）；对 TD3 在 v2 中失效的诊断和 10 组超参数研究（图 8，表 10）。</p>
+          </section>
+
+          <section class="chapter" id="related">
+            <h2>2 相关工作</h2>
+            <ul class="plain-list">
+              <li><strong>经典四旋翼控制。</strong>串级 PID 是 PX4 和 Crazyflie 固件的默认结构；Brescianini 和 D'Andrea 提出倾角优先的姿态控制 [4]，本文 PID 的姿态环采用这一思路。Bouabdallah 等在微型四旋翼上比较过 PID 和 LQ 控制 [3]，结论是 LQ 对模型误差更敏感，与本文 v2 的结果一致。</li>
+              <li><strong>RL 低层控制。</strong>Hwangbo 等首次用 RL 策略直接输出四旋翼电机推力 [7]；Molchanov 等通过参数随机化把一个策略迁移到多种实机 [8]；Kaufmann 等比较了不同动作接口，发现集体推力 + 机体角速度（CTBR）在性能和迁移性之间折中最好 [9]，本文第 5.4 节在抗风任务上复现了这一点。</li>
+              <li><strong>在线自适应。</strong>RMA [10] 用教师–学生方式让策略从历史观测中隐式估计环境参数，最早用于足式机器人；Neural-Fly [11] 在强风中在线学习气动残差。经典控制一侧有扰动观测器（DOB）和增量非线性动态逆（INDI）[12]，本文未纳入（见第 8 节）。</li>
+            </ul>
+          </section>
+
+          <section class="chapter" id="method">
+            <h2>3 方法</h2>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/hover-f1-system.webp" aria-label="打开原图 · 图 1 系统框图"><img src="../../assets/project-media/hover-f1-system.webp" width="2220" height="1140" loading="lazy" decoding="async" alt="上半部分是 v2 仿真信号流：指令队列（1 到 2 步延迟）→ 机上角速度环（仅 CTBR）→ 一阶滞后电机（时间常数 20 到 50 ms，推重比 1.9）→ 刚体（质量和推力系数随机 ±10%），风力作用在刚体上（基础风 0 到 35% 机重加阵风 10 到 40%）→ 带噪声的传感器 → 观测。下半部分是四类控制器：串级 PID、LQR/LQI、PPO/TD3 策略、RMA 教师–学生（历史 50 步 → 适配模块估计环境参数 → 策略）。"></a>
+              <figcaption><strong class="insight-media-title">图 1　系统框图</strong>(a) v2 仿真：物理 100 Hz，控制 50 Hz；电机指令策略绕过机上角速度环。(b) 四类控制器，全部输出到同一个指令队列。RMA 教师额外读取 7 维特权信息 e（机体系风力、质量、推力系数、电机时间常数、延迟），学生用适配模块从过去 1 秒的历史估计 ê。</figcaption>
+            </figure>
+            <figure class="data-table"><table><caption><strong>表 1　参与对比的方法</strong>所有控制器拿到同样的测量值（v2 里带噪声）；只有 RMA 教师能看到真实风力，只作上界参考，不算可部署的控制器。</caption><thead><tr><th>方法</th><th>怎么工作</th><th>输入 → 输出</th><th>需要调的东西</th></tr></thead><tbody>
+              <tr><td>串级 PID<br>（比例–积分–微分，多环嵌套）</td><td>位置 PID 算出期望推力向量（倾角 ≤ 40°）→ 倾角优先的姿态 P 环 [4] → 角速度 P 环 → 混控分配到四个电机</td><td>位置、速度、姿态、陀螺仪 → 4 个电机指令（或 CTBR）</td><td>8 个增益，CEM 自动调</td></tr>
+              <tr><td>LQR<br>（线性二次型调节器 [1]）</td><td>在悬停点线性化为 12 状态小角度模型，按 50 Hz 零阶保持离散化后解离散 Riccati 方程，得到固定的状态反馈增益；位置误差限幅防饱和</td><td>12 维状态 → 总推力 + 3 个力矩 → 电机</td><td>Q/R 权重（Bryson 法则 [2]，10 个最大允许值）+ 限幅，CEM 调</td></tr>
+              <tr><td>LQI<br>（带积分的 LQR）</td><td>LQR 状态再加 3 维位置误差积分，消除恒定扰动造成的稳态偏差；条件积分防积分饱和</td><td>状态 + 位置误差积分 → 推力 + 力矩</td><td>LQR 的参数 + 2 个积分权重</td></tr>
+              <tr><td>PPO<br>（近端策略优化 [5]）</td><td>同策略 actor-critic：用当前策略采样，更新时裁剪新旧策略比值，防止一步改得太多；GAE 估计优势</td><td>18 维（v1）/ 26 维（v2）观测 → 4 维连续动作</td><td>1024 环境 × 32 步，5 轮 × 4 小批，裁剪 0.2，γ 0.99，λ 0.95，网络 256-128-64</td></tr>
+              <tr><td>TD3<br>（双延迟 DDPG [6]）</td><td>异策略、确定性 actor：两个 Q 网络取较小值抑制高估，目标动作加噪声平滑，actor 每 2 步更新一次；v2 用 3 步回报（第 6 节）</td><td>同上 → 4 维连续动作</td><td>200 万回放池，batch 4096，网络 256-256；v2：学习率 1e-4，探索/目标噪声 0.1</td></tr>
+              <tr><td>DQN<br>（深度 Q 网络 [13]，Double DQN [14] + 3 步回报）</td><td>只输出离散动作：每个电机三档转速，共 81 种组合，学习每种组合的 Q 值</td><td>同上 → 81 选 1</td><td>学习率 1e-4，目标网络软更新 0.001</td></tr>
+              <tr><td>CTBR 动作接口<br>（Collective Thrust + Body Rates [9]）</td><td>策略输出总推力和三个机体角速度设定值，由机上 100 Hz 角速度 P 环和混控转成电机指令；真机飞控普遍接受这种指令</td><td>[T, ω<sub>x</sub>, ω<sub>y</sub>, ω<sub>z</sub>] → 电机</td><td>角速度增益 20/20/10 s⁻¹，最大角速度 4/4/2 rad/s</td></tr>
+              <tr><td>RMA 教师<br>（Rapid Motor Adaptation [10]）</td><td>PPO-CTBR 策略额外看到 7 维特权信息 e</td><td>观测 + e → CTBR</td><td>同 PPO，1 亿步</td></tr>
+              <tr><td>RMA 学生</td><td>冻结教师；适配模块只用过去 1 秒（50 步）的观测和动作估计 e，估计值喂给教师。用学生自己飞出来的数据做回归（DAgger 式 [15]）</td><td>50 × 26 维历史 → ê → 教师 → CTBR</td><td>MLP 1300-256-128-7，3000 万步</td></tr>
+            </tbody></table></figure>
+            <p><strong>经典控制器的调参</strong>用交叉熵方法 CEM [16]：每轮随机采样一批参数，各在 1024 个并行回合里飞一遍，取最好的一部分更新采样分布。调参用种子 11–13，从不使用评估种子。为了让 LQR 的比较公平：在 Bryson 归一化坐标下解 Riccati 方程（原始权重范围大时数值失败）；初值从 Bryson 估计出发；像 PID 的倾角限制一样给位置误差加可调限幅；LQI 用条件积分。这些处理去掉的是实现问题造成的坠机，剩下的差距才算 LQR 本身的。</p>
+            <p><strong>状态表示。</strong>所有量都在机体坐标系下：位置误差、机体系重力方向、线速度、角速度；v2 再加最近 2 步动作。姿态不用欧拉角：偏航随机时欧拉角在 ±π 处跳变，预实验中 PPO 坠机率 15%，换成机体系重力方向后降到 0.2%。</p>
+            <p><strong>奖励</strong>（v1、v2 相同）：靠近目标加分，扣速度和角速度的平方项；v2 再扣动作变化量，抑制抖动。</p>
+          </section>
+
+          <section class="chapter" id="setup">
+            <h2>4 实验设置</h2>
+            <p>共用部分：Crazyflie 2.x（28.2 g，重力 0.277 N），目标点 (0, 0, 1) m，起点随机偏离 ±0.2 m、偏航随机；物理 100 Hz、控制 50 Hz，1024 个环境 GPU 并行。风是世界坐标系下作用在质心的水平力，每秒随机波动 ±20%，训练时随机出现阵风脉冲。</p>
+            <figure class="data-table"><table><caption><strong>表 2　两套仿真环境</strong>v2 的参数按 Crazyflie 2.1 实机量级设定。</caption><thead><tr><th></th><th>v1 理想仿真</th><th>v2 接近真实</th></tr></thead><tbody>
               <tr><td>电机</td><td>4500–5500 RPM，瞬时响应；总推力 0.81–1.21 倍机重</td><td>推重比 1.9；一阶滞后，时间常数随机 20–50 ms</td></tr>
               <tr><td>指令延迟</td><td>无</td><td>1–2 个控制周期（20–40 ms）</td></tr>
               <tr><td>参数随机化</td><td>无</td><td>质量/惯量、推力系数各 ×U[0.9, 1.1]</td></tr>
@@ -102,38 +134,23 @@
               <tr><td>训练风力</td><td>0.02–0.08 N（机重 7–29%）+ 阵风 0.03–0.10 N</td><td>0–35% 机重 + 阵风 10–40%</td></tr>
               <tr><td>评估阵风</td><td>+0.10 N（36%）</td><td>+40%</td></tr>
             </tbody></table></figure>
-            <p>状态全部用机体坐标系下的量：位置误差、机体系重力方向、线速度、角速度等。姿态不用欧拉角：偏航随机时欧拉角在 ±π 处跳变，试训中 PPO 坠机率 15%；换成机体系重力方向后降到 0.2%。</p>
-            <p>评估协议：每回合 12 秒，基础风在训练范围内随机取大小和方向，第 6 秒从随机方向加 0.5 秒阵风；512 个回合，评估种子 1000。<strong>位置误差</strong>是 2–6 秒内与目标点的平均真实距离；<strong>阵风峰值</strong>是阵风后的最大误差；<strong>恢复时间</strong>从阵风开始算，到误差回到 5 cm 内并保持 0.5 秒；<strong>成功</strong>指 12 秒内没坠机、且最后 2 秒误差小于 10 cm。</p>
+            <p><strong>评估协议。</strong>每回合 12 秒，基础风在训练范围内随机取大小和方向，第 6 秒从随机方向加 0.5 秒阵风；512 个回合，评估种子 1000；结果为 3 个种子的均值 ± 标准差。指标定义：</p>
+            <ul class="plain-list">
+              <li><strong>稳态误差</strong>：2–6 秒内与目标点的平均真实距离（不是带噪声的测量值）。</li>
+              <li><strong>阵风峰值</strong>：阵风开始后的最大误差。</li>
+              <li><strong>恢复时间</strong>：从阵风开始，到误差回到 5 cm 内并保持 0.5 秒；只对能恢复的回合求均值，并单列恢复比例。</li>
+              <li><strong>成功</strong>：12 秒内没坠机，且最后 2 秒平均误差小于 10 cm。</li>
+              <li><strong>风力扫描</strong>：把基础风固定在 0–80% 机重（训练只到 35%），同样加 40% 阵风，测外推能力。</li>
+            </ul>
+            <figure class="data-table"><table><caption><strong>表 3　训练与调参预算</strong></caption><thead><tr><th></th><th>v1</th><th>v2</th></tr></thead><tbody>
+              <tr><td>RL</td><td>PPO / TD3 / DQN，各 3 种子 × 5000 万步</td><td>PPO-电机、PPO-CTBR、RMA 教师、TD3-CTBR，各 3 种子 × 1 亿步（单卡约 1 小时/种子）；RMA 学生每个教师 3000 万步</td></tr>
+              <tr><td>PID / LQR / LQI</td><td colspan="2">CEM，每轮 1024 个并行回合（PID 20 轮，LQR/LQI 30 轮），调参种子 11–13，8 秒回合、第 4 秒加阵风；PID 约 10 分钟调完</td></tr>
+            </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="v1">
-            <h2>v1：理想仿真</h2>
-            <figure class="data-table"><table><caption><strong>v1，训练风力范围内</strong>3 个种子的均值 ± 标准差；粗体是该列最优。</caption><thead><tr><th>控制器</th><th class="num">位置误差 (cm)</th><th class="num">阵风峰值 (cm)</th><th class="num">恢复 (s)</th><th class="num">成功</th><th class="num">坠机</th></tr></thead><tbody>
-              <tr><td>PPO</td><td class="num">1.13 ± 0.24</td><td class="num"><strong>7.1 ± 0.3</strong></td><td class="num"><strong>0.54 ± 0.04</strong></td><td class="num">99.7%</td><td class="num">0.3%</td></tr>
-              <tr><td>TD3</td><td class="num">1.84 ± 0.24</td><td class="num">7.5 ± 0.2</td><td class="num">0.62 ± 0.04</td><td class="num">100%</td><td class="num">0%</td></tr>
-              <tr><td>DQN</td><td class="num"><strong>0.80 ± 0.14</strong></td><td class="num">8.4 ± 0.1</td><td class="num">0.63 ± 0.01</td><td class="num">100%</td><td class="num">0%</td></tr>
-              <tr><td>串级 PID</td><td class="num">0.81 ± 0.05</td><td class="num">13.2 ± 0.3</td><td class="num">1.10 ± 0.02</td><td class="num">99.7%</td><td class="num">0.3%</td></tr>
-              <tr><td>LQR</td><td class="num">4.65 ± 0.07</td><td class="num">11.6 ± 0.1</td><td class="num">1.22 ± 0.01</td><td class="num">94.3%</td><td class="num">5.5%</td></tr>
-              <tr><td>LQI</td><td class="num">1.06 ± 0.04</td><td class="num">13.7 ± 0.8</td><td class="num">1.35 ± 0.23</td><td class="num">96.5%</td><td class="num">2.9%</td></tr>
-            </tbody></table></figure>
-            <p>理想条件下，RL 的阵风峰值和恢复时间大约是 PID 的一半；稳态误差上 PID 和 DQN 打平，PPO 反而略差。DQN 稳态误差小，是因为它的三档开关式控制训好后在目标点附近做极小幅度的来回切换。</p>
-            <figure class="data-table"><table><caption><strong>v1，超出训练范围的风</strong>悬停成功率。训练时最大基础风只有 0.08 N。</caption><thead><tr><th>基础风</th><th class="num">PPO</th><th class="num">TD3</th><th class="num">DQN</th><th class="num">PID</th><th class="num">LQR</th><th class="num">LQI</th></tr></thead><tbody>
-              <tr><td>0.12 N（43% 机重）</td><td class="num"><strong>89.5%</strong></td><td class="num">79.8%</td><td class="num">80.5%</td><td class="num">37.2%</td><td class="num">1.8%</td><td class="num">12.2%</td></tr>
-              <tr><td>0.14 N（51% 机重）</td><td class="num"><strong>48.8%</strong></td><td class="num">42.8%</td><td class="num">10.4%</td><td class="num">0.1%</td><td class="num">0%</td><td class="num">6.1%</td></tr>
-            </tbody></table></figure>
-            <p>v1 的电机推力最多只有机重的 1.21 倍，这么大的风下所有控制器都在推力饱和边缘。RL 训练时见过大量阵风造成的饱和，学会了用满执行器的余量，所以掉得最慢。这个优势到了推力余量更大的 v2 就不成立了。</p>
-            <figure class="case-media">
-              <a class="screenshot-link" href="../../assets/project-media/hover-v1-wind-pid.webp" aria-label="打开原图 · v1 风力扫描"><img src="../../assets/project-media/hover-v1-wind-pid.webp" width="2240" height="640" loading="lazy" decoding="async" alt="三张图横轴都是风力 0 到 0.14 N，灰色带是训练范围 0.02 到 0.08 N。左为稳态误差，0.12 N 后 PID 升到 40 cm 以上；中为阵风峰值误差，PID 始终最高，0.14 N 时约 63 cm；右为成功率，PID 在 0.12 N 跌到约 37%、0.14 N 到 0，PPO 在 0.14 N 还有约 49%。"></a>
-              <figcaption><strong class="insight-media-title">v1 风力扫描：三种 RL 与串级 PID</strong>左：稳态误差；中：阵风峰值误差；右：成功率。灰色带为训练范围；误差只统计未坠机的回合。</figcaption>
-            </figure>
-            <figure class="case-media">
-              <a class="screenshot-link" href="../../assets/project-media/hover-rerun-training.webp" aria-label="打开原图 · v1 训练曲线"><img src="../../assets/project-media/hover-rerun-training.webp" width="1760" height="640" loading="lazy" decoding="async" alt="左：三种算法的每回合累计奖励随训练步数上升，PPO 最快，最终都在 850 左右；右：训练中的坠机率，三者都在 500 万步内降到接近 0，DQN 在 1000 万步附近有一段回升。"></a>
-              <figcaption><strong class="insight-media-title">v1 训练曲线</strong>左为每回合累计奖励，右为坠机或出界比例，阴影是 3 个种子的标准差。PPO 收敛最快；DQN 起步晚，中途有一段波动。</figcaption>
-            </figure>
-          </section>
-
-          <section class="chapter" id="v2">
-            <h2>v2：接近真实的仿真</h2>
+          <section class="chapter" id="results">
+            <h2>5 结果</h2>
+            <h3>5.1 接近真实的仿真（v2）：训练风力范围内</h3>
             <figure class="case-media bar-compare">
               <figcaption><strong class="insight-media-title">v2 阵风峰值误差（cm）</strong>训练风力范围内 + 40% 机重阵风，越短越好。RMA 教师能看到真实风力，只作上界参考。</figcaption>
               <dl>
@@ -141,137 +158,219 @@
                 <div class="is-best"><dt>RMA 学生</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:27.5%"></span></span><b>9.2</b></dd></div>
                 <div><dt>PPO-CTBR</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:31.6%"></span></span><b>10.6</b></dd></div>
                 <div><dt>PPO-电机</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:34.6%"></span></span><b>11.6</b></dd></div>
-                <div><dt>TD3-CTBR</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:58.8%"></span></span><b>19.7</b></dd></div>
+                <div><dt>TD3-CTBR</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:38.8%"></span></span><b>13.0</b></dd></div>
                 <div><dt>PID-CTBR</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:62.7%"></span></span><b>21.0</b></dd></div>
                 <div><dt>PID-电机</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:69.9%"></span></span><b>23.4</b></dd></div>
                 <div><dt>LQI</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:80.6%"></span></span><b>27.0</b></dd></div>
                 <div><dt>LQR</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:100%"></span></span><b>33.5</b></dd></div>
               </dl>
             </figure>
-            <figure class="data-table"><table><caption><strong>v2，训练风力范围内（主要结果）</strong>3 个种子的均值 ± 标准差，每个种子 512 回合。</caption><thead><tr><th>控制器</th><th class="num">位置误差 (cm)</th><th class="num">阵风峰值 (cm)</th><th class="num">恢复 (s)</th><th class="num">成功</th><th class="num">坠机</th></tr></thead><tbody>
-              <tr><td>串级 PID（CTBR，机上角速度环）</td><td class="num">1.66 ± 0.17</td><td class="num">21.0 ± 0.4</td><td class="num">1.58 ± 0.04</td><td class="num">99.9%</td><td class="num">0.1%</td></tr>
-              <tr><td>串级 PID（电机指令）</td><td class="num">1.73 ± 0.17</td><td class="num">23.4 ± 0.6</td><td class="num">1.94 ± 0.19</td><td class="num">100%</td><td class="num">0%</td></tr>
-              <tr><td>LQR（电机指令）</td><td class="num">14.72 ± 1.61</td><td class="num">33.5 ± 0.5</td><td class="num">1.81 ± 0.30</td><td class="num">35.3%</td><td class="num">0.8%</td></tr>
-              <tr><td>LQI（电机指令）</td><td class="num">2.27 ± 0.57</td><td class="num">27.0 ± 0.3</td><td class="num">1.76 ± 0.05</td><td class="num">84.8%</td><td class="num">14.4%</td></tr>
-              <tr><td>PPO（电机指令）</td><td class="num">2.83 ± 0.54</td><td class="num">11.6 ± 0.2</td><td class="num">1.35 ± 0.06</td><td class="num">99.5%</td><td class="num">0.5%</td></tr>
-              <tr><td>PPO（CTBR）</td><td class="num">2.15 ± 0.13</td><td class="num">10.6 ± 0.3</td><td class="num">1.09 ± 0.04</td><td class="num">100%</td><td class="num">0%</td></tr>
-              <tr><td>TD3（CTBR）</td><td class="num">9.90 ± 1.40</td><td class="num">19.7 ± 0.6</td><td class="num">1.91 ± 0.21¹</td><td class="num">54.4%</td><td class="num">0%</td></tr>
-              <tr class="is-best"><td>RMA 学生（CTBR，在线估计风力）</td><td class="num">0.90 ± 0.05</td><td class="num">9.2 ± 0.2</td><td class="num">0.84 ± 0.06</td><td class="num">100%</td><td class="num">0%</td></tr>
-              <tr><td>RMA 教师（看得到真实风力，上界）</td><td class="num">0.74 ± 0.06</td><td class="num">7.7 ± 0.1</td><td class="num">0.80 ± 0.03</td><td class="num">100%</td><td class="num">0%</td></tr>
+            <figure class="data-table"><table><caption><strong>表 4　v2，训练风力范围内（主要结果）</strong>3 个种子的均值 ± 标准差，每个种子 512 回合。“恢复比例”是能在 12 秒内回到 5 cm 以内的回合占比。</caption><thead><tr><th>控制器</th><th class="num">稳态误差 (cm)</th><th class="num">阵风峰值 (cm)</th><th class="num">恢复 (s)</th><th class="num">恢复比例</th><th class="num">成功</th><th class="num">坠机</th></tr></thead><tbody>
+              <tr><td>串级 PID（CTBR）</td><td class="num">1.66 ± 0.17</td><td class="num">21.0 ± 0.4</td><td class="num">1.58 ± 0.04</td><td class="num">99.8%</td><td class="num">99.9%</td><td class="num">0.1%</td></tr>
+              <tr><td>串级 PID（电机指令）</td><td class="num">1.73 ± 0.17</td><td class="num">23.4 ± 0.6</td><td class="num">1.94 ± 0.19</td><td class="num">99.8%</td><td class="num">100%</td><td class="num">0%</td></tr>
+              <tr><td>LQR</td><td class="num">14.72 ± 1.61</td><td class="num">33.5 ± 0.5</td><td class="num">1.81 ± 0.30</td><td class="num">20.4%</td><td class="num">35.3%</td><td class="num">0.8%</td></tr>
+              <tr><td>LQI</td><td class="num">2.27 ± 0.57</td><td class="num">27.0 ± 0.3</td><td class="num">1.76 ± 0.05</td><td class="num">84.8%</td><td class="num">84.8%</td><td class="num">14.4%</td></tr>
+              <tr><td>PPO（电机指令）</td><td class="num">2.83 ± 0.54</td><td class="num">11.6 ± 0.2</td><td class="num">1.35 ± 0.06</td><td class="num">98.6%</td><td class="num">99.5%</td><td class="num">0.5%</td></tr>
+              <tr><td>PPO（CTBR）</td><td class="num">2.15 ± 0.13</td><td class="num">10.6 ± 0.3</td><td class="num">1.09 ± 0.04</td><td class="num">99.3%</td><td class="num">100%</td><td class="num">0%</td></tr>
+              <tr><td>TD3（CTBR）</td><td class="num">4.39 ± 0.65</td><td class="num">13.0 ± 0.5</td><td class="num">1.95 ± 0.33</td><td class="num">83.9%</td><td class="num">99.9%</td><td class="num">0%</td></tr>
+              <tr class="is-best"><td>RMA 学生（CTBR，在线估计风力）</td><td class="num">0.90 ± 0.05</td><td class="num">9.2 ± 0.2</td><td class="num">0.84 ± 0.06</td><td class="num">100%</td><td class="num">100%</td><td class="num">0%</td></tr>
+              <tr><td>RMA 教师（看得到真实风力，上界）</td><td class="num">0.74 ± 0.06</td><td class="num">7.7 ± 0.1</td><td class="num">0.80 ± 0.03</td><td class="num">100%</td><td class="num">100%</td><td class="num">0%</td></tr>
             </tbody></table></figure>
-            <p>¹ TD3 只有 16.5% 的回合能回到 5 cm 以内，均值只算这些回合。它在范围内不坠机，但悬停时一直偏离约 10 cm（各种子成功率 36–70%）。DQN 的三档离散动作表达不了 v2 更宽的推力范围和 CTBR 设定值，v2 没有重训 DQN。</p>
-            <figure class="data-table"><table><caption><strong>v2，超出训练范围的风</strong>基础风固定在 40–80% 机重（训练只到 35%），同样加 40% 阵风；悬停成功率。</caption><thead><tr><th>控制器</th><th class="num">40%</th><th class="num">50%</th><th class="num">60%</th><th class="num">70%</th><th class="num">80%</th></tr></thead><tbody>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/hover-f2-v2-in-range.webp" aria-label="打开原图 · 图 2 v2 范围内对比"><img src="../../assets/project-media/hover-f2-v2-in-range.webp" width="2157" height="878" loading="lazy" decoding="async" alt="三张横向条形图，每个控制器一根柱，圆点是 3 个种子的单独结果。(a) 稳态误差：LQR 约 15 cm 远高于其他，TD3 约 4.4 cm，PPO 约 2 到 3 cm，PID 约 1.7 cm，RMA 学生 0.9 cm。(b) 阵风峰值：LQR 33.5、LQI 27、PID 21 到 23 cm，RL 都在 8 到 13 cm。(c) 恢复时间：RMA 约 0.8 s 最短，PPO-CTBR 1.1 s，TD3 和 PID-电机约 1.9 到 2.0 s；LQR 只有 20% 的回合能恢复，LQI 85%，TD3 84%。"></a>
+              <figcaption><strong class="insight-media-title">图 2　v2 训练风力范围内的三项指标</strong>(a) 稳态误差；(b) 阵风峰值；(c) 恢复时间。柱为 3 个种子均值，误差棒为标准差，圆点为单个种子。灰色系为经典控制，绿色为 PPO，橙色为 TD3，蓝色为 RMA；斜线/点纹填充分别表示电机指令和特权信息。</figcaption>
+            </figure>
+            <ul class="plain-list">
+              <li><strong>RMA 学生是可部署控制器中三项都最好的：</strong>比 PID-CTBR 稳态误差低 46%、阵风峰值低 56%、恢复快 47%；比同为 CTBR 的普通 PPO 分别低 58%、13%、23%。</li>
+              <li><strong>阵风响应上所有 RL 都明显好于经典控制：</strong>最差的 RL（TD3，13.0 cm）也比最好的经典控制器（PID-CTBR，21.0 cm）低 38%。</li>
+              <li><strong>稳态精度上普通 RL 不如 PID：</strong>PPO-CTBR 2.15 cm、TD3 4.39 cm，PID 1.66 cm。只有加了风力估计的 RMA 超过 PID。</li>
+              <li><strong>TD3 的恢复时间长是阈值效应：</strong>它的残余偏差 4–5 cm，紧贴 5 cm 的恢复阈值，16% 的回合始终没跨过去；它的阵风峰值只比 PPO 高 23%。</li>
+              <li>DQN 的三档离散动作表达不了 v2 更宽的推力范围和 CTBR 设定值，没有参加 v2 对比。</li>
+            </ul>
+
+            <h3>5.2 阵风时间响应</h3>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/hover-f5-time-response.webp" aria-label="打开原图 · 图 3 时间响应"><img src="../../assets/project-media/hover-f5-time-response.webp" width="2182" height="851" loading="lazy" decoding="async" alt="(a) 单个回合 0 到 12 秒的位置误差曲线：起飞阶段 PID 和 LQI 有约 20 cm 的超调；第 6 秒阵风时 PID 峰值约 25 cm，随后在 7 秒附近还有约 14 cm 的二次超调；PPO 峰值约 14 cm，RMA 约 10 cm；TD3 全程在 5 到 10 cm 之间波动。(b) 512 回合平均的 5.5 到 9 秒放大：LQI 峰值约 26 cm、PID 约 21 cm，二者在 7.0 到 7.2 秒还有 13 到 18 cm 的第二个峰；TD3 约 12 cm、PPO 约 11 cm、RMA 约 9 cm，RL 曲线没有第二个峰；TD3 在阵风前后都停在约 4.5 到 5 cm。"></a>
+              <figcaption><strong class="insight-media-title">图 3　阵风前后的位置误差</strong>(a) 同一个随机种子下的单个回合，阴影为 0.5 秒阵风；(b) 512 个回合的均值，阴影为种子间差异，虚线为 5 cm 恢复阈值。</figcaption>
+            </figure>
+            <p>RL 策略的误差峰值出现得更早（约 6.3 s，经典控制约 6.5 s），而且没有第二个峰。PID 和 LQI 在阵风结束后有 13–18 cm 的反向超调：阵风期间积分项累积，阵风撤掉后需要时间放掉。RL 策略没有需要放空的积分状态。图 3(b) 也直接显示了 TD3 的问题：阵风前后它都停在 4.5–5 cm，而不是回到 0。</p>
+
+            <h3>5.3 超出训练范围的风</h3>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/hover-f3-v2-wind-sweep.webp" aria-label="打开原图 · 图 4 v2 风力扫描"><img src="../../assets/project-media/hover-f3-v2-wind-sweep.webp" width="2276" height="860" loading="lazy" decoding="async" alt="三张图横轴都是稳态风力 0 到 80% 机重，灰色带为训练范围 0 到 35%。(a) 成功率：LQR 在 20% 起为 0，LQI 在 30% 后快速下降；TD3 在 50% 跌到约 69%、60% 约 15%；PPO-电机 60% 约 56%，PPO-CTBR 70% 约 45%；PID-CTBR 70% 约 82%、80% 约 30%；RMA 学生 80% 约 54%；PID-电机 80% 仍约 93%。(b) 稳态误差（对数轴）随风力单调上升，RMA 在 40% 以内最低，60% 以后 PID-电机最低。(c) 阵风峰值（对数轴），RMA 学生在所有风力下都最低，约 9 到 16 cm。"></a>
+              <figcaption><strong class="insight-media-title">图 4　v2 风力扫描</strong>(a) 成功率；(b) 稳态误差；(c) 阵风峰值。每个风力点 512 回合 × 3 个种子，阴影为种子间标准差；误差只统计未坠机的回合。</figcaption>
+            </figure>
+            <figure class="data-table"><table><caption><strong>表 5　v2，超出训练范围的风</strong>基础风固定在 40–80% 机重，同样加 40% 阵风；悬停成功率，3 个种子均值。</caption><thead><tr><th>控制器</th><th class="num">40%</th><th class="num">50%</th><th class="num">60%</th><th class="num">70%</th><th class="num">80%</th></tr></thead><tbody>
               <tr><td>PID-CTBR</td><td class="num">99.9%</td><td class="num">99.9%</td><td class="num">99.3%</td><td class="num">82.0%</td><td class="num">29.6%</td></tr>
               <tr class="is-best"><td>PID-电机</td><td class="num">100%</td><td class="num">99.7%</td><td class="num">99.9%</td><td class="num">99.0%</td><td class="num">93.4%</td></tr>
               <tr><td>LQR</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td></tr>
               <tr><td>LQI</td><td class="num">59.8%</td><td class="num">28.8%</td><td class="num">10.2%</td><td class="num">0.3%</td><td class="num">0%</td></tr>
               <tr><td>PPO-电机</td><td class="num">97.7%</td><td class="num">88.5%</td><td class="num">56.0%</td><td class="num">9.6%</td><td class="num">0.8%</td></tr>
               <tr><td>PPO-CTBR</td><td class="num">99.8%</td><td class="num">98.8%</td><td class="num">83.9%</td><td class="num">45.0%</td><td class="num">12.0%</td></tr>
-              <tr><td>TD3-CTBR</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td></tr>
+              <tr><td>TD3-CTBR</td><td class="num">98.4%</td><td class="num">68.9%</td><td class="num">14.9%</td><td class="num">0.3%</td><td class="num">0%</td></tr>
               <tr><td>RMA 学生</td><td class="num">100%</td><td class="num">99.9%</td><td class="num">99.7%</td><td class="num">89.9%</td><td class="num">54.3%</td></tr>
               <tr><td>RMA 教师（上界）</td><td class="num">100%</td><td class="num">100%</td><td class="num">100%</td><td class="num">93.9%</td><td class="num">70.2%</td></tr>
             </tbody></table></figure>
-            <p>LQR 在 40–60% 风力下其实很少坠机，成功率是 0 是因为没有积分项，稳态偏差超过了 10 cm 的成功阈值。</p>
-            <figure class="case-media">
-              <a class="screenshot-link" href="../../assets/project-media/hover-v2-wind-sweep.webp" aria-label="打开原图 · v2 风力扫描"><img src="../../assets/project-media/hover-v2-wind-sweep.webp" width="2400" height="704" loading="lazy" decoding="async" alt="三张图横轴都是基础风力 0 到 80% 机重，灰色带是训练范围 0 到 35%。左为阵风前位置误差（对数轴），RMA 学生在 30% 以内最低约 0.7 到 1 cm；中为阵风峰值误差，PID-CTBR 一直在 21 cm 以上，RMA 学生最低约 9 cm；右为成功率，60% 前除 PPO-电机外都接近 100%，80% 时 RMA 学生约 54%，PID-CTBR 约 30%，PPO-CTBR 约 12%，PPO-电机接近 0。"></a>
-              <figcaption><strong class="insight-media-title">v2 风力扫描：PID 与各种 RL 策略</strong>左：阵风前位置误差（对数轴）；中：阵风峰值误差；右：成功率。灰色带为训练范围。</figcaption>
-            </figure>
-            <figure class="case-media">
-              <a class="screenshot-link" href="../../assets/project-media/hover-v2-training.webp" aria-label="打开原图 · v2 训练曲线"><img src="../../assets/project-media/hover-v2-training.webp" width="1760" height="640" loading="lazy" decoding="async" alt="左：v2 每回合累计奖励，RMA 教师约 900，PPO-CTBR 约 770，PPO-电机约 690 且 6000 万步后种子间差异变大；右：训练中位置误差，教师约 3 cm，两种 PPO 约 5 cm。"></a>
-              <figcaption><strong class="insight-media-title">v2 训练曲线</strong>3 个种子 × 1 亿步。看得到风力的教师收敛最快、误差最低；PPO-电机在 6000 万步后种子间差异变大，CTBR 没有这个问题。</figcaption>
-            </figure>
-          </section>
+            <p>风一超出训练范围，结论就反转了。PID-电机到 80% 机重仍有 93.4% 成功率；RL 里最好的 RMA 学生是 54.3%，PPO-CTBR 12.0%，TD3 在 60% 就只剩 14.9%。积分器会一直累积，直到抵消任意大小的恒定风；策略网络只在见过的输入范围里可靠。阵风峰值（图 4c）则相反：RMA 在所有风力下都最低，说明 RL 输在稳态的“够不够力”，而不是对扰动的反应速度。LQR 在 40–60% 风力下其实很少坠机，成功率为 0 是因为没有积分项，稳态偏差超过了 10 cm 的成功阈值。</p>
 
-          <section class="chapter" id="compare">
-            <h2>PID、LQR、RL 对比</h2>
+            <h3>5.4 从理想仿真到接近真实的仿真</h3>
+            <figure class="data-table"><table><caption><strong>表 6　v1 理想仿真，训练风力范围内</strong>电机指令，阵风 +0.10 N（36% 机重）；3 个种子均值 ± 标准差，粗体为该列最优。</caption><thead><tr><th>控制器</th><th class="num">稳态误差 (cm)</th><th class="num">阵风峰值 (cm)</th><th class="num">恢复 (s)</th><th class="num">成功</th><th class="num">43% 风</th><th class="num">51% 风</th></tr></thead><tbody>
+              <tr><td>串级 PID</td><td class="num">0.81 ± 0.05</td><td class="num">13.2 ± 0.3</td><td class="num">1.10 ± 0.02</td><td class="num">99.7%</td><td class="num">37.2%</td><td class="num">0.1%</td></tr>
+              <tr><td>LQR</td><td class="num">4.65 ± 0.07</td><td class="num">11.6 ± 0.1</td><td class="num">1.22 ± 0.01</td><td class="num">94.3%</td><td class="num">1.8%</td><td class="num">0%</td></tr>
+              <tr><td>LQI</td><td class="num">1.06 ± 0.04</td><td class="num">13.7 ± 0.8</td><td class="num">1.35 ± 0.23</td><td class="num">96.5%</td><td class="num">12.2%</td><td class="num">6.1%</td></tr>
+              <tr><td>PPO</td><td class="num">1.13 ± 0.24</td><td class="num"><strong>7.1 ± 0.3</strong></td><td class="num"><strong>0.54 ± 0.04</strong></td><td class="num">99.7%</td><td class="num"><strong>89.5%</strong></td><td class="num"><strong>48.8%</strong></td></tr>
+              <tr><td>TD3</td><td class="num">1.84 ± 0.24</td><td class="num">7.5 ± 0.2</td><td class="num">0.62 ± 0.04</td><td class="num">100%</td><td class="num">79.8%</td><td class="num">42.8%</td></tr>
+              <tr><td>DQN</td><td class="num"><strong>0.80 ± 0.14</strong></td><td class="num">8.4 ± 0.1</td><td class="num">0.63 ± 0.01</td><td class="num">100%</td><td class="num">80.5%</td><td class="num">10.4%</td></tr>
+            </tbody></table></figure>
             <figure class="case-media">
-              <a class="screenshot-link" href="../../assets/project-media/hover-classical-vs-rl.webp" aria-label="打开原图 · 经典控制与 RL 对比"><img src="../../assets/project-media/hover-classical-vs-rl.webp" width="2400" height="1344" loading="lazy" decoding="async" alt="两行三列。上行 v1：PPO 的阵风峰值误差在所有风力下最低，成功率在 43% 风力时约 89%，PID 约 37%，LQR 与 LQI 在 0 到 12%。下行 v2：PID-电机的成功率到 80% 风力仍约 93%，PPO-CTBR 约 12%，LQR 从 20% 风力起成功率为 0，LQI 在 30% 后快速下降；阵风峰值误差两种 PPO 约 10 到 12 cm，PID 约 23 cm，LQI 约 27 cm，LQR 30 cm 以上。"></a>
-              <figcaption><strong class="insight-media-title">经典控制与 RL：v1（上）和 v2（下）</strong>左：阵风前位置误差；中：阵风峰值误差；右：成功率。横轴是基础风力占机重的比例，灰色带为训练范围。</figcaption>
+              <a class="screenshot-link" href="../../assets/project-media/hover-f4-sim-gap.webp" aria-label="打开原图 · 图 5 v1 到 v2"><img src="../../assets/project-media/hover-f4-sim-gap.webp" width="2174" height="896" loading="lazy" decoding="async" alt="三张斜线图，左端 v1 理想仿真，右端 v2 接近真实。(a) 稳态误差（对数轴）：所有方法都上升，LQR 从 4.7 到 14.7 cm 最多，PID 从 0.8 到 1.7 cm 仍最低，TD3 从 1.8 到 4.4 cm。(b) 阵风峰值：LQR 从 11.6 升到 33.5 cm，LQI 从 13.7 到 27.0，PID 从 13.2 到 23.4，RL 三条线都从 7 左右升到 11 到 13 cm。(c) 范围内成功率：LQR 从 94% 跌到 35%，LQI 从 97% 到 85%，其他方法都保持约 100%。"></a>
+              <figcaption><strong class="insight-media-title">图 5　仿真保真度对各方法的影响</strong>(a) 稳态误差（对数轴）；(b) 阵风峰值；(c) 范围内成功率。PPO 和 TD3 在 v1 用电机指令、在 v2 用 CTBR（实线）；虚线为两边都用电机指令的 PPO。</figcaption>
             </figure>
-            <h3>为什么用串级 PID 做基线</h3>
-            <p>真机上就是它在飞：PX4 和 Crazyflie 固件都用位置 → 姿态 → 角速度三级 PID，所以“RL 能不能比 PID 好”是工程上真正要回答的问题。调好之后它也是个强基线：用 CEM 调 8 个增益，3 个独立调参种子的结果相差只有几个百分点；v1 里稳态误差 0.81 cm，与最好的 RL 持平；v2 里强风下最稳。</p>
-            <h3>加上 LQR 之后怎样</h3>
+            <figure class="data-table"><table><caption><strong>表 7　v1 → v2 阵风峰值的放大倍数</strong>v2 的阵风更大（40% vs 36% 机重），所以倍数之间比较更有意义。</caption><thead><tr><th>控制器</th><th class="num">v1 (cm)</th><th class="num">v2 (cm)</th><th class="num">倍数</th></tr></thead><tbody>
+              <tr><td>PPO（电机 → CTBR）</td><td class="num">7.1</td><td class="num">10.6</td><td class="num">×1.49</td></tr>
+              <tr><td>PPO（电机 → 电机）</td><td class="num">7.1</td><td class="num">11.6</td><td class="num">×1.63</td></tr>
+              <tr><td>TD3（电机 → CTBR）</td><td class="num">7.5</td><td class="num">13.0</td><td class="num">×1.73</td></tr>
+              <tr><td>串级 PID（电机）</td><td class="num">13.2</td><td class="num">23.4</td><td class="num">×1.77</td></tr>
+              <tr><td>LQI</td><td class="num">13.7</td><td class="num">27.0</td><td class="num">×1.97</td></tr>
+              <tr><td>LQR</td><td class="num">11.6</td><td class="num">33.5</td><td class="num">×2.89</td></tr>
+            </tbody></table></figure>
             <ul class="plain-list">
-              <li><strong>赢在模型准确时的阵风响应。</strong>v1 模型完美、无延迟，LQR 阵风峰值比 PID 低（11.6 vs 13.2 cm）：全状态反馈同时用速度和姿态，对扰动反应更快。加了积分的 LQI 稳态误差和 PID 接近（1.06 vs 0.81 cm）。</li>
-              <li><strong>输在恒定扰动。</strong>纯 LQR 没有积分项，恒定风和 v2 里随机的质量、推力都会留下固定偏差：v1 4.65 cm，v2 14.7 cm，PID 是 0.81 / 1.73 cm。LQI 能消掉（1.06 / 2.27 cm）。</li>
-              <li><strong>输在饱和。</strong>线性控制律不知道电机有上限。不做误差限幅时，LQR/LQI 在初始偏差和阵风后都会坠机；加了限幅和条件积分，v1 里仍有 3–6% 坠机，43% 风力下成功率 2–12%，有倾角限制的 PID 是 37%。</li>
-              <li><strong>输在模型误差和延迟。</strong>LQR 的模型里没有电机滞后和指令延迟。到了 v2，LQI 的余量基本耗尽：成功率 84.8%，坠机 14.4%（PID 100%）；超出训练范围后很快崩掉，60% 风力只剩 10%，PID 99.9%。PID 逐环低增益的结构对 20–90 ms 的未建模滞后容忍得多。</li>
+              <li><strong>模型类方法受 sim gap 影响最大。</strong>LQR 在 v1 的阵风峰值比 PID 低（11.6 vs 13.2 cm），到 v2 反而高 43%；它的模型里没有电机滞后和延迟，增益是按无滞后系统算的。</li>
+              <li><strong>RL 退化最少。</strong>PPO-CTBR 的峰值只放大 1.49 倍。RL 在 v2 里是在带滞后、延迟和随机参数的环境中直接训练的，等于把这些因素学进了策略。</li>
+              <li><strong>v1 里 RL 扛强风更好，v2 里不成立。</strong>v1 电机推力最多只有机重的 1.21 倍，43–51% 的风下所有控制器都在推力饱和边缘；RL 训练时见过大量饱和，会用满执行器余量（PPO 89.5% vs PID 37.2%）。v2 推重比 1.9，饱和不再是瓶颈，积分器的优势显出来了。</li>
+              <li><strong>DQN 的稳态误差最小（0.80 cm）</strong>，是因为三档开关式控制训好后在目标点附近做极小幅度的来回切换；代价是动作集固定，换到 v2 就不适用。</li>
             </ul>
-            <p>结论：在这个问题上，LQR 只在理想模型里比 PID 好，换成接近真实的执行器就不如 PID。</p>
-            <h3>RL 相比 PID 和 LQR 的优缺点</h3>
-            <ul class="plain-list">
-              <li><strong>优点：抗阵风好得多。</strong>v2 里 RMA 阵风峰值 9.2 cm，PID 21.0 cm，LQI 27.0 cm；恢复 0.84 s，PID 1.58 s，LQI 1.76 s。v1 里 PPO 的峰值和恢复时间都约为 PID 的一半（7.1 vs 13.2 cm，0.54 vs 1.10 s）。</li>
-              <li><strong>优点：会用满执行器。</strong>v1 推力余量很小时，43% 风力下 PPO 成功率 89.5%，PID 37.2%。</li>
-              <li><strong>优点：加上 RMA 后能在线辨识风力，</strong>稳态误差也最好（v2 0.90 cm，PID 1.66 cm）。</li>
-              <li><strong>缺点：只在训练范围附近好用。</strong>v2 风力超过 60% 机重后，PID-电机仍有 93–99% 成功率，PPO 掉到 1–12%，RMA 54%。积分器能一直累积去抵消任意大小的恒定风，策略网络只在见过的范围里可靠。</li>
-              <li><strong>缺点：成本和脆弱性。</strong>每个种子 1 亿步仿真（一张 GPU 约 1 小时），还要设计观测、动作接口、随机化和奖励；同一套 TD3 超参数在 v1 表现很好，到 v2 就失效了。PID 是 8 个可解释的增益，约 10 分钟调完，稳定裕度也有成熟的分析方法。</li>
-            </ul>
-          </section>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/hover-v1-wind-pid.webp" aria-label="打开原图 · 图 6 v1 风力扫描"><img src="../../assets/project-media/hover-v1-wind-pid.webp" width="2240" height="640" loading="lazy" decoding="async" alt="三张图横轴都是风力 0 到 0.14 N，灰色带是训练范围 0.02 到 0.08 N。左为稳态误差，0.12 N 后 PID 升到 40 cm 以上；中为阵风峰值误差，PID 始终最高，0.14 N 时约 63 cm；右为成功率，PID 在 0.12 N 跌到约 37%、0.14 N 到 0，PPO 在 0.14 N 还有约 49%。"></a>
+              <figcaption><strong class="insight-media-title">图 6　v1 风力扫描：三种 RL 与串级 PID</strong>左：稳态误差；中：阵风峰值；右：成功率。灰色带为训练范围；误差只统计未坠机的回合。</figcaption>
+            </figure>
 
-          <section class="chapter" id="ctbr">
-            <h2>动作接口：电机指令还是 CTBR</h2>
-            <p>同样是 PPO、同样的训练预算，只把输出从 4 个电机指令换成“总推力 + 3 个机体角速度”，由机上角速度环去跟踪：</p>
-            <figure class="data-table"><table><caption><strong>PPO：电机指令 vs CTBR（v2）</strong></caption><thead><tr><th>指标</th><th class="num">电机指令</th><th class="num">CTBR</th><th class="num">变化</th></tr></thead><tbody>
-              <tr><td>稳态位置误差</td><td class="num">2.83 cm</td><td class="num">2.15 cm</td><td class="num">−24%</td></tr>
+            <h3>5.5 动作接口：电机指令还是 CTBR</h3>
+            <figure class="data-table"><table><caption><strong>表 8　PPO：电机指令 vs CTBR（v2）</strong>同样的网络和训练预算，只改输出层的含义。</caption><thead><tr><th>指标</th><th class="num">电机指令</th><th class="num">CTBR</th><th class="num">变化</th></tr></thead><tbody>
+              <tr><td>稳态误差</td><td class="num">2.83 cm</td><td class="num">2.15 cm</td><td class="num">−24%</td></tr>
               <tr><td>阵风峰值</td><td class="num">11.6 cm</td><td class="num">10.6 cm</td><td class="num">−9%</td></tr>
               <tr><td>恢复时间</td><td class="num">1.35 s</td><td class="num">1.09 s</td><td class="num">−19%</td></tr>
               <tr><td>70% 风力成功率</td><td class="num">9.6%</td><td class="num">45.0%</td><td class="num">×4.7</td></tr>
             </tbody></table></figure>
-            <p>快速的角速度稳定交给了机上 100 Hz 的环，策略只需决定“往哪倾、推多大”，学习问题更简单；训练曲线上 CTBR 的回报也更高、种子间更一致。真机飞控本来就接受 CTBR 指令，所以它也更容易部署。PID 则相反：用电机指令时在强风下更稳（80% 风力成功率 93% vs 30%）。</p>
-          </section>
+            <p>快速的角速度稳定交给机上 100 Hz 的环，策略只需决定“往哪倾、推多大”，学习问题更简单；训练曲线上 CTBR 的回报更高、种子间更一致（图 9）。真机飞控本来就接受 CTBR 指令，所以它也更容易部署。PID 则相反：用电机指令时强风下更稳（80% 风力成功率 93% vs 30%）。</p>
 
-          <section class="chapter" id="rma">
-            <h2>RMA：在线估计风力</h2>
-            <p>普通 PPO 只能看到当前状态，不知道此刻风有多大，只能学一个对所有风力都凑合的策略。RMA 分两步：先训练一个能直接看到真实风力和机体参数的教师；再训练适配模块，只看过去 1 秒的状态和自己发出的动作——“推力给了这么多，飞机却往那边漂”——去反推这些参数，交给教师使用。</p>
-            <figure class="data-table"><table><caption><strong>RMA 学生相对普通 PPO-CTBR（v2）</strong></caption><thead><tr><th>指标</th><th class="num">PPO-CTBR</th><th class="num">RMA 学生</th><th class="num">RMA 教师（上界）</th></tr></thead><tbody>
-              <tr><td>稳态位置误差</td><td class="num">2.15 cm</td><td class="num">0.90 cm（−58%）</td><td class="num">0.74 cm</td></tr>
+            <h3>5.6 RMA：在线估计风力</h3>
+            <p>普通 PPO 只看到当前状态，不知道此刻风有多大，只能学一个对所有风力都凑合的策略。RMA 先训练一个能直接看到真实风力和机体参数的教师，再训练适配模块：只看过去 1 秒的状态和自己发出的动作——“推力给了这么多，飞机却往那边漂”——反推这些参数，交给教师使用。</p>
+            <figure class="data-table"><table><caption><strong>表 9　RMA 学生相对普通 PPO-CTBR（v2）</strong></caption><thead><tr><th>指标</th><th class="num">PPO-CTBR</th><th class="num">RMA 学生</th><th class="num">RMA 教师（上界）</th></tr></thead><tbody>
+              <tr><td>稳态误差</td><td class="num">2.15 cm</td><td class="num">0.90 cm（−58%）</td><td class="num">0.74 cm</td></tr>
               <tr><td>阵风峰值</td><td class="num">10.6 cm</td><td class="num">9.2 cm（−13%）</td><td class="num">7.7 cm</td></tr>
               <tr><td>恢复时间</td><td class="num">1.09 s</td><td class="num">0.84 s（−23%）</td><td class="num">0.80 s</td></tr>
               <tr><td>80% 风力成功率</td><td class="num">12.0%</td><td class="num">54.3%</td><td class="num">70.2%</td></tr>
             </tbody></table></figure>
-            <figure class="data-table"><table><caption><strong>风力估计误差</strong>以机重百分比计的均方根误差，512 回合 × 3 个学生。</caption><thead><tr><th>情况</th><th class="num">RMSE</th><th>说明</th></tr></thead><tbody>
-              <tr><td>稳定风 30%（训练范围内）</td><td class="num">2.0%</td><td>估计与真实 x/y 风力相关系数 0.994</td></tr>
-              <tr><td>稳定风 60%（训练范围外）</td><td class="num">5.2%</td><td>整体偏低约 2.7%</td></tr>
-              <tr><td>0.5 秒阵风期间</td><td class="num">9–13%</td><td>1 秒的历史窗口对阶跃变化滞后约 0.1–0.2 秒</td></tr>
-            </tbody></table></figure>
             <figure class="case-media">
-              <a class="screenshot-link" href="../../assets/project-media/hover-v2-wind-estimate.webp" aria-label="打开原图 · 风力在线估计"><img src="../../assets/project-media/hover-v2-wind-estimate.webp" width="1984" height="1120" loading="lazy" decoding="async" alt="上排两张是单个回合中真实风力 Fx、Fy（实线）和估计值（虚线）随时间变化：左边 30% 风力时虚线紧贴实线，第 6 秒阵风跳变也很快跟上；右边 60% 风力时估计更抖、略偏低。下排是 512 回合的估计误差：开头 1 秒和阵风开始、结束时有尖峰，其余时间左边约 2%、右边约 5%。"></a>
-              <figcaption><strong class="insight-media-title">适配模块的在线风力估计</strong>左：训练范围内（30% 机重）；右：训练范围外（60%）。上排是单个回合的真实值（实线）与估计值（虚线），下排是 512 个回合的估计误差。每秒一次的小尖峰来自风力每秒一次的随机跳变。</figcaption>
+              <a class="screenshot-link" href="../../assets/project-media/hover-f6-rma-estimate.webp" aria-label="打开原图 · 图 7 风力在线估计"><img src="../../assets/project-media/hover-f6-rma-estimate.webp" width="2257" height="778" loading="lazy" decoding="async" alt="(a) 基础风 30% 机重的单个回合：真实风力 Fx、Fy 为阶梯状黑线，估计值为蓝线，紧贴黑线，第 6 秒阵风跳到约 60% 时估计也迅速跟上。(b) 基础风 60%（超出训练范围）：估计更抖，整体略偏低。(c) 512 回合的估计 RMSE 随时间变化：30% 风时约 2%，60% 时约 5%；开头 1 秒、阵风开始和结束、以及每秒一次的风力跳变处有尖峰。"></a>
+              <figcaption><strong class="insight-media-title">图 7　适配模块的在线风力估计</strong>(a) 训练范围内（30% 机重）；(b) 训练范围外（60%）；(c) 512 回合 × 3 个学生的估计 RMSE。阴影为 0.5 秒阵风。每秒一次的小尖峰来自风力每秒一次的随机跳变。</figcaption>
             </figure>
-            <p>估计得准，说明 RMA 的提升确实来自“知道了风多大”。学生和教师在三项指标上相差 5–19%，剩下的主要是阵风刚来时的估计滞后。</p>
+            <figure class="data-table"><table><caption><strong>表 10　风力估计误差</strong>以机重百分比计，512 回合 × 3 个学生。</caption><thead><tr><th>基础风</th><th class="num">稳定段 RMSE（2–6 s）</th><th class="num">阵风期间 RMSE</th><th class="num">稳定段偏差</th><th class="num">相关系数</th></tr></thead><tbody>
+              <tr><td>30%（训练范围内）</td><td class="num">2.0</td><td class="num">9.3</td><td class="num">−0.2</td><td class="num">0.994</td></tr>
+              <tr><td>60%（训练范围外）</td><td class="num">5.2</td><td class="num">12.7</td><td class="num">−2.7</td><td class="num">0.994</td></tr>
+            </tbody></table></figure>
+            <p>估计得准，说明 RMA 的提升确实来自“知道了风多大”。学生与教师在三项指标上相差 5–19%，剩下的主要是阵风刚来时的估计滞后：1 秒的历史窗口对阶跃变化要 0.1–0.2 秒才能跟上。训练范围外估计整体偏低 2.7%，这也是 RMA 在 80% 风力下仍不如 PID 的原因之一。</p>
           </section>
 
-          <section class="chapter" id="claims">
-            <h2>哪些结论成立</h2>
-            <figure class="data-table"><table><caption><strong>结论核对</strong></caption><thead><tr><th>说法</th><th>成立吗</th><th>依据</th></tr></thead><tbody>
+          <section class="chapter" id="td3">
+            <h2>6 TD3 超参数研究</h2>
+            <p>TD3 在 v1 中与 PPO 接近（表 6），但在 v2 中用原论文的默认超参数 [6]（探索噪声 0.2，目标噪声 0.2、裁剪 0.5，1 步 TD 目标，学习率 3e-4）时，悬停时一直偏离约 10 cm，成功率只有 54%。为了让对比公平，先诊断原因，再做超参数研究。</p>
+            <p><strong>诊断。</strong>误差是固定偏移，不是抖动：在 0 / 15 / 30% 稳态风下平均偏移 5.3 / 8.0 / 12.0 cm（PPO 0.9 / 1.3 / 2.1 cm），而 RMS 抖动只有 2–3 cm，且无风时也存在。Critic 没有系统性高估（Q 值与实际回报之比在无风时 −30%、30% 风时 +27%，方向不一致），偏航转动和指令抖动也与 PPO 相当。结论是确定性 actor 本身不够精确：50 Hz 控制下相邻两步的状态差别很小，1 步 TD 目标给 actor 的梯度又弱又噪，拉不到目标点上。由此推出两个调整方向：用 n 步回报加强信用分配，以及降低噪声。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/hover-f8-td3-study.webp" aria-label="打开原图 · 图 8 TD3 超参数研究"><img src="../../assets/project-media/hover-f8-td3-study.webp" width="2259" height="737" loading="lazy" decoding="async" alt="(a) 10 组配置在 2500 万步内的训练位置误差曲线：默认配置停在约 11 cm；只降噪声的两组停在 13 到 14 cm；所有 3 步和 5 步回报的配置都降到 5 到 7 cm；10 步回报和 5 步加学习率 1e-4 两组发散。橙色为选用配置，最终约 5 cm。(b) 评估稳态误差：默认 9.6 cm，只降噪声 12.5 和 13.2 cm，n 步回报各组 3.7 到 4.5 cm，选用配置 4.1 cm。(c) 范围内成功率：默认 56%，只降噪声 36% 和 2%，n 步回报各组 99 到 100%。"></a>
+              <figcaption><strong class="insight-media-title">图 8　TD3（CTBR）超参数研究</strong>1 个种子、每组 2500 万步、同一评估协议。(a) 训练中的位置误差；(b) 评估稳态误差；(c) 范围内成功率。斜线为默认超参数，橙色为最终选用的配置。</figcaption>
+            </figure>
+            <figure class="data-table"><table><caption><strong>表 11　TD3 超参数研究</strong>“噪声”同时指探索噪声和目标策略平滑噪声；“偏移”是 0 / 30% 稳态风下的平均静态偏移。</caption><thead><tr><th>配置（相对默认的改动）</th><th class="num">稳态 (cm)</th><th class="num">阵风峰值 (cm)</th><th class="num">成功</th><th class="num">30% 风成功</th><th class="num">偏移 (cm)</th></tr></thead><tbody>
+              <tr><td>默认：噪声 0.2，1 步，lr 3e-4</td><td class="num">9.55</td><td class="num">21.7</td><td class="num">56.2%</td><td class="num">6.6%</td><td class="num">1.5 / 12.6</td></tr>
+              <tr><td>噪声 0.1</td><td class="num">12.54</td><td class="num">26.6</td><td class="num">35.9%</td><td class="num">0%</td><td class="num">4.3 / 16.7</td></tr>
+              <tr><td>噪声 0.05</td><td class="num">13.18</td><td class="num">25.9</td><td class="num">2.1%</td><td class="num">0%</td><td class="num">10.2 / 14.3</td></tr>
+              <tr><td>噪声 0.2 + 3 步</td><td class="num">4.02</td><td class="num">13.0</td><td class="num">100%</td><td class="num">99.6%</td><td class="num">1.9 / 5.4</td></tr>
+              <tr><td>噪声 0.1 + 3 步</td><td class="num">4.46</td><td class="num">14.2</td><td class="num">100%</td><td class="num">99.6%</td><td class="num">2.3 / 5.1</td></tr>
+              <tr><td>噪声 0.1 + 5 步</td><td class="num">3.73</td><td class="num">13.9</td><td class="num">100%</td><td class="num">100%</td><td class="num">1.4 / 5.1</td></tr>
+              <tr><td>噪声 0.05 + 5 步</td><td class="num">4.13</td><td class="num">15.0</td><td class="num">100%</td><td class="num">100%</td><td class="num">1.0 / 6.1</td></tr>
+              <tr class="is-best"><td>噪声 0.1 + 3 步 + lr 1e-4（选用）</td><td class="num">4.08</td><td class="num">12.5</td><td class="num">98.8%</td><td class="num">98.8%</td><td class="num">3.5 / 4.7</td></tr>
+              <tr><td>噪声 0.1 + 10 步</td><td colspan="5">发散：370 万步起 Q 损失 &gt; 10⁴，所有回合坠机</td></tr>
+              <tr><td>噪声 0.1 + 5 步 + lr 1e-4</td><td colspan="5">发散：约 400 万步时回报崩溃</td></tr>
+            </tbody></table></figure>
+            <ul class="plain-list">
+              <li><strong>n 步回报是关键。</strong>只要用 3 或 5 步回报，稳态误差就从 9.6 cm 降到 3.7–4.5 cm，30% 风下成功率从 7% 升到 99–100%。</li>
+              <li><strong>只降噪声反而更差。</strong>探索变少后 1 步 critic 学得更慢，偏移更大（成功率 36% → 2%）。</li>
+              <li><strong>回报步数不能太长。</strong>10 步回报的目标方差太大，critic 发散；5 步配合低学习率也会在约 400 万步时崩溃。</li>
+              <li><strong>选用配置</strong>按阵风峰值（最低 12.5 cm）和 30% 风下偏移（最小 4.7 cm）选出，再按正式预算训练 3 个种子 × 1 亿步，得到表 4 的结果。即便如此，它在每项指标上仍不如 PPO-CTBR，外推也更差（60% 风力 14.9% vs 83.9%）。</li>
+            </ul>
+          </section>
+
+          <section class="chapter" id="discussion">
+            <h2>7 讨论：PID、LQR、RL 怎么选</h2>
+            <h3>为什么用串级 PID 做基线</h3>
+            <p>真机上就是它在飞：PX4 和 Crazyflie 固件都用位置 → 姿态 → 角速度三级 PID，所以“RL 能不能比 PID 好”是工程上真正要回答的问题。调好之后它是个强基线：CEM 调 8 个增益，3 个独立调参种子的结果相差只有几个百分点；v1 里稳态误差 0.81 cm，与最好的 RL 持平；v2 里强风下最稳。</p>
+            <h3>加上 LQR 之后怎样</h3>
+            <ul class="plain-list">
+              <li><strong>赢在模型准确时的阵风响应。</strong>v1 模型完美、无延迟，LQR 阵风峰值比 PID 低（11.6 vs 13.2 cm）：全状态反馈同时用速度和姿态，对扰动反应更快。加了积分的 LQI 稳态误差和 PID 接近（1.06 vs 0.81 cm）。</li>
+              <li><strong>输在恒定扰动。</strong>纯 LQR 没有积分项，恒定风和 v2 里随机的质量、推力都会留下固定偏差：v1 4.65 cm，v2 14.7 cm，PID 是 0.81 / 1.73 cm。LQI 能消掉（1.06 / 2.27 cm）。</li>
+              <li><strong>输在饱和。</strong>线性控制律不知道电机有上限。即使加了限幅和条件积分，v1 里仍有 3–6% 坠机，43% 风力下成功率 2–12%，有倾角限制的 PID 是 37%。</li>
+              <li><strong>输在模型误差和延迟。</strong>v2 里 LQI 成功率 84.8%、坠机 14.4%（PID 100%）；60% 风力只剩 10%，PID 99.9%。PID 逐环低增益的结构对 20–90 ms 的未建模滞后容忍得多。</li>
+            </ul>
+            <p>在这个问题上，LQR 只在理想模型里比 PID 好，换成接近真实的执行器就不如 PID。</p>
+            <h3>RL 相比 PID 和 LQR 的优缺点</h3>
+            <ul class="plain-list">
+              <li><strong>优点：抗阵风好得多。</strong>v2 里 RMA 阵风峰值 9.2 cm，PID 21.0 cm，LQI 27.0 cm；没有积分器造成的二次超调（图 3）。</li>
+              <li><strong>优点：对 sim gap 最不敏感。</strong>直接在带滞后、延迟的环境里训练，阵风峰值只放大 1.5 倍，LQR 是 2.9 倍（表 7）。</li>
+              <li><strong>优点：加上 RMA 后能在线辨识风力，</strong>稳态误差也最好（0.90 cm，PID 1.66 cm）。</li>
+              <li><strong>缺点：只在训练范围附近好用。</strong>风力超过 60% 机重后，PID-电机仍有 93–99% 成功率，PPO 掉到 1–12%，RMA 54%，TD3 0%。</li>
+              <li><strong>缺点：成本高、对算法细节敏感。</strong>每个种子 1 亿步仿真，还要设计观测、动作接口、随机化和奖励；TD3 在 v2 需要专门的超参数研究（第 6 节）才能稳定悬停。PID 是 8 个可解释的增益，约 10 分钟调完，稳定裕度也有成熟的分析方法。</li>
+            </ul>
+            <figure class="data-table"><table><caption><strong>表 12　结论核对</strong></caption><thead><tr><th>说法</th><th>成立吗</th><th>依据</th></tr></thead><tbody>
               <tr><td>RL 抗阵风比 PID/LQR 好（峰值、恢复）</td><td>成立，v1 和 v2 都是</td><td>v1 PPO 7.1 vs PID 13.2 cm；v2 RMA 9.2 vs 21.0 cm，0.84 vs 1.58 s</td></tr>
-              <tr><td>RL 稳态悬停精度最好</td><td>只有加了自适应才成立</td><td>v2 RMA 0.90 cm 最好；普通 PPO 比 PID 差（2.15 vs 1.66 cm）；v1 PID ≈ DQN &lt; PPO</td></tr>
+              <tr><td>RL 稳态悬停精度最好</td><td>只有加了自适应才成立</td><td>v2 RMA 0.90 cm 最好；PPO 2.15、TD3 4.39 cm，都比 PID 1.66 cm 差</td></tr>
               <tr><td>RL 比 PID 更能扛强风</td><td>v2 不成立；v1 成立（推力饱和场景）</td><td>v2 80% 风力：PID-电机 93%，RMA 54%，PPO 12%；v1 43%：PPO 89.5%，PID 37%</td></tr>
               <tr><td>RMA 比普通 RL 好</td><td>成立</td><td>稳态 −58%，峰值 −13%，恢复 −23%；80% 风力 54.3% vs 12.0%</td></tr>
               <tr><td>适配模块真的在估计风</td><td>成立</td><td>范围内 RMSE 2% 机重，相关系数 0.994</td></tr>
               <tr><td>CTBR 是更好的 RL 动作接口</td><td>成立（PPO）</td><td>稳态 −24%，恢复 −19%，70% 风力 45% vs 9.6%</td></tr>
               <tr><td>LQR 比 PID 好</td><td>不成立</td><td>只在理想 v1 里阵风峰值更低；稳态偏差、饱和、延迟鲁棒性都更差</td></tr>
-              <tr><td>TD3 有竞争力</td><td>v1 成立，v2 不成立</td><td>v1 成功率 100%、峰值 7.5 cm；v2 偏差 9.9 cm、成功率 54%，≥40% 风力为 0</td></tr>
+              <tr><td>TD3 与 PPO 相当</td><td>v1 基本成立，v2 不成立</td><td>v1 峰值 7.5 vs 7.1 cm；v2 稳态 4.39 vs 2.15 cm，60% 风力 14.9% vs 83.9%</td></tr>
             </tbody></table></figure>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/hover-f7-training.webp" aria-label="打开原图 · 图 9 v2 训练曲线"><img src="../../assets/project-media/hover-f7-training.webp" width="2264" height="792" loading="lazy" decoding="async" alt="(a) v2 每回合回报随 1 亿步训练变化：RMA 教师约 900 最高且 500 万步内收敛，PPO-CTBR 约 770，PPO-电机约 690 且种子间差异较大，TD3 约 630。(b) 训练中位置误差（对数轴）：教师约 2 cm，PPO-CTBR 约 4 cm，PPO-电机约 4 到 5 cm，TD3 约 5.5 cm。(c) RMA 学生 3000 万步训练中风力估计 RMSE 从 20% 降到约 3% 机重。"></a>
+              <figcaption><strong class="insight-media-title">图 9　v2 训练曲线</strong>(a) 每回合回报；(b) 训练中的位置误差；(c) RMA 学生的风力估计 RMSE。3 个种子，阴影为标准差。</figcaption>
+            </figure>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/hover-v1-training.webp" aria-label="打开原图 · 图 10 v1 训练曲线"><img src="../../assets/project-media/hover-v1-training.webp" width="1760" height="640" loading="lazy" decoding="async" alt="左：三种算法的每回合累计奖励随训练步数上升，PPO 最快，最终都在 850 左右；右：训练中的坠机率，三者都在 500 万步内降到接近 0，DQN 在 1000 万步附近有一段回升。"></a>
+              <figcaption><strong class="insight-media-title">图 10　v1 训练曲线</strong>左为每回合累计奖励，右为坠机或出界比例，阴影是 3 个种子的标准差。DQN 起步晚、中途有波动：照搬 TD3 的更新频率时约 800 万步 Q 值发散，最终用 Double DQN、学习率 1e-4、目标网络软更新 0.001 稳定训到 5000 万步。</figcaption>
+            </figure>
           </section>
 
-          <section class="chapter" id="training">
-            <h2>训练与调参</h2>
-            <figure class="data-table"><table><caption><strong>训练与调参预算</strong></caption><thead><tr><th></th><th>v1</th><th>v2</th></tr></thead><tbody>
-              <tr><td>RL</td><td>PPO / TD3 / DQN，各 3 种子 × 5000 万步</td><td>PPO-电机、PPO-CTBR、RMA 教师、TD3-CTBR，各 3 种子 × 1 亿步；RMA 学生每个教师 3000 万步</td></tr>
-              <tr><td>PID / LQR / LQI</td><td colspan="2">CEM，每轮 1024 个并行回合（PID 20 轮，LQR/LQI 30 轮），调参种子 11–13，8 秒回合、第 4 秒加阵风；从不使用评估种子</td></tr>
-            </tbody></table></figure>
-            <p><strong>DQN 最难训。</strong>照搬 TD3 的更新频率和学习率，约 800 万步时 Q 值发散；降低更新比例、加 3 步回报后，1100 万步左右又崩了。最后用 Double DQN、学习率 1e-4、目标网络软更新系数 0.001，三个种子都稳定训到 5000 万步。</p>
-            <p><strong>让 LQR 的比较公平。</strong>一开始直接在原始 Q/R 上解 Riccati 方程，权重范围一大就数值失败，改成在 Bryson 归一化坐标下求解；初值从物理上合理的 Bryson 估计出发，而不是参数区间中点；像 PID 的倾角限制一样给位置误差加可调的限幅；LQI 用条件积分。每一步去掉的都是实现问题造成的坠机，剩下的差距才算 LQR 本身的。</p>
-          </section>
-
-          <section class="chapter" id="next">
-            <h2>局限</h2>
+          <section class="chapter" id="limits">
+            <h2>8 局限</h2>
             <ul class="plain-list">
               <li><strong>只在仿真里。</strong>风被简化成作用在质心的水平力，没有桨叶气动、地面效应和风对姿态的力矩；还没上实机。</li>
               <li><strong>DQN 没有参加 v2 对比。</strong>三档离散动作表达不了 v2 更宽的推力范围，需要重新设计动作集。</li>
-              <li><strong>RL 的强风结论依赖训练分布。</strong>训练风力扩大到 0–80% 后 RL 在强风下会怎样，这次没有测。</li>
-              <li><strong>没有和自适应经典控制比。</strong>扰动观测器（DOB）、增量非线性动态逆（INDI）这类方法也能在线补偿风力，可能是 RMA 更直接的对手。</li>
+              <li><strong>RL 的强风结论依赖训练分布。</strong>训练风力扩大到 0–80% 后 RL 在强风下会怎样，本文没有测。</li>
+              <li><strong>TD3 超参数研究只用 1 个种子、2500 万步。</strong>n 步回报各组之间的差别（3.7–4.5 cm）与正式训练的种子间标准差（0.65 cm）相当，组间排序不一定稳定；结论“n 步回报是关键”在所有组上一致。</li>
+              <li><strong>没有和自适应经典控制比。</strong>扰动观测器（DOB）、增量非线性动态逆（INDI）[12] 也能在线补偿风力，可能是 RMA 更直接的对手。</li>
+            </ul>
+          </section>
+
+          <section class="chapter" id="refs">
+            <h2>参考文献</h2>
+            <ul class="plain-list" lang="en">
+              <li>[1] R. E. Kalman. Contributions to the theory of optimal control. Boletín de la Sociedad Matemática Mexicana, 1960.</li>
+              <li>[2] A. E. Bryson, Y.-C. Ho. Applied Optimal Control. Hemisphere, 1975.</li>
+              <li>[3] S. Bouabdallah, A. Noth, R. Siegwart. PID vs LQ control techniques applied to an indoor micro quadrotor. IROS, 2004.</li>
+              <li>[4] D. Brescianini, R. D'Andrea. Tilt-prioritized quadrocopter attitude control. IEEE Transactions on Control Systems Technology, 2020.</li>
+              <li>[5] J. Schulman, F. Wolski, P. Dhariwal, A. Radford, O. Klimov. Proximal policy optimization algorithms. arXiv:1707.06347, 2017.</li>
+              <li>[6] S. Fujimoto, H. van Hoof, D. Meger. Addressing function approximation error in actor-critic methods. ICML, 2018.</li>
+              <li>[7] J. Hwangbo, I. Sa, R. Siegwart, M. Hutter. Control of a quadrotor with reinforcement learning. IEEE Robotics and Automation Letters, 2017.</li>
+              <li>[8] A. Molchanov et al. Sim-to-(multi)-real: transfer of low-level robust control policies to multiple quadrotors. IROS, 2019.</li>
+              <li>[9] E. Kaufmann, L. Bauersfeld, D. Scaramuzza. A benchmark comparison of learned control policies for agile quadrotor flight. ICRA, 2022.</li>
+              <li>[10] A. Kumar, Z. Fu, D. Pathak, J. Malik. RMA: Rapid motor adaptation for legged robots. RSS, 2021.</li>
+              <li>[11] M. O'Connell et al. Neural-Fly enables rapid learning for agile flight in strong winds. Science Robotics, 2022.</li>
+              <li>[12] E. J. J. Smeur, Q. Chu, G. C. H. E. de Croon. Adaptive incremental nonlinear dynamic inversion for attitude control of micro air vehicles. Journal of Guidance, Control, and Dynamics, 2016.</li>
+              <li>[13] V. Mnih et al. Human-level control through deep reinforcement learning. Nature, 2015.</li>
+              <li>[14] H. van Hasselt, A. Guez, D. Silver. Deep reinforcement learning with double Q-learning. AAAI, 2016.</li>
+              <li>[15] S. Ross, G. Gordon, D. Bagnell. A reduction of imitation learning and structured prediction to no-regret online learning. AISTATS, 2011.</li>
+              <li>[16] R. Y. Rubinstein, D. P. Kroese. The Cross-Entropy Method. Springer, 2004.</li>
             </ul>
           </section>
         </div>
