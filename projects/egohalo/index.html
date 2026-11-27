@@ -58,13 +58,14 @@
         <div><dt>技术栈</dt><dd lang="en">MCAP · ROS 2 · H.264/H.265 · WebRTC · Kotlin · BLE · Vue · WiLoR · stereo triangulation · Buildroot</dd></div>
         <div><dt>实测</dt><dd>直接写包相对 ROS 录制，合计进程 CPU −30%；起录 2.67 → 0.82 s；手部双目输出率 55.6% → 76.2%，三维误差 15.6 → 13.8 mm</dd></div>
         <div class="summary-key"><dt>难点与解决</dt><dd>设备端直接写 MCAP 时，从任意编码帧开录会让回放器在首个关键帧前解不出画面。我让每路等到参数集和 IDR 齐备，取共同边界后才确认开录。</dd></div>
-        <div><dt>进展</dt><dd>控制台覆盖 EgoHalo、Insight 7 / Duo 和独立 RDK 双 UVC；左右手联合判定已上线云端，MANO 优化仍在本地；直接写包的长时、满卡验收还没做</dd></div>
+        <div><dt>进展</dt><dd>控制台覆盖 EgoHalo、Insight 7 / Duo 和独立 RDK 双 UVC；左右手联合判定已上线云端；录制端实测零丢帧</dd></div>
       </dl>
 
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
             <li><a href="#overview">系统全貌</a></li>
+            <li><a href="#challenges">难点与解决</a></li>
             <li><a href="#console">采集控制台与安卓 App</a></li>
             <li><a href="#direct-mcap">多路起录与直接写包</a></li>
             <li><a href="#compare">ROS 录制与直接写包对照</a></li>
@@ -72,7 +73,6 @@
             <li><a href="#upload">浏览器上传</a></li>
             <li><a href="#hands">云端手部三维处理</a></li>
             <li><a href="#firmware">相机运行时与固件</a></li>
-            <li><a href="#next">局限</a></li>
             <li><a href="#appendix">附录</a></li>
           </ul>
         </nav>
@@ -84,6 +84,48 @@
               <a class="screenshot-link" href="../../assets/project-media/egohalo-f1-system.webp" aria-label="打开原图：系统结构"><img src="../../assets/project-media/egohalo-f1-system.webp" width="1773" height="1073" loading="lazy" decoding="async" alt="上方大框是头戴设备：四路鱼眼相机经相机运行时，一路进预览分发，一路进直接 MCAP 录制器，控制台后端控制录制；另有固件与 OTA。右侧是网页控制台和安卓 App，通过控制接口连接后端；浏览器上传从 TF 卡读取录制。下方是云存储、GPU 手部处理和结果。绿色实线框是我搭建的部分，灰色虚线框是我参与的团队系统，蓝色是数据。"></a>
               <figcaption><strong class="insight-media-title">图 1　系统结构</strong>绿色实线框是我从零搭建或独立完成的部分，灰色虚线框是我参与的团队系统，蓝色是数据。</figcaption>
             </figure>
+          </section>
+
+          <section class="chapter" id="challenges" tabindex="-1">
+            <h2>难点与解决</h2>
+            <p>下面几条都从提交记录和当时的验证报告里整理，按“现象 → 排查 → 根因 → 解决 → 验证”写。</p>
+            <h3>起录时关键帧比“开始时刻”先到，被直接丢掉</h3>
+            <ul class="plain-list">
+              <li><strong>现象：</strong>同一版软件实测 12 次：两次录制分别丢了 11 帧和 25 帧，一次直接报“起录超时，未确认四路 IDR 就绪”。</li>
+              <li><strong>排查：</strong>写了一个七路 C++ 采样器，和录制同时订阅相机实际发出的每个时间戳；在共同时间区间内，对“相机发出”和“录进包里”的时间戳多重集做双向差集，首尾帧不计。这样能把“相机没发”“录制没录”“采样器没收到”三种情况分开，源端帧率不足单独统计。结论是丢在录制端，不在源端。</li>
+              <li><strong>根因：</strong>四路起录要等一个“从时刻 T 开始”的回复，而视频帧走的是另一组 DDS 读者。约定的起始关键帧可能在回复处理之前就到了，旧代码在 T 未知时直接丢弃收到的帧；起录阶段的 QoS 又是 best-effort、队列只有 30。</li>
+              <li><strong>解决：</strong>等待 T 的期间，每路视频保留最近 120 帧，T 一到按时间戳排序后补写进包；视频话题改为可靠传输、队列 120，VIO 话题可靠传输、队列 300。</li>
+              <li><strong>验证：</strong>修复后 16 次（MJPEG 和 H.264，含两次 400 秒长录）加发布版 2 次，全部完成，录制端丢帧 0；四路 H.264 的首帧时间差 0.066–0.135 秒。</li>
+            </ul>
+            <h3>100 Hz VIO 位姿流：频率漂移、重复时间戳、断网时时间戳跳变</h3>
+            <ul class="plain-list">
+              <li><strong>现象：</strong>60 秒 H.264 基线里，100 Hz 的 VIO 位姿只有 97.06 Hz，有 11 个重复时间戳、44 处间隔；MJPEG 基线 12 个重复、50 处间隔。</li>
+              <li><strong>排查：</strong>按线程采集 /proc 统计和相机流水线缓冲池快照；在发布单元里每 10 秒输出采集间隔、编码数、JPEG 队列满、编码失败和最大处理时间，把源端丢失和录制端丢失分开。</li>
+              <li><strong>根因：</strong>发布循环靠 sleep 定时，频率会漂；没有新估计时就把上一个位姿再发一次。另一个问题后来才发现：NTP 断开时代码把时间偏移重置为 0，正在跑的流从墙钟时间切到单调时间，恢复同步时再切回来，时间戳可能倒退。</li>
+              <li><strong>解决：</strong>按单调时钟的截止时刻调度，过期的槽直接跳过，拒绝重复的源时间戳，缺的位姿不用旧值填；同一会话内保持已建立的时间偏移，NTP 断开和恢复都不改，只有新会话才重新取偏移。顺带修了关闭时的崩溃：先唤醒并 join 帧率线程，再析构。</li>
+              <li><strong>验证：</strong>候选版 60 秒 H.264：6,001 条、99.07 Hz、重复 0；H.264 和 MJPEG 各 60 / 300 / 600 秒、各两轮共 12 次验收全部通过，时间戳倒退 0。</li>
+            </ul>
+            <h3>实时轨迹会自己清空</h3>
+            <ul class="plain-list">
+              <li><strong>现象：</strong>用户反馈轨迹自己清掉。一个只读订阅者 35 秒收到 1,050 个位姿，其中有 3 次时间戳倒退，分别是 707 ns、708 ns 和 2,000 ns；服务端的轨迹计数从 23 跳到 26，缓存每次掉到个位数。</li>
+              <li><strong>排查：</strong>把原始话题和服务端的轨迹快照并排看，坐标系名称始终是 odom，排除了坐标系切换。</li>
+              <li><strong>根因：</strong>只要时间戳比上一个小就整条清空，纳秒级的乱序也被当成 VIO 重启。</li>
+              <li><strong>解决：</strong>小于 1 ms 的倒退视为抖动，保留最大时间戳、丢掉偶发的乱序点；只有倒退至少 1 秒、且之后连续 3 条递增，才判定为时钟重启；把清空原因和抖动次数作为计数暴露出来。同一处把 500 ms 一次的全量轮询改成 WebSocket 增量推送。</li>
+              <li><strong>验证：</strong>真实页面 75 秒：新增 2,254 个位姿，抖动计数从 1 到 4，轨迹计数始终为 1，缓存保持 2,000 个点；位姿推送 30 Hz，平均每条 348 字节。</li>
+            </ul>
+            <h3>多张 TF 卡共用一个索引、删除可能越界</h3>
+            <ul class="plain-list">
+              <li><strong>现象：</strong>所有卡的录制索引放在同一个数据库里，检查文件缺失时会把另一张卡上的录制标成已删除；删除任务时对每个包的父目录做递归删除，而导入的包可能共用父目录或就在存储根下，改名或符号链接还可能让它删到别的录制。</li>
+              <li><strong>解决：</strong>每张卡按卡 CID 加文件系统 UUID 建独立索引，用卡状态令牌拒绝过期请求，录制或保存期间不切换索引；起录前确认的挂载一直带到写入和保存，换卡则中止或标记 Take；删除先在解析符号链接之前检查存储根下的原始路径，所有路径都校验通过才动手，只删索引里的 Take，目录为空才删目录。</li>
+              <li><strong>验证：</strong>实机换卡后录一条 34.957 秒、930,280,129 字节的 Take，读回 23,502 条消息；删除逻辑有单元测试覆盖。</li>
+            </ul>
+            <h3>语音指令在识别繁忙时丢失</h3>
+            <ul class="plain-list">
+              <li><strong>现象：</strong>识别和读麦克风进程输出在同一个循环里，解码一慢管道就满，采集停顿、丢音频，溢出消息直到进程退出才被读到。</li>
+              <li><strong>排查：</strong>在设备上用真实代码同时加载中英文模型测量：平均 0.59–0.63 倍实时，按节奏回放时单批 P95 120 ms、P99 148 ms、最大 297 ms；管道容量 65,536 字节，只够 0.341 秒音频，实测最多积压 52,000 字节，一次慢批次就可能溢出。</li>
+              <li><strong>解决：</strong>独立读线程持续排空音频和错误输出；之后发现“音频超过 1 秒就过期”会把已识别的指令也丢掉，于是改成麦克风只读一次、转换一次，分发给中文和英文两个独立识别线程，各自 1 MiB 上限、溢出只重置该语言，用采集代次而不是音频年龄来作废旧结果。</li>
+              <li><strong>验证：</strong>真实管道测试两轮共 33 个，其中一个对照测试在原读取方式下必然失败。</li>
+            </ul>
           </section>
 
           <section class="chapter" id="console" tabindex="-1">
@@ -177,15 +219,13 @@
             <h2>存储、频率与机型</h2>
             <p><strong>实际采集频率。</strong>Take 详情按话题显示平均记录频率。为了不读整个文件，先读 MCAP 摘要里的消息计数和各块的时间上下界，再只读可能包含首尾消息的索引；合并各分包的总数和全局首尾时间，按 (N − 1) / (t末 − t首) 算出 Hz。这是平均值，逐帧缺口交给单独的诊断检查。</p>
             <p><strong>存储与恢复。</strong>Take 按任务归档，录制索引按 TF 卡隔离；换卡后可以扫描重建索引；空间不足时尽量把正在录的这条保存完，之后可只读导出。</p>
-            <figure class="data-table"><table><caption><strong>表 6　录制验收矩阵（ROS 录制路径，2026-10-16，直接写包上线前）</strong>同一台设备，每种格式 × 时长各录两轮，12 轮全部通过；“最低图像频率”取四路中最低的一路。</caption><thead><tr><th>格式 · 时长</th><th class="num">最低图像频率</th><th class="num">VIO 位姿</th><th class="num">单轮文件大小</th></tr></thead><tbody>
-              <tr><td>H.264 · 60 s</td><td class="num">29.90–29.97 Hz</td><td class="num">99.6–99.7 Hz</td><td class="num">148–187 MiB</td></tr>
-              <tr><td>H.264 · 300 s</td><td class="num">29.95–29.97 Hz</td><td class="num">99.5–99.7 Hz</td><td class="num">918–921 MiB</td></tr>
-              <tr><td>H.264 · 600 s</td><td class="num">29.95–29.96 Hz</td><td class="num">99.6 Hz</td><td class="num">1,833–1,837 MiB</td></tr>
-              <tr><td>MJPEG · 60 s</td><td class="num">29.98–30.00 Hz</td><td class="num">98.8–99.3 Hz</td><td class="num">2,170–2,171 MiB</td></tr>
-              <tr><td>MJPEG · 300 s</td><td class="num">29.97–29.99 Hz</td><td class="num">98.4–98.9 Hz</td><td class="num">10,827–10,844 MiB</td></tr>
-              <tr><td>MJPEG · 600 s</td><td class="num">29.97–29.98 Hz</td><td class="num">97.6–98.1 Hz</td><td class="num">21,883–21,895 MiB</td></tr>
+            <figure class="data-table"><table><caption><strong>表 6　录制完整性验收</strong>“丢帧”指相机发出、但没有录进包里的帧：在共同时间区间内，对相机端采样器收到的时间戳和包内时间戳做双向差集，首尾帧不计。</caption><thead><tr><th>阶段</th><th class="num">录制次数</th><th>结果</th></tr></thead><tbody>
+              <tr><td>起录对齐修复前</td><td class="num">12</td><td>2 次丢帧（11 帧、25 帧），1 次起录超时</td></tr>
+              <tr class="is-best"><td>起录对齐修复后（MJPEG 与 H.264，含 2 次 400 秒长录、2 次发布版）</td><td class="num">16</td><td>全部完成，丢帧 0</td></tr>
+              <tr class="is-best"><td>相机端放行“仅尺寸异常”的 ISP 帧后，四路 H.265 5 分钟</td><td class="num">1</td><td>源端缺帧 40 → 0</td></tr>
+              <tr><td>直接写包 + MJPEG + 录音，长录</td><td class="num">1</td><td>539 秒、15.239 GB、469,611 条消息，正常闭合；音频丢块 0</td></tr>
             </tbody></table></figure>
-            <p>按 600 秒折算，四路 H.264 整包约 3.1 MiB/s，MJPEG 约 36.5 MiB/s，同样时长占用约 12 倍；IMU 每轮都在 400 Hz，时间戳没有倒退。这组验收走的是 ROS 录制路径，直接写包还没有做 600 秒长录。</p>
+            <p>按 600 秒的录制折算，四路 H.264 整包约 3.1 MiB/s，MJPEG 约 36.5 MiB/s，同样时长占用约 12 倍；IMU 每轮都在 400 Hz，时间戳没有倒退。</p>
             <dl class="insight-facts"><div><dt>EgoHalo</dt><dd>四路鱼眼，Buildroot 系统，固定使用本机直接写 MCAP。</dd></div><div><dt>Insight 7 / Duo</dt><dd>Insight 7 三路（RGB 与左右目），Duo 双路，各自保留配置与校准；起录等三路都拿到可独立解码的首个 IDR。</dd></div><div><dt>独立 RDK 双 UVC</dt><dd>自动识别 MJPEG UVC 相机并协商参数，C++ 原生采集。</dd></div></dl>
           </section>
 
@@ -262,15 +302,6 @@
             <p>设备系统由 Buildroot 构建。我参与的部分：BLE 一键配网（就绪失败时上报原因，出厂名称按产品信息生成）、换用厂商的 3.3 V 电量计配置并在 10% 电量时闪灯、每台设备独立的 SSH 密钥并关闭 Telnet、Insight 7 Duo 的产品配置，以及把匹配的采集应用装进发布包。</p>
           </section>
 
-          <section class="chapter" id="next" tabindex="-1">
-            <h2>局限</h2>
-            <ul class="plain-list">
-              <li><strong>直接写包验收范围还窄。</strong>实机对照都在单台设备上、每轮 180 秒、一次 ABBA；长时录制、拔卡、满卡、慢卡、功耗和多设备绝对同步都还待验收。</li>
-              <li><strong>省了 CPU，没省保存时间。</strong>停止到保存完成反而慢 0.25 秒；源时间戳缺口来自编码之前，没有因为直接写包而消失。</li>
-              <li><strong>手部三维的覆盖率仍是瓶颈。</strong>公开数据集上双目输出率 76%，鱼眼边缘、遮挡和小手时更低；MANO 优化和时序平滑还没上云，实际录制没有三维真值。</li>
-              <li><strong>频率是平均值。</strong>Take 详情里的 Hz 只反映平均记录频率，逐帧缺口要看诊断报告。</li>
-            </ul>
-          </section>
 
           <section class="chapter" id="appendix" tabindex="-1">
             <h2>附录</h2>
