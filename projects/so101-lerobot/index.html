@@ -72,20 +72,12 @@
             <li><a href="#speed">瓶颈在思考，不在电机</a></li>
             <li><a href="#act">把经验交给 ACT</a></li>
             <li><a href="#next">局限与下一步</a></li>
+            <li><a href="#appendix">附录</a></li>
           </ul>
         </nav>
         <div class="case-text">
           <section class="chapter" id="methods" tabindex="-1">
             <h2>方法一览</h2>
-            <figure class="data-table"><table><caption><strong>这一页出现的方法和缩写</strong></caption><thead><tr><th>名称</th><th>是什么 / 怎么工作</th><th>输入或条件</th><th>出处</th></tr></thead><tbody>
-              <tr><td lang="en">Codex</td><td>基于 GPT 大语言模型的编程智能体：能读图、读文件、调用命令行工具。这里它通过工具调用读双图和关节状态，输出下一步关节目标和理由</td><td>两张 RGB 图、六维关节读数、任务描述和经验文档</td><td>现成产品，未微调</td></tr>
-              <tr><td>常驻控制进程</td><td>我写的长驻进程，独占舵机串口和相机，把机械臂包成 <code>observe</code> / <code>step</code> / <code>finish</code> 三条 JSON 指令，同时按 30 Hz 录制 episode</td><td>绝对关节目标、时长、技能节点、理由</td><td>本项目</td></tr>
-              <tr><td>技能树</td><td>把任务拆成复合技能 → 原子技能 → 基础接口，每一步动作标记所属节点，失败时定位到具体环节</td><td>人工定义的任务结构</td><td>参考 <a href="https://lab.noematrix.ai/blog/2-roborsi/">RoboRSI</a></td></tr>
-              <tr><td>ACT（Action Chunking with Transformers）</td><td>模仿学习策略：图像经 ResNet 编码，与关节状态一起送入 Transformer，一次预测未来一段动作（动作块）；训练时带一个条件变分自编码器（CVAE）吸收示范里的多样性</td><td>双路 RGB + 六维关节状态；成功示范</td><td><a href="https://arxiv.org/abs/2304.13705">Zhao 等，2023</a></td></tr>
-              <tr><td><code>action_is_pad</code></td><td>ACT 训练时的掩码：动作块里标记为填充的步不计入损失</td><td>每个样本一条布尔向量</td><td>LeRobot 的 ACT 实现</td></tr>
-              <tr><td>“保持当前关节”基线</td><td>不学习，直接把当前测得的关节角当作下一步动作；用来判断模型是否学到了比“不动”更多的东西</td><td>当前关节读数</td><td>本项目评估用</td></tr>
-              <tr><td>MAE（平均绝对误差）</td><td>预测动作与示范动作差值绝对值的平均，关节单位为度，夹爪为开合百分点</td><td>同一批观测</td><td>—</td></tr>
-            </tbody></table></figure>
           </section>
 
           <section class="chapter" id="setup" tabindex="-1">
@@ -207,6 +199,19 @@
               <li><strong>还要人复位。</strong>每次尝试之间由我摆回物体，还谈不上连续自主运行。</li>
               <li><strong>换一套技能对照。</strong>正在用一套开源的机器人操作技能库走 real → sim → real：先在 MuJoCo 里按实测几何建模、仿真抓放，再回到真机，对比它和我自己这套流程的效果。</li>
             </ul>
+          </section>
+
+          <section class="chapter" id="appendix" tabindex="-1">
+            <h2>附录</h2>
+            <figure class="data-table"><table><caption><strong>这一页出现的方法和缩写</strong></caption><thead><tr><th>名称</th><th>是什么 / 怎么工作</th><th>输入或条件</th><th>出处</th></tr></thead><tbody>
+              <tr><td lang="en">Codex</td><td>基于 GPT 大语言模型的编程智能体：能读图、读文件、调用命令行工具。这里它通过工具调用读双图和关节状态，输出下一步关节目标和理由</td><td>两张 RGB 图、六维关节读数、任务描述和经验文档</td><td>现成产品，未微调</td></tr>
+              <tr><td>常驻控制进程</td><td>我写的长驻进程，独占舵机串口和相机，把机械臂包成 <code>observe</code> / <code>step</code> / <code>finish</code> 三条 JSON 指令，同时按 30 Hz 录制 episode</td><td>绝对关节目标、时长、技能节点、理由</td><td>本项目</td></tr>
+              <tr><td>技能树</td><td>把任务拆成复合技能 → 原子技能 → 基础接口，每一步动作标记所属节点，失败时定位到具体环节</td><td>人工定义的任务结构</td><td>参考 <a href="https://lab.noematrix.ai/blog/2-roborsi/">RoboRSI</a></td></tr>
+              <tr><td>ACT（Action Chunking with Transformers）</td><td>模仿学习策略：图像经 ResNet 编码，与关节状态一起送入 Transformer，一次预测未来一段动作（动作块）；训练时带一个条件变分自编码器（CVAE）吸收示范里的多样性</td><td>双路 RGB + 六维关节状态；成功示范</td><td><a href="https://arxiv.org/abs/2304.13705">Zhao 等，2023</a></td></tr>
+              <tr><td><code>action_is_pad</code></td><td>ACT 训练时的掩码：动作块里标记为填充的步不计入损失</td><td>每个样本一条布尔向量</td><td>LeRobot 的 ACT 实现</td></tr>
+              <tr><td>“保持当前关节”基线</td><td>不学习，直接把当前测得的关节角当作下一步动作；用来判断模型是否学到了比“不动”更多的东西</td><td>当前关节读数</td><td>本项目评估用</td></tr>
+              <tr><td>MAE（平均绝对误差）</td><td>预测动作与示范动作差值绝对值的平均，关节单位为度，夹爪为开合百分点</td><td>同一批观测</td><td>—</td></tr>
+            </tbody></table></figure>
           </section>
         </div>
       </div>

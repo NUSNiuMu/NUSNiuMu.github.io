@@ -76,6 +76,7 @@
             <li><a href="#deploy">部署与现场可靠性</a></li>
             <li><a href="#next">局限</a></li>
             <li><a href="#demos">团队演示</a></li>
+            <li><a href="#appendix">附录</a></li>
           </ul>
         </nav>
         <div class="case-text">
@@ -92,29 +93,12 @@
               <tr><td>EgoHalo + 双 Insight1</td><td>Insight1 双目</td></tr>
               <tr><td>EgoHalo + 双 UVC 鱼眼</td><td>单目鱼眼 1920×1200 MJPEG @ 90 fps、原始 IMU、V4L2 帧时序</td></tr>
             </tbody></table></figure>
-            <figure class="data-table"><table><caption><strong>表 2　我负责的部分</strong>2026 年 6 月至 11 月，约 600 次提交；行数只计我写的代码，不含第三方库。</caption><thead><tr><th>模块</th><th>内容</th><th class="num">规模</th></tr></thead><tbody>
-              <tr><td>Jetson 后端</td><td>ROS 2 接入与健康检查、原生 UVC 采集、MCAP 录制、对时与双端合包、定位编排、WebRTC 与本机预览、质检和后处理</td><td class="num">Python 约 2.1 万行</td></tr>
-              <tr><td>建图与腕部定位</td><td>TensorRT 上的 SuperPoint/SuperGlue 推理服务、双目亚像素细化、腕部几何定位、EKF 融合与检查工具；地标、局部 BA 和回环模块迁自团队已有的视觉里程计库</td><td class="num">C++ 约 750 行 + Python 编排</td></tr>
-              <tr><td>手机采集页</td><td>采集、记录、设备三页，中英文，WebRTC 多路预览</td><td class="num">Vue 约 2.6 千行</td></tr>
-              <tr><td>原生 Qt 客户端</td><td>七个页面，回放、空间检查、评分、COLMAP 重建</td><td class="num">C++/QML 约 6 千行</td></tr>
-              <tr><td>部署</td><td>离线安装与升级包、采集热点、开机服务、电源键关机</td><td class="num">按版本发布</td></tr>
-              <tr><td>测试</td><td>后端单元与集成测试、Qt C++ 测试、网页测试、建图几何检查</td><td class="num">440 多个 Python 测试</td></tr>
-            </tbody></table></figure>
             <figure class="case-media">
               <a class="screenshot-link" href="../../assets/insight-v1/wearable-kit.png" aria-label="打开原图：头部采集设备与两套腕部相机组件">
                 <img src="../../assets/insight-v1/wearable-kit.png" width="1672" height="941" alt="头部采集设备与两套腕部相机组件" loading="lazy">
               </a>
               <figcaption><strong class="insight-media-title">图 2　头部与双腕设备组</strong>头部相机和两套腕部相机，经 USB 接入背包里的 Jetson。</figcaption>
             </figure>
-            <figure class="data-table"><table><caption><strong>表 3　本页用到的数据与传输术语</strong>按第一次出现的顺序。</caption><thead><tr><th>术语</th><th>是什么</th></tr></thead><tbody>
-              <tr><td>VIO，Visual-Inertial Odometry</td><td>视觉惯性里程计：相机画面加 IMU 积分估计自身位姿；每台设备从自己的开机位置起算，原点和朝向互不相同</td></tr>
-              <tr><td>IMU</td><td>惯性测量单元，输出加速度和角速度</td></tr>
-              <tr><td>ROS 2 / DDS</td><td>机器人中间件；话题消息经 DDS（数据分发服务）发布订阅</td></tr>
-              <tr><td>MCAP</td><td>开源的多话题日志容器格式，ROS 2 的录制包可用它存储；带索引，可按时间随机读取</td></tr>
-              <tr><td>CDR</td><td>ROS 2 消息的二进制序列化格式；合包时按 CDR 字节逐条比对哈希</td></tr>
-              <tr><td>H.264 · IDR · SPS/PPS · GOP</td><td>视频编码。IDR 是可独立解码的关键帧，SPS/PPS 是解码所需的参数集，GOP 是两个关键帧之间的一组帧；P 帧依赖前面的帧，不能单独解码</td></tr>
-              <tr><td>NTP</td><td>网络时间协议：用请求/应答的四个时间戳估计两台设备的时钟偏差和往返时延</td></tr>
-            </tbody></table></figure>
             <figure class="case-media">
               <video class="sample-video" width="1280" height="720" controls playsinline preload="none" poster="../../assets/insight-v1/insight-egohalo-four-view.webp" aria-labelledby="video-egohalo">
                 <source src="../../assets/insight-v1/insight-egohalo-four-view.mp4" type="video/mp4">
@@ -132,7 +116,7 @@
               <li><strong>录制中审计</strong><span>每 5 秒复测；超限不跳时钟、不丢数据，记进清单和质检。</span></li>
               <li><strong>回传与合包</strong><span>4 MiB 分片取回并逐文件 SHA-256 校验，按原始采集时间（header.stamp）合并。</span></li>
             </ol>
-            <figure class="data-table"><table><caption><strong>表 4　对时门限</strong>单机界限 = |偏差| + 往返时延/2；它基于 NTP 路径时延模型，不是曝光同步的测量。10 ms 是内部工程门槛。</caption><thead><tr><th>参数</th><th class="num">默认值</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 2　对时门限</strong>单机界限 = |偏差| + 往返时延/2；它基于 NTP 路径时延模型，不是曝光同步的测量。10 ms 是内部工程门槛。</caption><thead><tr><th>参数</th><th class="num">默认值</th></tr></thead><tbody>
               <tr><td>单台设备相对 Jetson 的界限</td><td class="num">10 ms</td></tr>
               <tr><td>任意两台设备界限之和</td><td class="num">10 ms</td></tr>
               <tr><td>采纳的 NTP 往返时延上限</td><td class="num">10 ms</td></tr>
@@ -147,7 +131,7 @@
               <div><dt>合包话题 / 消息</dt><dd>26 / 66,698</dd></div>
               <div><dt>8 轮 NTP 审计 · 设备间界限最大</dt><dd>3.74 ms</dd></div>
             </dl>
-            <figure class="data-table"><table><caption><strong>表 5　逐项检查</strong>最近帧时间差反映的是自由运行相机之间的帧相位，不是时钟误差。</caption><thead><tr><th>检查</th><th>结果</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 3　逐项检查</strong>最近帧时间差反映的是自由运行相机之间的帧相位，不是时钟误差。</caption><thead><tr><th>检查</th><th>结果</th></tr></thead><tbody>
               <tr><td>TF 卡原件 vs 取回文件</td><td>139,260,413 字节，SHA-256 一致</td></tr>
               <tr><td>合包 vs 两端原件</td><td>66,698 条 CDR 逐条哈希一致；带 Header 的消息索引时间等于原始采集时间</td></tr>
               <tr><td>头部 IMU</td><td>13,044 条，400 Hz 连续，估计缺失 0</td></tr>
@@ -156,7 +140,7 @@
               <tr><td>头部前左路采集时间戳</td><td>3 处缺口，估计 0.307%，超过 0.1% 门槛 → 该条标为质量可疑</td></tr>
             </tbody></table></figure>
             <h3>各设备组合的实机核对</h3>
-            <figure class="data-table"><table><caption><strong>表 6　三条实机录制的核对结果</strong>帧丢失按 V4L2 帧序号或时间戳缺口统计；头腕最近帧时间差反映自由运行相机之间的帧相位，不是时钟误差。</caption><thead><tr><th>组合</th><th class="num">时长</th><th>结果</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 4　三条实机录制的核对结果</strong>帧丢失按 V4L2 帧序号或时间戳缺口统计；头腕最近帧时间差反映自由运行相机之间的帧相位，不是时钟误差。</caption><thead><tr><th>组合</th><th class="num">时长</th><th>结果</th></tr></thead><tbody>
               <tr><td>EgoHalo + 双 Insight3</td><td class="num">32.48 s</td><td>26 个话题、66,698 条消息逐条哈希一致；头部 IMU 400 Hz 连续；前左路时间戳缺口 0.307%，该条标为可疑</td></tr>
               <tr class="is-best"><td>Insight9 头部 + 双 UVC（90 fps）</td><td class="num">120 s</td><td>左腕 10,830 帧、右腕 10,829 帧，帧序号缺失 0；帧间隔中位 12.002 ms、P99 12.099 ms；头部双目 2,415 对精确配对、0 未配；头腕最近帧 P95 5.63 ms；MCAP 5.6 GB</td></tr>
               <tr><td>EgoHalo + 双 UVC（90 fps）</td><td class="num">27.27 s</td><td>每腕 2,459 帧、实测 90.19 fps，帧序号缺失 0；头腕最近帧 P95 5.70 ms；每侧 28/28 次腕部地图定位通过验证；腕部 IMU 有 2–3 个无效包，审计标为未通过</td></tr>
@@ -183,7 +167,7 @@
               <figcaption><strong class="insight-media-title">图 5　定位链路</strong>(a) 头部建图；(b) 腕部对地图定位，橙色框是接受门限；(c) 与设备 VIO 融合并输出统一位姿。</figcaption>
             </figure>
             <p>建图和腕部定位在 C++ 里运行，特征推理是单独的 TensorRT 服务。头部关键帧按 2 Hz 采样，静止时也建图；腕部每路最多 4 Hz，特征提取和几何求解各自只保留最新一帧，过载时丢旧帧而不排队。地标、共视局部 BA 和回环模块迁自团队已有的视觉里程计库，我负责把它接进这套系统，并实现腕部几何定位、EKF 融合和检查工具。</p>
-            <figure class="data-table"><table><caption><strong>表 7　定位链路用到的方法</strong>出处列的是方法原始论文或项目；本项目使用现成实现，未改模型。</caption><thead><tr><th>方法</th><th>怎么工作</th><th>输入 / 条件</th><th>出处</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 5　定位链路用到的方法</strong>出处列的是方法原始论文或项目；本项目使用现成实现，未改模型。</caption><thead><tr><th>方法</th><th>怎么工作</th><th>输入 / 条件</th><th>出处</th></tr></thead><tbody>
               <tr><td>SuperPoint</td><td>卷积网络在整张图上同时检测特征点并输出 256 维描述子</td><td>灰度图，本项目统一缩放到 544×640，在 TensorRT（NVIDIA 推理引擎）上运行</td><td>DeTone 等，2018</td></tr>
               <tr><td>SuperGlue</td><td>图神经网络在两张图的特征点之间做注意力匹配，每对给出置信度</td><td>两组 SuperPoint 特征；本项目丢弃置信度 &lt; 0.5 的对应</td><td>Sarlin 等，2020</td></tr>
               <tr><td>双目三角化</td><td>同一特征在左右目的像素位置 + 已知基线，求出三维点</td><td>头部左右目（EgoHalo 前置双目基线 69.25 mm）；视差角 &lt; 0.5° 的点拒绝</td><td>—</td></tr>
@@ -193,7 +177,7 @@
               <tr><td>Huber 损失细化</td><td>误差小时按平方、大时按线性计，减弱离群点对位姿的拉扯</td><td>RANSAC 内点；阈值 1 px，最多 20 次函数求值，未收敛直接拒绝</td><td>—</td></tr>
               <tr><td>EKF，扩展卡尔曼滤波</td><td>把小幅视觉修正平滑地融进 VIO 输出，避免位姿跳变</td><td>VIO 位姿 + 地图修正；&gt; 5 cm 的修正不走 EKF，需可靠重定位确认</td><td>—</td></tr>
             </tbody></table></figure>
-            <figure class="data-table"><table><caption><strong>表 8　腕部位姿被接受的条件</strong>任何一条不满足，本次匹配都不更新位姿。可靠性不靠可能已经漂移的 VIO 去验证跨帧运动。</caption><thead><tr><th>检查</th><th class="num">条件</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 6　腕部位姿被接受的条件</strong>任何一条不满足，本次匹配都不更新位姿。可靠性不靠可能已经漂移的 VIO 去验证跨帧运动。</caption><thead><tr><th>检查</th><th class="num">条件</th></tr></thead><tbody>
               <tr><td>PnP 求解</td><td class="num">RANSAC → 1 px Huber 细化 → 剔除 &gt; 3 px 后再拟合</td></tr>
               <tr><td>内点数 / 内点比例</td><td class="num">≥ 40 / ≥ 50%</td></tr>
               <tr><td>内点覆盖的图像网格</td><td class="num">≥ 4 格</td></tr>
@@ -203,7 +187,7 @@
             </tbody></table></figure>
             <h3>现场调试：腕部模型来回跳</h3>
             <p>现场两个腕部模型突然几乎重叠，独立订阅测得相机中心间距只有约 1.7 cm。同一 14 秒内两路原始 VIO 只有毫米级变化，但腕 A 的日志有 28 次大幅地图修正、B 为 0，问题在定位确认，不在 VIO。原规则允许以中心为基准各 20 cm / 12° 的解进同一簇，簇直径实际可达 40 cm；而 10° 的修正就已触发硬切换。</p>
-            <figure class="data-table"><table><caption><strong>表 9　候选确认规则修改前后</strong>PnP 数量、内点比例、像素误差和网格门限都没有放宽。</caption><thead><tr><th>项目</th><th>修改前</th><th>修改后</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 7　候选确认规则修改前后</strong>PnP 数量、内点比例、像素误差和网格门限都没有放宽。</caption><thead><tr><th>项目</th><th>修改前</th><th>修改后</th></tr></thead><tbody>
               <tr><td>同一簇的范围</td><td>以中心为基准各 20 cm / 12°</td><td>任意两候选之间 ≤ 5 cm / 3°</td></tr>
               <tr><td>另一个解也有支持</td><td>可能被拼进同一簇</td><td>另一解有 2 次支持即标记为歧义并等待</td></tr>
               <tr><td>输出的位姿</td><td>平移中位数 + 另一候选的旋转</td><td>同一候选的完整 SE(3) 解（平移 + 旋转一起取）</td></tr>
@@ -227,7 +211,7 @@
             </figure>
             <h3>显示端的细碎抖动</h3>
             <p>静止时 3D 模型放大后有亚毫米级抖动。我只在 Qt 显示端加了自适应低通（低速截止 3 Hz，速度增大时升到 30 Hz；&gt; 2 cm / 5°、断流或回放时直接跳到新位姿），不改后端位姿和录制数据。</p>
-            <figure class="data-table"><table><caption><strong>表 10　同一段 20 秒真实采样的逐帧变化 P95</strong>模拟 20 cm/s、90°/s 运动时的最大显示滞后为 2.24 mm / 0.39°。</caption><thead><tr><th>设备</th><th class="num">未过滤</th><th class="num">显示过滤后</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 8　同一段 20 秒真实采样的逐帧变化 P95</strong>模拟 20 cm/s、90°/s 运动时的最大显示滞后为 2.24 mm / 0.39°。</caption><thead><tr><th>设备</th><th class="num">未过滤</th><th class="num">显示过滤后</th></tr></thead><tbody>
               <tr><td>腕 A 位置 / 角度</td><td class="num">0.340 mm / 0.0163°</td><td class="num">0.170 mm / 0.0083°</td></tr>
               <tr><td>腕 B 位置 / 角度</td><td class="num">0.260 mm / 0.0140°</td><td class="num">0.134 mm / 0.0065°</td></tr>
               <tr><td>头部位置 / 角度</td><td class="num">0.295 mm / 0.0192°</td><td class="num">0.159 mm / 0.0082°</td></tr>
@@ -238,7 +222,7 @@
           <section class="chapter" id="precision" tabindex="-1">
             <h2>定位精度对照</h2>
             <p>在线链路没有真值，我用已录数据做了一次离线对照：画面里有 AprilGrid（由多个 AprilTag 二维码组成的标定板），用板子独立求出每对相机的相对变换作为参照，再比较两版定位算法给出的相对变换。训练图像 21 张，评估 109 张查询图像，两版全部通过定位门限。</p>
-            <figure class="data-table"><table><caption><strong>表 11　参与对照的两版算法</strong>同一批图像、同一 TensorRT SuperPoint 特征、同一 RANSAC 随机种子。</caption><thead><tr><th>版本</th><th>地标怎么建</th><th>位姿怎么求</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 9　参与对照的两版算法</strong>同一批图像、同一 TensorRT SuperPoint 特征、同一 RANSAC 随机种子。</caption><thead><tr><th>版本</th><th>地标怎么建</th><th>位姿怎么求</th></tr></thead><tbody>
               <tr><td>基线</td><td>原地标融合</td><td>RANSAC PnP</td></tr>
               <tr class="is-best"><td>改进</td><td>按空间距离 + 描述子余弦相似度 + 距离比关联同一特征；同一体素可保留不同特征；至少 3 帧确认；每体素只留观测最多的真实地标</td><td>RANSAC PnP 后再用 1 px Huber 损失细化 6 自由度位姿</td></tr>
             </tbody></table></figure>
@@ -248,7 +232,7 @@
               </a>
               <figcaption><strong class="insight-media-title">图 7　相对位姿位置 RMSE</strong>RMSE 是误差的均方根。指标是“估计的两相机相对平移”与“标定板参照的相对平移”之差。</figcaption>
             </figure>
-            <figure class="data-table"><table><caption><strong>表 12　对应的角度 RMSE（度）</strong>六组中三组下降明显，两组持平，一组略升。</caption><thead><tr><th>片段 · 相机对</th><th class="num">基线</th><th class="num">改进</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 10　对应的角度 RMSE（度）</strong>六组中三组下降明显，两组持平，一组略升。</caption><thead><tr><th>片段 · 相机对</th><th class="num">基线</th><th class="num">改进</th></tr></thead><tbody>
               <tr><td>26–46 s · 头部 / 腕 A</td><td class="num">1.060</td><td class="num">0.915</td></tr>
               <tr><td>26–46 s · 头部 / 腕 B</td><td class="num">1.072</td><td class="num">1.010</td></tr>
               <tr><td>26–46 s · 腕 A / 腕 B</td><td class="num">1.042</td><td class="num">1.070</td></tr>
@@ -298,19 +282,19 @@
             </details>
             <h3>Jetson 本机 Qt 预览：绕开 WebRTC 编码</h3>
             <p>最初 Qt 和网页一样走 WebRTC（浏览器实时音视频协议），本机显示也要先编码再解码。我给本机客户端加了一条只对 loopback（本机回环地址）开放的通道：后端把收到的帧加 32 字节头（格式、宽高、源时间戳、主机收帧时间）通过 WebSocket 直接发给 Qt，Qt 用 GStreamer 的 appsrc 送进 Jetson 硬件解码 NVDEC、图像转换 VIC 后直接显示。</p>
-            <figure class="data-table"><table><caption><strong>表 13　两条预览路径</strong>远程网页、远程 Qt 和 MP4 回放仍走原路径。</caption><thead><tr><th>场景</th><th>图像路径</th><th>积压时怎么丢</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 11　两条预览路径</strong>远程网页、远程 Qt 和 MP4 回放仍走原路径。</caption><thead><tr><th>场景</th><th>图像路径</th><th>积压时怎么丢</th></tr></thead><tbody>
               <tr><td>原路径：WebRTC</td><td>ROS reader → 编码 → WebRTC → Qt 解码</td><td>由编码与网络栈决定</td></tr>
               <tr><td>本机 Insight3（原始帧）</td><td>ROS reader → 只保留最新一帧 → loopback WebSocket → appsrc → VIC → 显示</td><td>新帧覆盖旧帧</td></tr>
               <tr><td>本机 EgoHalo（H.264）</td><td>ROS reader → 有界的连续 GOP 队列 → loopback WebSocket → NVDEC → VIC → 显示</td><td>P 帧不能单独丢；积压、超龄（&gt; 150 ms）或丢参考帧后等下一个完整 IDR 恢复</td></tr>
             </tbody></table></figure>
-            <figure class="data-table"><table><caption><strong>表 14　两台 Insight3 本机预览实测</strong>预热后采样 90.10 秒，逐帧诊断开启。起点是主机预览队列收到帧，终点是显示 sink（GStreamer 输出端）入口；不含曝光、USB/DDS 和屏幕扫描。</caption><thead><tr><th>指标</th><th class="num">Insight3 A</th><th class="num">Insight3 B</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 12　两台 Insight3 本机预览实测</strong>预热后采样 90.10 秒，逐帧诊断开启。起点是主机预览队列收到帧，终点是显示 sink（GStreamer 输出端）入口；不含曝光、USB/DDS 和屏幕扫描。</caption><thead><tr><th>指标</th><th class="num">Insight3 A</th><th class="num">Insight3 B</th></tr></thead><tbody>
               <tr><td>显示 sink 输出率</td><td class="num">29.99 FPS</td><td class="num">30.00 FPS</td></tr>
               <tr><td>收帧 → sink 入口 中位</td><td class="num">5.99 ms</td><td class="num">5.67 ms</td></tr>
               <tr><td>同一阶段 P95 / 最大</td><td class="num">8.92 / 16.92 ms</td><td class="num">8.33 / 13.36 ms</td></tr>
               <tr><td>sink 帧间隔 P95 / 最大</td><td class="num">41.02 / 51.18 ms</td><td class="num">38.34 / 43.61 ms</td></tr>
               <tr><td>&gt; 100 ms 帧间隔 / sink 丢弃</td><td class="num">0 / 0</td><td class="num">0 / 0</td></tr>
             </tbody></table></figure>
-            <figure class="data-table"><table><caption><strong>表 15　同机优化前后</strong>前后诊断条件不同的项（Qt 自身 CPU、GPU 总负载）没有列入。</caption><thead><tr><th>指标</th><th class="num">之前</th><th class="num">之后</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 13　同机优化前后</strong>前后诊断条件不同的项（Qt 自身 CPU、GPU 总负载）没有列入。</caption><thead><tr><th>指标</th><th class="num">之前</th><th class="num">之后</th></tr></thead><tbody>
               <tr><td>WebRTC 编码 worker CPU</td><td class="num">约 25% 单核</td><td class="num">约 0.03%</td></tr>
               <tr><td>任务列表请求（磁盘读取移到线程）</td><td class="num">52–69 ms</td><td class="num">中位 5.37 ms</td></tr>
               <tr><td>姿态推送最大停顿</td><td class="num">约 182 ms（每 5 秒一次）</td><td class="num">53.95 ms</td></tr>
@@ -388,7 +372,7 @@
           <section class="chapter" id="deploy" tabindex="-1">
             <h2>部署与现场可靠性</h2>
             <p>设备交给现场采集员使用，没有外网，也没有开发者在旁边。下面这些机制都是为了让现场出问题时数据不丢、能自己恢复、能留下诊断。</p>
-            <figure class="data-table"><table><caption><strong>表 16　现场运行机制</strong></caption><thead><tr><th>问题</th><th>做法</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 14　现场运行机制</strong></caption><thead><tr><th>问题</th><th>做法</th></tr></thead><tbody>
               <tr><td>换了一套相机</td><td>空闲时自动扫描设备，连续两轮识别到同一套完整组合才切换；UVC 腕部可插任意 USB 口，有唯一序列号的按序列号绑定左右</td></tr>
               <tr><td>现场没有网络</td><td>Jetson 自建采集热点和 DHCP，手机直接打开网页，无需安装 App；Qt 客户端的运行库、字体和三维模型全部在本地，离线验收在只有 loopback 的网络命名空间里完成</td></tr>
               <tr><td>相机时钟不准</td><td>起录前对每台设备做 5 次 NTP、取往返最短的一次；录制中每 5 秒复测；相机系统时钟实际修正 &lt; 5 ms 才开始采集</td></tr>
@@ -438,6 +422,27 @@
                 </figure>
               </div>
             </details>
+          </section>
+
+          <section class="chapter" id="appendix" tabindex="-1">
+            <h2>附录</h2>
+            <figure class="data-table"><table><caption><strong>表 A1　我负责的部分</strong>2026 年 6 月至 11 月，约 600 次提交；行数只计我写的代码，不含第三方库。</caption><thead><tr><th>模块</th><th>内容</th><th class="num">规模</th></tr></thead><tbody>
+              <tr><td>Jetson 后端</td><td>ROS 2 接入与健康检查、原生 UVC 采集、MCAP 录制、对时与双端合包、定位编排、WebRTC 与本机预览、质检和后处理</td><td class="num">Python 约 2.1 万行</td></tr>
+              <tr><td>建图与腕部定位</td><td>TensorRT 上的 SuperPoint/SuperGlue 推理服务、双目亚像素细化、腕部几何定位、EKF 融合与检查工具；地标、局部 BA 和回环模块迁自团队已有的视觉里程计库</td><td class="num">C++ 约 750 行 + Python 编排</td></tr>
+              <tr><td>手机采集页</td><td>采集、记录、设备三页，中英文，WebRTC 多路预览</td><td class="num">Vue 约 2.6 千行</td></tr>
+              <tr><td>原生 Qt 客户端</td><td>七个页面，回放、空间检查、评分、COLMAP 重建</td><td class="num">C++/QML 约 6 千行</td></tr>
+              <tr><td>部署</td><td>离线安装与升级包、采集热点、开机服务、电源键关机</td><td class="num">按版本发布</td></tr>
+              <tr><td>测试</td><td>后端单元与集成测试、Qt C++ 测试、网页测试、建图几何检查</td><td class="num">440 多个 Python 测试</td></tr>
+            </tbody></table></figure>
+            <figure class="data-table"><table><caption><strong>表 A2　本页用到的数据与传输术语</strong>按第一次出现的顺序。</caption><thead><tr><th>术语</th><th>是什么</th></tr></thead><tbody>
+              <tr><td>VIO，Visual-Inertial Odometry</td><td>视觉惯性里程计：相机画面加 IMU 积分估计自身位姿；每台设备从自己的开机位置起算，原点和朝向互不相同</td></tr>
+              <tr><td>IMU</td><td>惯性测量单元，输出加速度和角速度</td></tr>
+              <tr><td>ROS 2 / DDS</td><td>机器人中间件；话题消息经 DDS（数据分发服务）发布订阅</td></tr>
+              <tr><td>MCAP</td><td>开源的多话题日志容器格式，ROS 2 的录制包可用它存储；带索引，可按时间随机读取</td></tr>
+              <tr><td>CDR</td><td>ROS 2 消息的二进制序列化格式；合包时按 CDR 字节逐条比对哈希</td></tr>
+              <tr><td>H.264 · IDR · SPS/PPS · GOP</td><td>视频编码。IDR 是可独立解码的关键帧，SPS/PPS 是解码所需的参数集，GOP 是两个关键帧之间的一组帧；P 帧依赖前面的帧，不能单独解码</td></tr>
+              <tr><td>NTP</td><td>网络时间协议：用请求/应答的四个时间戳估计两台设备的时钟偏差和往返时延</td></tr>
+            </tbody></table></figure>
           </section>
         </div>
       </div>

@@ -73,6 +73,7 @@
             <li><a href="#hands">云端手部三维处理</a></li>
             <li><a href="#firmware">相机运行时与固件</a></li>
             <li><a href="#next">局限</a></li>
+            <li><a href="#appendix">附录</a></li>
           </ul>
         </nav>
         <div class="case-text">
@@ -83,26 +84,6 @@
               <a class="screenshot-link" href="../../assets/project-media/egohalo-f1-system.webp" aria-label="打开原图：系统结构"><img src="../../assets/project-media/egohalo-f1-system.webp" width="1773" height="1073" loading="lazy" decoding="async" alt="上方大框是头戴设备：四路鱼眼相机经相机运行时，一路进预览分发，一路进直接 MCAP 录制器，控制台后端控制录制；另有固件与 OTA。右侧是网页控制台和安卓 App，通过控制接口连接后端；浏览器上传从 TF 卡读取录制。下方是云存储、GPU 手部处理和结果。绿色实线框是我搭建的部分，灰色虚线框是我参与的团队系统，蓝色是数据。"></a>
               <figcaption><strong class="insight-media-title">图 1　系统结构</strong>绿色实线框是我从零搭建或独立完成的部分，灰色虚线框是我参与的团队系统，蓝色是数据。</figcaption>
             </figure>
-            <figure class="data-table"><table><caption><strong>表 1　各部分的分工</strong>提交数为非合并提交，统计全部分支；行数只计源码，不含第三方库和模型。</caption><thead><tr><th>部分</th><th>我的角色</th><th class="num">提交（我 / 全部）</th></tr></thead><tbody>
-              <tr class="is-best"><td>采集控制台：后端、网页、安卓 App、C++ 录制器</td><td>从零搭建并持续负责；约 3.2 万行（Python 1.75 万、Kotlin 6.4 千、Vue/JS 3.4 千、C++ 2.8 千）</td><td class="num">339 / 368</td></tr>
-              <tr><td>浏览器上传与设备导出</td><td>独立完成，约 5 千行</td><td class="num">54 / 54</td></tr>
-              <tr><td>云端手部处理</td><td>多视角处理、标定双目三角化、手部关联、左右手联合判定、HEVC 输入、进度上报</td><td class="num">21 / 46</td></tr>
-              <tr><td>OTA 服务</td><td>一条发布关联多个产品、分阶段运行时升级、设备设置项</td><td class="num">62 / 245</td></tr>
-              <tr><td>相机运行时</td><td>共同起录边界、直接写包、预览与录制分支、与图像同步的 VIO、机型识别</td><td class="num">41 / 728</td></tr>
-              <tr><td>设备固件</td><td>BLE 配网、ISP 帧保留、电量计配置、设备独立 SSH 密钥</td><td class="num">37 / 130</td></tr>
-            </tbody></table></figure>
-            <figure class="data-table"><table><caption><strong>表 2　本页用到的术语</strong>按第一次出现的顺序。</caption><thead><tr><th>术语</th><th>是什么</th></tr></thead><tbody>
-              <tr><td>MCAP</td><td>开源的多话题日志容器格式，ROS 2 录制包（rosbag2）可用它存储；内部分块并带索引</td></tr>
-              <tr><td>ROS 2 · DDS · CDR</td><td>机器人中间件；消息经 DDS 发布订阅，以 CDR 二进制格式序列化</td></tr>
-              <tr><td>H.264 / H.265</td><td>帧间压缩视频编码；H.265（HEVC）同画质下码率通常更低，解码更重</td></tr>
-              <tr><td>IDR · SPS/PPS · P 帧</td><td>IDR 是可独立解码的关键帧，SPS/PPS 是解码所需的参数集；P 帧依赖之前的帧，单独拿到解不出来</td></tr>
-              <tr><td>MJPEG</td><td>每帧独立的 JPEG 图像序列，无帧间依赖，体积远大于 H.264</td></tr>
-              <tr><td>WebRTC</td><td>浏览器实时音视频协议，用于手机和网页预览</td></tr>
-              <tr><td>VIO</td><td>视觉惯性里程计：相机画面加 IMU 估计设备位姿</td></tr>
-              <tr><td>ISP</td><td>图像信号处理器：把传感器原始数据转成图像，位于编码之前</td></tr>
-              <tr><td>fsync</td><td>要求操作系统把文件缓存真正写到存储介质，返回后断电也不丢</td></tr>
-              <tr><td>OTA</td><td>Over-the-Air，设备联网升级</td></tr>
-            </tbody></table></figure>
           </section>
 
           <section class="chapter" id="console" tabindex="-1">
@@ -124,7 +105,7 @@
               <figcaption><strong class="insight-media-title">图 3　安卓 App：连接、记录、设备三页</strong>实机截图；设备序列号已打码，品牌标识已去掉。</figcaption>
             </figure>
             <h3>设备端功能</h3>
-            <figure class="data-table"><table><caption><strong>表 3　不依赖手机也能用的功能</strong>都在设备后端实现，客户端断开不影响。</caption><thead><tr><th>功能</th><th>做法</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 1　不依赖手机也能用的功能</strong>都在设备后端实现，客户端断开不影响。</caption><thead><tr><th>功能</th><th>做法</th></tr></thead><tbody>
               <tr><td>离线语音起停</td><td>Vosk 中文、英文两个识别线程并行听同一路 16 kHz 音频，只匹配完整口令，先命中的语言立即提交并让另一路结果失效；也可切换到单路 Sherpa 双语模型</td></tr>
               <tr><td>实体录制键</td><td>长按起停，手势和时长可在 OTA 设置里配置</td></tr>
               <tr><td>低电量保护</td><td>SOC ≤ 10% 提醒；SOC ≤ 1% 且原始放电电压 30 秒均值 ≤ 3.3 V 时禁止新录制、保存当前 Take、同步文件系统、播报后再关机；接上充电器即取消</td></tr>
@@ -146,7 +127,7 @@
             <h3>ROS 录制路径的起录延迟</h3>
             <p>在直接写包之前，录制走 ROS：每次按开始都要重新加载 ROS 环境、启动完整的 ros2 命令行，三次平均 2.671 秒才真正开录。我把录制放进常驻子进程，直接调用 rosbag2_py 的 Recorder，平均降到 0.824 秒（−69%）。</p>
             <h3>直接写包时起停各花多少时间</h3>
-            <figure class="data-table"><table><caption><strong>表 4　一次起停的分段耗时（秒）</strong>直接写包 + MJPEG，录音关闭，单次无追踪样本；从设备本机 HTTP 请求起算，不含手机链路和界面刷新。</caption><thead><tr><th>阶段</th><th class="num">耗时</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 2　一次起停的分段耗时（秒）</strong>直接写包 + MJPEG，录音关闭，单次无追踪样本；从设备本机 HTTP 请求起算，不含手机链路和界面刷新。</caption><thead><tr><th>阶段</th><th class="num">耗时</th></tr></thead><tbody>
               <tr><td>开始请求返回（只表示接受）</td><td class="num">0.368</td></tr>
               <tr><td>实际首帧确认</td><td class="num">0.937</td></tr>
               <tr><td>轮询看到“录制中”</td><td class="num">1.371</td></tr>
@@ -159,7 +140,7 @@
 
           <section class="chapter" id="compare" tabindex="-1">
             <h2>ROS 录制与直接写包对照</h2>
-            <figure class="data-table"><table><caption><strong>表 5　参与对照的两种录制方式</strong>同一编码器、同一消息格式，差别只在传输和写盘的位置。</caption><thead><tr><th>方式</th><th>数据怎么走</th><th>录制中能做什么</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 3　参与对照的两种录制方式</strong>同一编码器、同一消息格式，差别只在传输和写盘的位置。</caption><thead><tr><th>方式</th><th>数据怎么走</th><th>录制中能做什么</th></tr></thead><tbody>
               <tr><td>ROS 录制（rosbag2）</td><td>相机发布 ROS 消息 → DDS → 独立 Recorder 进程订阅 → 写 MCAP</td><td>外部节点可同时订阅，ROS 轨迹持续更新</td></tr>
               <tr><td>直接写包</td><td>相机进程内把相同 CDR 送入有界缓存和写线程 → 写 MCAP；控制经 Unix socket</td><td>录制时暂停所选流的 ROS 发布，位姿照常入包</td></tr>
             </tbody></table></figure>
@@ -170,7 +151,7 @@
               </a>
               <figcaption><strong class="insight-media-title">图 4　四轮 ABBA 对照</strong>左：合计进程 CPU，100% 表示一个核。右：图像源时间戳间隔超过 50 ms 的次数（正常间隔约 33 ms）。</figcaption>
             </figure>
-            <figure class="data-table"><table><caption><strong>表 6　两轮均值</strong>CPU 差异包含传输、订阅、独立 Recorder 和实时轨迹等工作量变化，不能当作单独写线程的加速比。</caption><thead><tr><th>指标</th><th class="num">ROS 录制</th><th class="num">直接写包</th><th class="num">差异</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 4　两轮均值</strong>CPU 差异包含传输、订阅、独立 Recorder 和实时轨迹等工作量变化，不能当作单独写线程的加速比。</caption><thead><tr><th>指标</th><th class="num">ROS 录制</th><th class="num">直接写包</th><th class="num">差异</th></tr></thead><tbody>
               <tr class="is-best"><td>合计进程 CPU</td><td class="num">397.49%</td><td class="num">278.06%</td><td class="num">−30.0%，约少 1.19 核</td></tr>
               <tr><td>整机 CPU（8 核合计）</td><td class="num">63.15%</td><td class="num">46.19%</td><td class="num">−16.96 个百分点</td></tr>
               <tr><td>进程常驻内存合计</td><td class="num">480.27 MiB</td><td class="num">462.96 MiB</td><td class="num">−17.31 MiB</td></tr>
@@ -179,7 +160,7 @@
               <tr><td>图像源间隔 &gt; 50 ms（四路合计，两轮）</td><td class="num">65 次</td><td class="num">15 次</td><td class="num">−50 次</td></tr>
               <tr><td>VIO 100 Hz 位姿最大源间隔</td><td class="num">42.5 / 45.0 ms</td><td class="num">37.5 / 32.5 ms</td><td class="num">—</td></tr>
             </tbody></table></figure>
-            <figure class="data-table"><table><caption><strong>表 7　逐轮记录频率（Hz）</strong>取四路共同起点后第 10 秒开始的 160 秒窗口，按去重后的源 header 计数。</caption><thead><tr><th>轮次</th><th class="num">前左</th><th class="num">前右</th><th class="num">左侧</th><th class="num">右侧</th><th class="num">IMU</th><th class="num">VIO 位姿</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 5　逐轮记录频率（Hz）</strong>取四路共同起点后第 10 秒开始的 160 秒窗口，按去重后的源 header 计数。</caption><thead><tr><th>轮次</th><th class="num">前左</th><th class="num">前右</th><th class="num">左侧</th><th class="num">右侧</th><th class="num">IMU</th><th class="num">VIO 位姿</th></tr></thead><tbody>
               <tr><td>1 · ROS</td><td class="num">29.87</td><td class="num">29.94</td><td class="num">30.00</td><td class="num">30.00</td><td class="num">400.0</td><td class="num">98.94</td></tr>
               <tr><td>2 · 直接</td><td class="num">29.98</td><td class="num">29.98</td><td class="num">29.99</td><td class="num">30.00</td><td class="num">400.0</td><td class="num">99.39</td></tr>
               <tr><td>3 · 直接</td><td class="num">29.99</td><td class="num">29.99</td><td class="num">30.00</td><td class="num">30.00</td><td class="num">400.0</td><td class="num">99.48</td></tr>
@@ -196,7 +177,7 @@
             <h2>存储、频率与机型</h2>
             <p><strong>实际采集频率。</strong>Take 详情按话题显示平均记录频率。为了不读整个文件，先读 MCAP 摘要里的消息计数和各块的时间上下界，再只读可能包含首尾消息的索引；合并各分包的总数和全局首尾时间，按 (N − 1) / (t末 − t首) 算出 Hz。这是平均值，逐帧缺口交给单独的诊断检查。</p>
             <p><strong>存储与恢复。</strong>Take 按任务归档，录制索引按 TF 卡隔离；换卡后可以扫描重建索引；空间不足时尽量把正在录的这条保存完，之后可只读导出。</p>
-            <figure class="data-table"><table><caption><strong>表 8　录制验收矩阵（ROS 录制路径，2026-10-16，直接写包上线前）</strong>同一台设备，每种格式 × 时长各录两轮，12 轮全部通过；“最低图像频率”取四路中最低的一路。</caption><thead><tr><th>格式 · 时长</th><th class="num">最低图像频率</th><th class="num">VIO 位姿</th><th class="num">单轮文件大小</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 6　录制验收矩阵（ROS 录制路径，2026-10-16，直接写包上线前）</strong>同一台设备，每种格式 × 时长各录两轮，12 轮全部通过；“最低图像频率”取四路中最低的一路。</caption><thead><tr><th>格式 · 时长</th><th class="num">最低图像频率</th><th class="num">VIO 位姿</th><th class="num">单轮文件大小</th></tr></thead><tbody>
               <tr><td>H.264 · 60 s</td><td class="num">29.90–29.97 Hz</td><td class="num">99.6–99.7 Hz</td><td class="num">148–187 MiB</td></tr>
               <tr><td>H.264 · 300 s</td><td class="num">29.95–29.97 Hz</td><td class="num">99.5–99.7 Hz</td><td class="num">918–921 MiB</td></tr>
               <tr><td>H.264 · 600 s</td><td class="num">29.95–29.96 Hz</td><td class="num">99.6 Hz</td><td class="num">1,833–1,837 MiB</td></tr>
@@ -219,7 +200,7 @@
               <a class="screenshot-link" href="../../assets/project-media/egohalo-upload.webp" aria-label="打开原图 · 上传进度"><img src="../../assets/project-media/egohalo-upload.webp" width="366" height="236" loading="lazy" decoding="async" alt="网页中的单条上传进度和取消入口"></a>
               <figcaption><strong class="insight-media-title">图 5　上传进度</strong>上传界面局部，已裁掉账号与录制标识。</figcaption>
             </figure>
-            <figure class="data-table"><table><caption><strong>表 9　上传链路的关键设计</strong></caption><thead><tr><th>环节</th><th>做法</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 7　上传链路的关键设计</strong></caption><thead><tr><th>环节</th><th>做法</th></tr></thead><tbody>
               <tr><td>设备导出</td><td>浏览器与设备配对后按 HTTP Range 分段读取，每段带录制版本号和 SHA-256，设备上的文件变了就拒绝继续</td></tr>
               <tr><td>分片直传</td><td>16 MiB 一片直传云存储；续传前先查云端实际已有的分片，不信任本地记录</td></tr>
               <tr><td>多标签页</td><td>每个页面单独持有上传租约，复制出来的标签页即使继承了配对，也不能共享或释放原页面的上传</td></tr>
@@ -238,7 +219,7 @@
               </video>
               <figcaption><strong class="insight-media-title" id="video-hand-overlay">图 6　叠衣服：手部关键点叠加</strong>一段 11.3 秒的三路 H.264 录制，RGB 主相机画面；蓝色为左手、橙色为右手。</figcaption>
             </figure>
-            <figure class="data-table"><table><caption><strong>表 10　手部链路里我做的改动</strong></caption><thead><tr><th>改动</th><th>原来的问题</th><th>做法</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 8　手部链路里我做的改动</strong></caption><thead><tr><th>改动</th><th>原来的问题</th><th>做法</th></tr></thead><tbody>
               <tr><td>标定双目三角化</td><td>单目网络只给相对手形，没有米制位置</td><td>按设备真实标定（鱼眼或针孔）去畸变、投影，三角化后再做几何检查；多相机设备按静态 TF 链组合外参</td></tr>
               <tr><td>全局一对一手部关联</td><td>贪心地先给一只手选局部最佳匹配，可能占走另一只手的候选，三角化失败</td><td>时间和双目关联都改成全局一对一匹配；在框中心、腕点两种轨迹中选支持更多的一种，选择不读真值</td></tr>
               <tr><td>左右手联合判定</td><td>单帧判断左右，同一帧里会出现两只“右手”</td><td>0.5 秒窗口内联合判定同时出现的两条轨迹，左右互斥；跨窗口用动态规划，结合检测器和双目几何的证据</td></tr>
@@ -248,7 +229,7 @@
               <a class="screenshot-link" href="../../assets/project-media/egohalo-hand-benchmark.webp" aria-label="打开原图：手部处理改动前后"><img src="../../assets/project-media/egohalo-hand-benchmark.webp" width="2250" height="690" loading="lazy" decoding="async" alt="三组前后对比柱状图，灰色为改动前、蓝色为改动后。(a) 有三维输出的手部比例：双目三角化 55.6% 升到 76.2%，再接 MANO 优化 55.3% 升到 76.2%。(b) 前后都有输出的手上的绝对三维关节误差：三角化 15.60 降到 13.79 mm，MANO 后 12.97 降到 12.19 mm。(c) 左右手标签：同一帧出现两只同侧手的帧数 389 降到 0，未知标签 110 降到 58，与独立检测器不一致 55 降到 31。"></a>
               <figcaption><strong class="insight-media-title">图 7　手部关联和左右手判定的效果</strong>(a)(b) InterHand2.6M 公开数据集上带真值的 6 段序列、759 个手部观测，误差只比较前后都有输出的手和相同关节；(c) 8 段实际录制、19,057 个手部观测，没有三维真值，独立检测器的一致率不等于准确率。</figcaption>
             </figure>
-            <figure class="data-table"><table><caption><strong>表 11　InterHand2.6M 上的方法对照</strong>6 段序列、759 个带真值的手部观测；误差只在四种方法共同输出的 418 个观测上比较，单位 mm。InterHand 是针孔相机，结果不能直接外推到鱼眼。</caption><thead><tr><th>方法</th><th class="num">有输出的比例</th><th class="num">腕部相对 MPJPE</th><th class="num">PA-MPJPE</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 9　InterHand2.6M 上的方法对照</strong>6 段序列、759 个带真值的手部观测；误差只在四种方法共同输出的 418 个观测上比较，单位 mm。InterHand 是针孔相机，结果不能直接外推到鱼眼。</caption><thead><tr><th>方法</th><th class="num">有输出的比例</th><th class="num">腕部相对 MPJPE</th><th class="num">PA-MPJPE</th></tr></thead><tbody>
               <tr><td>WiLoR-mini 单目</td><td class="num">95.4%</td><td class="num">15.26</td><td class="num">8.65</td></tr>
               <tr><td>WiLoR + 双目三角化</td><td class="num">55.6%</td><td class="num">18.62</td><td class="num">11.51</td></tr>
               <tr class="is-best"><td>WiLoR + 双目 + MANO 优化</td><td class="num">55.3%</td><td class="num">13.18</td><td class="num">9.86</td></tr>
@@ -269,7 +250,7 @@
             <h3>相机运行时</h3>
             <p>相机运行时负责感知、编码和 ROS 输出。我维护机型识别与校准配置，拆分了预览和录制两条队列（见上文），接出与图像同步的 VIO 位姿。</p>
             <p>前左路偶发缺帧的排查：5 分钟四路 H.265 实录缺 40 帧（前左 34 帧，0.38%），每处都是单次少一帧（间隔 33.3 → 66.7 ms），且都在编码前出现 frame ID 跳号、对应同一路 ISP 报出的尺寸异常（VSIZE_ERR），写盘没有额外丢帧。原驱动会直接丢掉这类帧。</p>
-            <figure class="data-table"><table><caption><strong>表 12　放行“已完成处理、仅有尺寸异常”的帧前后</strong>各 5 分钟实录；其他错误、混合错误和超时仍丢弃，不改帧 ID 和时间戳，不用重复帧补齐。</caption><thead><tr><th>相机</th><th class="num">之前：缺帧</th><th class="num">之后：缺帧</th><th class="num">之后：保留下来的异常帧</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>表 10　放行“已完成处理、仅有尺寸异常”的帧前后</strong>各 5 分钟实录；其他错误、混合错误和超时仍丢弃，不改帧 ID 和时间戳，不用重复帧补齐。</caption><thead><tr><th>相机</th><th class="num">之前：缺帧</th><th class="num">之后：缺帧</th><th class="num">之后：保留下来的异常帧</th></tr></thead><tbody>
               <tr><td>前置左</td><td class="num">34</td><td class="num">0</td><td class="num">40</td></tr>
               <tr><td>前置右</td><td class="num">1</td><td class="num">0</td><td class="num">3</td></tr>
               <tr><td>左侧</td><td class="num">1</td><td class="num">0</td><td class="num">1</td></tr>
@@ -277,8 +258,6 @@
               <tr class="is-best"><td>合计</td><td class="num">40（0.11%）</td><td class="num">0</td><td class="num">48</td></tr>
             </tbody></table></figure>
             <p>之后四路整段 H.265 全部解码通过，抽查异常帧及前后帧未见花屏或缺行。11 月 17 日起，这项放行已固定进发布固件。</p>
-            <h3>单帧绿闪排查</h3>
-            <p>有一台设备的录制在第 27、67 帧整幅变亮发绿，下一帧恢复。我在设备上抓编码前的 NV12 原图，又捕获到 4 次同类异常，前后帧间隔约 66 ms，说明问题出在 H.264 编码之前，录制、ROS 和 MCAP 写包都不是原因。之后在原参数下 600 秒、71,300 帧的长测和反复增益切换里都没有复现，换到其他设备也没有出现，最终确认是这台设备的硬件问题。排查中顺带发现传感器 ISP 去马赛克增益表多了一个尾值，导致 SDK 初始化报错，这是一个独立的配置错误。</p>
             <h3>设备固件</h3>
             <p>设备系统由 Buildroot 构建。我参与的部分：BLE 一键配网（就绪失败时上报原因，出厂名称按产品信息生成）、换用厂商的 3.3 V 电量计配置并在 10% 电量时闪灯、每台设备独立的 SSH 密钥并关闭 Telnet、Insight 7 Duo 的产品配置，以及把匹配的采集应用装进发布包。</p>
           </section>
@@ -291,6 +270,30 @@
               <li><strong>手部三维的覆盖率仍是瓶颈。</strong>公开数据集上双目输出率 76%，鱼眼边缘、遮挡和小手时更低；MANO 优化和时序平滑还没上云，实际录制没有三维真值。</li>
               <li><strong>频率是平均值。</strong>Take 详情里的 Hz 只反映平均记录频率，逐帧缺口要看诊断报告。</li>
             </ul>
+          </section>
+
+          <section class="chapter" id="appendix" tabindex="-1">
+            <h2>附录</h2>
+            <figure class="data-table"><table><caption><strong>表 A1　各部分的分工</strong>提交数为非合并提交，统计全部分支；行数只计源码，不含第三方库和模型。</caption><thead><tr><th>部分</th><th>我的角色</th><th class="num">提交（我 / 全部）</th></tr></thead><tbody>
+              <tr class="is-best"><td>采集控制台：后端、网页、安卓 App、C++ 录制器</td><td>从零搭建并持续负责；约 3.2 万行（Python 1.75 万、Kotlin 6.4 千、Vue/JS 3.4 千、C++ 2.8 千）</td><td class="num">339 / 368</td></tr>
+              <tr><td>浏览器上传与设备导出</td><td>独立完成，约 5 千行</td><td class="num">54 / 54</td></tr>
+              <tr><td>云端手部处理</td><td>多视角处理、标定双目三角化、手部关联、左右手联合判定、HEVC 输入、进度上报</td><td class="num">21 / 46</td></tr>
+              <tr><td>OTA 服务</td><td>一条发布关联多个产品、分阶段运行时升级、设备设置项</td><td class="num">62 / 245</td></tr>
+              <tr><td>相机运行时</td><td>共同起录边界、直接写包、预览与录制分支、与图像同步的 VIO、机型识别</td><td class="num">41 / 728</td></tr>
+              <tr><td>设备固件</td><td>BLE 配网、ISP 帧保留、电量计配置、设备独立 SSH 密钥</td><td class="num">37 / 130</td></tr>
+            </tbody></table></figure>
+            <figure class="data-table"><table><caption><strong>表 A2　本页用到的术语</strong>按第一次出现的顺序。</caption><thead><tr><th>术语</th><th>是什么</th></tr></thead><tbody>
+              <tr><td>MCAP</td><td>开源的多话题日志容器格式，ROS 2 录制包（rosbag2）可用它存储；内部分块并带索引</td></tr>
+              <tr><td>ROS 2 · DDS · CDR</td><td>机器人中间件；消息经 DDS 发布订阅，以 CDR 二进制格式序列化</td></tr>
+              <tr><td>H.264 / H.265</td><td>帧间压缩视频编码；H.265（HEVC）同画质下码率通常更低，解码更重</td></tr>
+              <tr><td>IDR · SPS/PPS · P 帧</td><td>IDR 是可独立解码的关键帧，SPS/PPS 是解码所需的参数集；P 帧依赖之前的帧，单独拿到解不出来</td></tr>
+              <tr><td>MJPEG</td><td>每帧独立的 JPEG 图像序列，无帧间依赖，体积远大于 H.264</td></tr>
+              <tr><td>WebRTC</td><td>浏览器实时音视频协议，用于手机和网页预览</td></tr>
+              <tr><td>VIO</td><td>视觉惯性里程计：相机画面加 IMU 估计设备位姿</td></tr>
+              <tr><td>ISP</td><td>图像信号处理器：把传感器原始数据转成图像，位于编码之前</td></tr>
+              <tr><td>fsync</td><td>要求操作系统把文件缓存真正写到存储介质，返回后断电也不丢</td></tr>
+              <tr><td>OTA</td><td>Over-the-Air，设备联网升级</td></tr>
+            </tbody></table></figure>
           </section>
         </div>
       </div>
