@@ -48,7 +48,7 @@
       </header>
 
       <dl class="case-summary" aria-label="项目摘要">
-        <div><dt>时间</dt><dd>2025 首版；2026-11 重跑，并补上经典控制和 v2 仿真</dd></div>
+        <div><dt>时间</dt><dd>2025–2026</dd></div>
         <div><dt>技术栈</dt><dd lang="en">Isaac Sim 4.5 · Isaac Lab 2.1 · PyTorch · PID · LQR/LQI · PPO · TD3 · DQN · RMA</dd></div>
         <div><dt>环境</dt><dd>Crazyflie 2.x（28.2 g），1024 架 GPU 并行；v1 理想电机，v2 加入电机滞后、20–40 ms 延迟、±10% 质量和推力、传感器噪声，推重比 1.9</dd></div>
         <div><dt>我做的</dt><dd>两套风扰环境；PID、LQR、LQI 的实现和 CEM 自动调参；PPO、TD3、DQN 训练；CTBR 动作接口；RMA 教师–学生训练；统一评估和录像</dd></div>
@@ -59,7 +59,6 @@
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
-            <li><a href="#review">复查第一版</a></li>
             <li><a href="#methods">方法一览</a></li>
             <li><a href="#env">两套仿真环境</a></li>
             <li><a href="#v1">v1：理想仿真</a></li>
@@ -73,17 +72,6 @@
           </ul>
         </nav>
         <div class="case-text">
-          <section class="chapter" id="review">
-            <h2>复查第一版</h2>
-            <p>2025 年第一版的结论是“PPO 比 DQN 位置误差低 42%、恢复时间短 35%”。重读代码后发现这个对比不成立：</p>
-            <ul class="plain-list">
-              <li><strong>三种算法不在同一个环境里。</strong>DQN 只有 9 维状态、没有风；TD3 用的是另一套奖励；只有 PPO 在有风的环境里训练。</li>
-              <li><strong>“恢复时间”其实是回合时长。</strong>它按步数 × 0.01 秒算，上限 3 秒，跟受扰后多久回到目标点无关。</li>
-              <li><strong>物理参数有误。</strong>电机最低转速时推力就有机重的 3.4 倍；风力加在机体坐标系里，会跟着飞机一起转；没有旋翼反扭矩，偏航不可控。</li>
-              <li><strong>没有经典控制基线。</strong>不和 PID 比，就说不清 RL 到底有没有用。</li>
-            </ul>
-            <p>所以这次重写了一套所有控制器共用的环境、训练和评估管线，旧数字全部作废。</p>
-          </section>
 
           <section class="chapter" id="methods">
             <h2>方法一览</h2>
@@ -114,7 +102,7 @@
               <tr><td>训练风力</td><td>0.02–0.08 N（机重 7–29%）+ 阵风 0.03–0.10 N</td><td>0–35% 机重 + 阵风 10–40%</td></tr>
               <tr><td>评估阵风</td><td>+0.10 N（36%）</td><td>+40%</td></tr>
             </tbody></table></figure>
-            <p>状态全部用机体坐标系下的量：位置误差、机体系重力方向、线速度、角速度等。第一版用欧拉角，偏航随机后在 ±π 处跳变；改成重力方向后，试训中 PPO 的坠机率从 15% 降到 0.2%。</p>
+            <p>状态全部用机体坐标系下的量：位置误差、机体系重力方向、线速度、角速度等。姿态不用欧拉角：偏航随机时欧拉角在 ±π 处跳变，试训中 PPO 坠机率 15%；换成机体系重力方向后降到 0.2%。</p>
             <p>评估协议：每回合 12 秒，基础风在训练范围内随机取大小和方向，第 6 秒从随机方向加 0.5 秒阵风；512 个回合，评估种子 1000。<strong>位置误差</strong>是 2–6 秒内与目标点的平均真实距离；<strong>阵风峰值</strong>是阵风后的最大误差；<strong>恢复时间</strong>从阵风开始算，到误差回到 5 cm 内并保持 0.5 秒；<strong>成功</strong>指 12 秒内没坠机、且最后 2 秒误差小于 10 cm。</p>
           </section>
 
@@ -167,11 +155,11 @@
               <tr><td>LQI（电机指令）</td><td class="num">2.27 ± 0.57</td><td class="num">27.0 ± 0.3</td><td class="num">1.76 ± 0.05</td><td class="num">84.8%</td><td class="num">14.4%</td></tr>
               <tr><td>PPO（电机指令）</td><td class="num">2.83 ± 0.54</td><td class="num">11.6 ± 0.2</td><td class="num">1.35 ± 0.06</td><td class="num">99.5%</td><td class="num">0.5%</td></tr>
               <tr><td>PPO（CTBR）</td><td class="num">2.15 ± 0.13</td><td class="num">10.6 ± 0.3</td><td class="num">1.09 ± 0.04</td><td class="num">100%</td><td class="num">0%</td></tr>
-              <tr><td>TD3（CTBR，沿用 v1 超参数）</td><td class="num">9.90 ± 1.40</td><td class="num">19.7 ± 0.6</td><td class="num">1.91 ± 0.21¹</td><td class="num">54.4%</td><td class="num">0%</td></tr>
+              <tr><td>TD3（CTBR）</td><td class="num">9.90 ± 1.40</td><td class="num">19.7 ± 0.6</td><td class="num">1.91 ± 0.21¹</td><td class="num">54.4%</td><td class="num">0%</td></tr>
               <tr class="is-best"><td>RMA 学生（CTBR，在线估计风力）</td><td class="num">0.90 ± 0.05</td><td class="num">9.2 ± 0.2</td><td class="num">0.84 ± 0.06</td><td class="num">100%</td><td class="num">0%</td></tr>
               <tr><td>RMA 教师（看得到真实风力，上界）</td><td class="num">0.74 ± 0.06</td><td class="num">7.7 ± 0.1</td><td class="num">0.80 ± 0.03</td><td class="num">100%</td><td class="num">0%</td></tr>
             </tbody></table></figure>
-            <p>¹ TD3 只有 16.5% 的回合能回到 5 cm 以内，均值只算这些回合。它在范围内不坠机，但悬停时一直偏离约 10 cm（各种子成功率 36–70%），没有为 v2 重新调参。DQN 的三档离散动作表达不了 v2 更宽的推力范围和 CTBR 设定值，v2 没有重训 DQN。</p>
+            <p>¹ TD3 只有 16.5% 的回合能回到 5 cm 以内，均值只算这些回合。它在范围内不坠机，但悬停时一直偏离约 10 cm（各种子成功率 36–70%）。DQN 的三档离散动作表达不了 v2 更宽的推力范围和 CTBR 设定值，v2 没有重训 DQN。</p>
             <figure class="data-table"><table><caption><strong>v2，超出训练范围的风</strong>基础风固定在 40–80% 机重（训练只到 35%），同样加 40% 阵风；悬停成功率。</caption><thead><tr><th>控制器</th><th class="num">40%</th><th class="num">50%</th><th class="num">60%</th><th class="num">70%</th><th class="num">80%</th></tr></thead><tbody>
               <tr><td>PID-CTBR</td><td class="num">99.9%</td><td class="num">99.9%</td><td class="num">99.3%</td><td class="num">82.0%</td><td class="num">29.6%</td></tr>
               <tr class="is-best"><td>PID-电机</td><td class="num">100%</td><td class="num">99.7%</td><td class="num">99.9%</td><td class="num">99.0%</td><td class="num">93.4%</td></tr>
@@ -216,7 +204,7 @@
               <li><strong>优点：会用满执行器。</strong>v1 推力余量很小时，43% 风力下 PPO 成功率 89.5%，PID 37.2%。</li>
               <li><strong>优点：加上 RMA 后能在线辨识风力，</strong>稳态误差也最好（v2 0.90 cm，PID 1.66 cm）。</li>
               <li><strong>缺点：只在训练范围附近好用。</strong>v2 风力超过 60% 机重后，PID-电机仍有 93–99% 成功率，PPO 掉到 1–12%，RMA 54%。积分器能一直累积去抵消任意大小的恒定风，策略网络只在见过的范围里可靠。</li>
-              <li><strong>缺点：成本和脆弱性。</strong>每个种子 1 亿步仿真（一张 GPU 约 1 小时），还要设计观测、动作接口、随机化和奖励；TD3 沿用 v1 超参数到 v2 就失效了。PID 是 8 个可解释的增益，约 10 分钟调完，稳定裕度也有成熟的分析方法。</li>
+              <li><strong>缺点：成本和脆弱性。</strong>每个种子 1 亿步仿真（一张 GPU 约 1 小时），还要设计观测、动作接口、随机化和奖励；同一套 TD3 超参数在 v1 表现很好，到 v2 就失效了。PID 是 8 个可解释的增益，约 10 分钟调完，稳定裕度也有成熟的分析方法。</li>
             </ul>
           </section>
 
@@ -281,7 +269,7 @@
             <h2>局限</h2>
             <ul class="plain-list">
               <li><strong>只在仿真里。</strong>风被简化成作用在质心的水平力，没有桨叶气动、地面效应和风对姿态的力矩；还没上实机。</li>
-              <li><strong>TD3 和 DQN 在 v2 里没有充分调。</strong>TD3 沿用 v1 超参数；DQN 的动作集需要重新设计，没有重训。</li>
+              <li><strong>DQN 没有参加 v2 对比。</strong>三档离散动作表达不了 v2 更宽的推力范围，需要重新设计动作集。</li>
               <li><strong>RL 的强风结论依赖训练分布。</strong>训练风力扩大到 0–80% 后 RL 在强风下会怎样，这次没有测。</li>
               <li><strong>没有和自适应经典控制比。</strong>扰动观测器（DOB）、增量非线性动态逆（INDI）这类方法也能在线补偿风力，可能是 RMA 更直接的对手。</li>
             </ul>
