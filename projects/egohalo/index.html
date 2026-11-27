@@ -237,8 +237,8 @@
               <li><strong>浏览器兼容：</strong>Chrome 131 因页面显式声明了它不支持的本地网络地址空间参数，能显示界面但读不到设备信息；改为普通同源导出请求、保留配对令牌后，Chrome 131 和 154 的配对、分段上传字节校验、取消续传和会话过期重配均通过。</li>
             </ul>
             <figure class="case-media">
-              <a class="screenshot-link" href="../../assets/project-media/egohalo-upload.webp" aria-label="打开原图 · 上传进度"><img src="../../assets/project-media/egohalo-upload.webp" width="366" height="236" loading="lazy" decoding="async" alt="网页中的单条上传进度和取消入口"></a>
-              <figcaption><strong class="insight-media-title">图 5　上传进度</strong>上传界面局部，已裁掉账号与录制标识。</figcaption>
+              <a class="screenshot-link" href="../../assets/project-media/egohalo-upload-live.webp" aria-label="打开原图 · 浏览器上传页"><img src="../../assets/project-media/egohalo-upload-live.webp" width="1568" height="771" loading="lazy" decoding="async" alt="设备托管的浏览器上传页：左侧是设备控制台菜单，中间是录制列表：设备上共 16 条录制、8.2 GB、7 分 56 秒，列出每条 Take 的录制时间、时长和大小以及云端状态“未上传”；右侧是设备卡片（USB 已连接）和上传面板，显示云端空间用量 0.15 GB / 100 GB、已选 1 条 1.6 GB 和“上传所选”按钮。"></a>
+              <figcaption><strong class="insight-media-title">图 5　浏览器上传页</strong>USB 连接设备后在浏览器里直接打开，选中录制即可直传云存储；实机截图。</figcaption>
             </figure>
             <figure class="data-table"><table><caption><strong>表 7　上传链路的关键设计</strong></caption><thead><tr><th>环节</th><th>做法</th></tr></thead><tbody>
               <tr><td>设备导出</td><td>浏览器与设备配对后按 HTTP Range 分段读取，每段带录制版本号和 SHA-256，设备上的文件变了就拒绝继续</td></tr>
