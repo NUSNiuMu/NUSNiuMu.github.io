@@ -5,7 +5,7 @@
     {"id": "navigation", "label": "感知与导航"},
     {"id": "control", "label": "控制、规划与学习"}
   ],
-  "featured": ["drone-hover-rl", "drone-swarm-planning", "multi-x5-time-sync", "so101-lerobot"],
+  "featured": ["insight-capture", "egohalo", "drone-hover-rl", "drone-swarm-planning"],
   "projects": [
     {
       "slug": "insight-capture", "title": "Insight Capture Dashboard", "lang": "en",

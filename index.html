@@ -62,6 +62,26 @@
         <h2 id="featured-title">代表作</h2>
         <ul class="featured-list" role="list">
           <li class="featured-item">
+            <img src="assets/project-media/insight-wearable-kit.webp" width="1200" height="676" alt="Insight 头部采集设备及两台腕部相机" loading="lazy" decoding="async">
+            <div class="featured-copy">
+              <p class="tag">工作项目</p>
+              <h3 lang="en"><a class="card-link" href="projects/insight-capture/">Insight Capture Dashboard</a></h3>
+              <p>头部加双腕三相机同步采集，腕部画面匹配头部地图，统一到一个坐标系。</p>
+              <dl class="card-metrics"><div><dt>腕部相对头部的位置 RMSE（离线标定板）</dt><dd>10.8–15.2 mm</dd></div><div><dt>双端实录合包消息逐条哈希一致</dt><dd>66,698 条</dd></div></dl>
+              <a class="repo-link" href="https://github.com/NUSNiuMu/insight-capture-dashboard" aria-label="GitHub 仓库：Insight Capture Dashboard">GitHub 仓库</a>
+            </div>
+          </li>
+          <li class="featured-item">
+            <img src="assets/insight-v1/insight-egohalo-four-view.webp" width="1280" height="720" alt="EgoHalo 的四路实机相机与位姿" loading="lazy" decoding="async">
+            <div class="featured-copy">
+              <p class="tag">工作项目</p>
+              <h3><a class="card-link" href="projects/egohalo/">EgoHalo 设备与数据工程</a></h3>
+              <p>四路鱼眼头戴设备的采集控制台，设备端直写 MCAP 的多路对齐起录。</p>
+              <dl class="card-metrics"><div><dt>设备端直接写 MCAP 相对 ROS 录包的 CPU</dt><dd>−30%</dd></div><div><dt>图像间隔超过 50 ms 的次数</dt><dd>65 → 15</dd></div></dl>
+              
+            </div>
+          </li>
+          <li class="featured-item">
             <img src="assets/project-media/hover-v2-poster.webp" width="1280" height="640" alt="仿真中两架四旋翼在同一阵风下悬停，左为串级 PID，右为 RMA 自适应策略" loading="lazy" decoding="async">
             <div class="featured-copy">
               <p class="tag">研究项目 · 2025–2026</p>
@@ -81,26 +101,6 @@
               <a class="repo-link" href="https://github.com/NUSNiuMu/UE5-Drone-Swarm" aria-label="GitHub 仓库：无人机集群路径规划与协同避障">GitHub 仓库</a>
             </div>
           </li>
-          <li class="featured-item">
-            <img src="assets/project-media/x5-sync-method-compare.webp" width="1440" height="704" alt="NTP 与共享蓝牙时钟两种对时方法的偏差对比图" loading="lazy" decoding="async">
-            <div class="featured-copy">
-              <p class="tag">工作项目</p>
-              <h3><a class="card-link" href="projects/multi-x5-time-sync/">多 X5 蓝牙配对与对时</a></h3>
-              <p>蓝牙让多块 X5 自动组网对时，板间偏差从毫秒级降到微秒级估计。</p>
-              <dl class="card-metrics"><div><dt>共享蓝牙时钟方案的软件自估偏差 P95</dt><dd>57.1 µs</dd></div><div><dt>相对蓝牙 PAN 上 NTP 的 4–6 ms</dt><dd>1/70–1/110</dd></div></dl>
-              
-            </div>
-          </li>
-          <li class="featured-item">
-            <img src="assets/project-media/so101-cup-dual.webp" width="1078" height="480" alt="Codex 控制机械臂叠纸杯的双路画面" loading="lazy" decoding="async">
-            <div class="featured-copy">
-              <p class="tag">个人项目</p>
-              <h3><a class="card-link" href="projects/so101-lerobot/">大模型操控 SO101 机械臂</a></h3>
-              <p>让 Codex 自己看图、下发关节目标，在真机上闭环完成红块入箱和叠纸杯，再把成功轨迹交给 ACT 学习。</p>
-              <dl class="card-metrics"><div><dt>红块入箱、叠纸杯的真机成功记录</dt><dd>20 + 15 条</dd></div><div><dt>机械臂真正在动的时间占比</dt><dd>3.5–8.3%</dd></div></dl>
-              <a class="repo-link" href="https://github.com/NUSNiuMu/so101-lerobot-closed-loop" aria-label="GitHub 仓库：大模型操控 SO101 机械臂">GitHub 仓库</a>
-            </div>
-          </li>
         </ul>
       </section>
 <!-- /build:featured -->
@@ -118,7 +118,7 @@
         </div>
         <p class="archive-note">筛选“全部”时只列代表作以外的 8 个项目；按类别筛选时包含代表作。</p>
         <ul class="project-list" id="project-list" role="list">
-          <li class="archive-item" data-category="data">
+          <li class="archive-item" data-category="data" data-featured="true" hidden>
             <article>
               <img class="archive-image kit-thumb" src="assets/project-media/insight-wearable-kit.webp" width="1200" height="676" alt="Insight 头部采集设备及两台腕部相机" loading="lazy" decoding="async">
               <div class="archive-copy">
@@ -151,7 +151,7 @@
                 <a class="repo-link" href="https://github.com/NUSNiuMu/UE5-Drone-Swarm" aria-label="GitHub 仓库：无人机集群路径规划与协同避障">GitHub 仓库</a>
               </div>
             </article></li>
-          <li class="archive-item" data-category="data" data-featured="true" hidden>
+          <li class="archive-item" data-category="data">
             <article>
               <img class="archive-image" src="assets/project-media/x5-sync-method-compare.webp" width="1440" height="704" alt="NTP 与共享蓝牙时钟两种对时方法的偏差对比图" loading="lazy" decoding="async">
               <div class="archive-copy">
@@ -161,7 +161,7 @@
                 <p class="card-metric"><strong>57.1 µs</strong> 共享蓝牙时钟方案的软件自估偏差 P95</p>
               </div>
             </article></li>
-          <li class="archive-item" data-category="control" data-featured="true" hidden>
+          <li class="archive-item" data-category="control">
             <article>
               <img class="archive-image" src="assets/project-media/so101-cup-dual.webp" width="1078" height="480" alt="Codex 控制机械臂叠纸杯的双路画面" loading="lazy" decoding="async">
               <div class="archive-copy">
@@ -202,7 +202,7 @@
                 <p class="card-metric"><strong>17,336 个</strong> Viewer 中累计的 episode（1,138 条录制）</p>
               </div>
             </article></li>
-          <li class="archive-item" data-category="data">
+          <li class="archive-item" data-category="data" data-featured="true" hidden>
             <article>
               <img class="archive-image" src="assets/insight-v1/insight-egohalo-four-view.webp" width="1280" height="720" alt="EgoHalo 的四路实机相机与位姿" loading="lazy" decoding="async">
               <div class="archive-copy">
