@@ -16,7 +16,8 @@
     <title>无人机抗风悬停：PID、LQR 与强化学习 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/drone-hover-rl/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
+    <link rel="stylesheet" href="../../assets/site.css?v=b49bae4f">
+    <script src="../../assets/case.js?v=6579f5e5" defer></script>
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -24,7 +25,8 @@
       <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
       <nav aria-label="主导航">
         <ul class="nav-list">
-          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#featured">代表作</a></li>
+          <li><a href="../../#projects">全部项目</a></li>
           <li><a href="../../#about">关于</a></li>
           <li><a href="../../#contact">联系</a></li>
           <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
@@ -47,6 +49,9 @@
         </figure>
       </header>
 
+<!-- build:metrics -->
+      <dl class="key-metrics" aria-label="关键指标"><div><dt>阵风峰值误差：RMA 自适应策略 vs PID</dt><dd>9.2 vs 21.0 cm</dd></div><div><dt>80% 机重强风下成功率：PID vs RL</dt><dd>93% vs ≤54%</dd></div><div><dt>每个控制器的评估规模</dt><dd>3 种子 × 512 回合</dd></div></dl>
+<!-- /build:metrics -->
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>时间</dt><dd>2025–2026</dd></div>
         <div><dt>技术栈</dt><dd lang="en">Isaac Sim 4.5 · Isaac Lab 2.1 · PyTorch · PID · LQR/LQI · PPO · TD3 · DQN · RMA</dd></div>
@@ -73,12 +78,12 @@
         </nav>
         <div class="case-text">
 
-          <section class="chapter" id="abstract">
+          <section class="chapter" id="abstract" tabindex="-1">
             <h2>摘要</h2>
             <p>四旋翼的抗风悬停在工程上通常由串级 PID 完成，学术上则有 LQR 和强化学习（RL）两条路线，但三者很少在同一仿真、同一评估协议、同样的调参预算下比较。本文在 Isaac Lab 中搭建两套风扰悬停环境：v1 为理想执行器，v2 加入一阶电机滞后、指令延迟、质量与推力随机化和传感器噪声。对比对象为 CEM 自动调参的串级 PID、LQR、LQI，以及 PPO、TD3、DQN 和 RMA 风自适应教师–学生策略，每个控制器 3 个种子 × 512 个评估回合。结果：(1) 训练风力范围内，RMA 学生策略的稳态误差、阵风峰值和恢复时间分别比 PID 低 46%、56%、47%；(2) 风力超出训练范围后结论反转，80% 机重稳态风下 PID 成功率 93.4%，最好的 RL 策略 54.3%；(3) LQR/LQI 只在理想模型中有优势，加入执行器滞后后最脆弱；(4) TD3 在 v2 中的稳态偏差来自 1 步 TD 目标给 actor 的梯度过弱，改用 3 步回报后成功率从约 55% 升到 99.9%，但仍不及 PPO。</p>
           </section>
 
-          <section class="chapter" id="intro">
+          <section class="chapter" id="intro" tabindex="-1">
             <h2>1 引言</h2>
             <p>悬停是四旋翼最基本的任务。风对机体的作用近似为一个未知、时变的外力：稳定风造成恒定偏差，阵风造成瞬时大偏离。PX4、Crazyflie 等开源飞控用位置–姿态–角速度三级串级 PID 处理它，靠积分项抵消恒定风；模型类方法（LQR）利用全状态反馈更快地响应扰动，但依赖模型；RL 策略可以直接从仿真数据学到非线性反馈，近年在四旋翼上已有不少成功案例 [7][8][9]。</p>
             <p>已有对比往往只覆盖其中两类，或者在理想仿真中进行，RL 的优势是否在执行器滞后和延迟下仍然成立并不清楚。本文要回答三个问题：</p>
@@ -90,7 +95,7 @@
             <p><strong>贡献</strong>：一套开源的两级保真度风扰悬停基准，所有方法共享观测、评估种子和成功判据；全部控制器的 3 种子对比（表 3–6，图 2–5）；一个 RMA 风力估计器，在训练范围内以 2% 机重的 RMSE 跟踪真实风力（图 7）；对 TD3 在 v2 中失效的诊断和 10 组超参数研究（图 8，表 10）。</p>
           </section>
 
-          <section class="chapter" id="related">
+          <section class="chapter" id="related" tabindex="-1">
             <h2>2 相关工作</h2>
             <ul class="plain-list">
               <li><strong>经典四旋翼控制。</strong>串级 PID 是 PX4 和 Crazyflie 固件的默认结构；Brescianini 和 D'Andrea 提出倾角优先的姿态控制 [4]，本文 PID 的姿态环采用这一思路。Bouabdallah 等在微型四旋翼上比较过 PID 和 LQ 控制 [3]，结论是 LQ 对模型误差更敏感，与本文 v2 的结果一致。</li>
@@ -99,7 +104,7 @@
             </ul>
           </section>
 
-          <section class="chapter" id="method">
+          <section class="chapter" id="method" tabindex="-1">
             <h2>3 方法</h2>
             <figure class="case-media">
               <a class="screenshot-link" href="../../assets/project-media/hover-f1-system.webp" aria-label="打开原图 · 图 1 系统框图"><img src="../../assets/project-media/hover-f1-system.webp" width="2220" height="1140" loading="lazy" decoding="async" alt="上半部分是 v2 仿真信号流：指令队列（1 到 2 步延迟）→ 机上角速度环（仅 CTBR）→ 一阶滞后电机（时间常数 20 到 50 ms，推重比 1.9）→ 刚体（质量和推力系数随机 ±10%），风力作用在刚体上（基础风 0 到 35% 机重加阵风 10 到 40%）→ 带噪声的传感器 → 观测。下半部分是四类控制器：串级 PID、LQR/LQI、PPO/TD3 策略、RMA 教师–学生（历史 50 步 → 适配模块估计环境参数 → 策略）。"></a>
@@ -121,7 +126,7 @@
             <p><strong>奖励</strong>（v1、v2 相同）：靠近目标加分，扣速度和角速度的平方项；v2 再扣动作变化量，抑制抖动。</p>
           </section>
 
-          <section class="chapter" id="setup">
+          <section class="chapter" id="setup" tabindex="-1">
             <h2>4 实验设置</h2>
             <p>共用部分：Crazyflie 2.x（28.2 g，重力 0.277 N），目标点 (0, 0, 1) m，起点随机偏离 ±0.2 m、偏航随机；物理 100 Hz、控制 50 Hz，1024 个环境 GPU 并行。风是世界坐标系下作用在质心的水平力，每秒随机波动 ±20%，训练时随机出现阵风脉冲。</p>
             <figure class="data-table"><table><caption><strong>表 2　两套仿真环境</strong>v2 的参数按 Crazyflie 2.1 实机量级设定。</caption><thead><tr><th></th><th>v1 理想仿真</th><th>v2 接近真实</th></tr></thead><tbody>
@@ -148,7 +153,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="results">
+          <section class="chapter" id="results" tabindex="-1">
             <h2>5 结果</h2>
             <h3>5.1 接近真实的仿真（v2）：训练风力范围内</h3>
             <figure class="case-media bar-compare">
@@ -273,7 +278,7 @@
             <p>估计得准，说明 RMA 的提升确实来自“知道了风多大”。学生与教师在三项指标上相差 5–19%，剩下的主要是阵风刚来时的估计滞后：1 秒的历史窗口对阶跃变化要 0.1–0.2 秒才能跟上。训练范围外估计整体偏低 2.7%，这也是 RMA 在 80% 风力下仍不如 PID 的原因之一。</p>
           </section>
 
-          <section class="chapter" id="td3">
+          <section class="chapter" id="td3" tabindex="-1">
             <h2>6 TD3 超参数研究</h2>
             <p>TD3 在 v1 中与 PPO 接近（表 6），但在 v2 中用原论文的默认超参数 [6]（探索噪声 0.2，目标噪声 0.2、裁剪 0.5，1 步 TD 目标，学习率 3e-4）时，悬停时一直偏离约 10 cm，成功率只有 54%。为了让对比公平，先诊断原因，再做超参数研究。</p>
             <p><strong>诊断。</strong>误差是固定偏移，不是抖动：在 0 / 15 / 30% 稳态风下平均偏移 5.3 / 8.0 / 12.0 cm（PPO 0.9 / 1.3 / 2.1 cm），而 RMS 抖动只有 2–3 cm，且无风时也存在。Critic 没有系统性高估（Q 值与实际回报之比在无风时 −30%、30% 风时 +27%，方向不一致），偏航转动和指令抖动也与 PPO 相当。结论是确定性 actor 本身不够精确：50 Hz 控制下相邻两步的状态差别很小，1 步 TD 目标给 actor 的梯度又弱又噪，拉不到目标点上。由此推出两个调整方向：用 n 步回报加强信用分配，以及降低噪声。</p>
@@ -301,7 +306,7 @@
             </ul>
           </section>
 
-          <section class="chapter" id="discussion">
+          <section class="chapter" id="discussion" tabindex="-1">
             <h2>7 讨论：PID、LQR、RL 怎么选</h2>
             <h3>为什么用串级 PID 做基线</h3>
             <p>真机上就是它在飞：PX4 和 Crazyflie 固件都用位置 → 姿态 → 角速度三级 PID，所以“RL 能不能比 PID 好”是工程上真正要回答的问题。调好之后它是个强基线：CEM 调 8 个增益，3 个独立调参种子的结果相差只有几个百分点；v1 里稳态误差 0.81 cm，与最好的 RL 持平；v2 里强风下最稳。</p>
@@ -341,7 +346,7 @@
             </figure>
           </section>
 
-          <section class="chapter" id="limits">
+          <section class="chapter" id="limits" tabindex="-1">
             <h2>8 局限</h2>
             <ul class="plain-list">
               <li><strong>只在仿真里。</strong>风被简化成作用在质心的水平力，没有桨叶气动、地面效应和风对姿态的力矩；还没上实机。</li>
@@ -352,7 +357,7 @@
             </ul>
           </section>
 
-          <section class="chapter" id="refs">
+          <section class="chapter" id="refs" tabindex="-1">
             <h2>参考文献</h2>
             <ul class="plain-list" lang="en">
               <li>[1] R. E. Kalman. Contributions to the theory of optimal control. Boletín de la Sociedad Matemática Mexicana, 1960.</li>
@@ -375,6 +380,13 @@
           </section>
         </div>
       </div>
+<!-- build:pager -->
+      <nav class="case-pager" aria-label="其他项目">
+        <a rel="prev" href="../insight-capture/"><span>上一个项目</span><strong lang="en">Insight Capture Dashboard</strong></a>
+        <a class="case-pager-all" href="../../#projects"><span>返回</span><strong>全部项目</strong></a>
+        <a rel="next" href="../drone-swarm-planning/"><span>下一个项目</span><strong>无人机集群路径规划与协同避障</strong></a>
+      </nav>
+<!-- /build:pager -->
     </main>
     <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
   </body>

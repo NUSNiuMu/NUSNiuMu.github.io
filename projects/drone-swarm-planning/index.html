@@ -16,7 +16,8 @@
     <title>无人机集群路径规划 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/drone-swarm-planning/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
+    <link rel="stylesheet" href="../../assets/site.css?v=b49bae4f">
+    <script src="../../assets/case.js?v=6579f5e5" defer></script>
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -24,7 +25,8 @@
       <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
       <nav aria-label="主导航">
         <ul class="nav-list">
-          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#featured">代表作</a></li>
+          <li><a href="../../#projects">全部项目</a></li>
           <li><a href="../../#about">关于</a></li>
           <li><a href="../../#contact">联系</a></li>
           <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
@@ -47,6 +49,9 @@
         </figure>
       </header>
 
+<!-- build:metrics -->
+      <dl class="key-metrics" aria-label="关键指标"><div><dt>10 架交叉飞行的机间碰撞率</dt><dd>93% → 0</dd></div><div><dt>30 架叠加延迟和噪声，动作依赖图执行</dt><dd>720 次 / 0 碰撞</dd></div><div><dt>与 CBS、ECBS、ORCA 的规模对比</dt><dd>50 架</dd></div></dl>
+<!-- /build:metrics -->
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>问题</dt><dd>10–50 架无人机在有建筑的三维空间里同时飞向各自目标，互不相撞，轨迹满足速度和加速度上限</dd></div>
         <div><dt>我做的</dt><dd>UE5 C++ 集群管理与预约表 A*（基线）；移植与碰撞分析、时空 A* / CBS / ECBS / 优先级规划、B 样条轨迹、动作依赖图执行、50 架规模评估</dd></div>
@@ -70,14 +75,14 @@
           </ul>
         </nav>
         <div class="case-text">
-          <section class="chapter" id="original">
+          <section class="chapter" id="original" tabindex="-1">
             <h2>基线：UE5 预约表规划器</h2>
             <p>基线是我在 UE5 里写的 C++ 组件：三维栅格地图、每架无人机一个 A* 规划器、全局预约表记录别的无人机何时在哪，规划时避开预约冲突；规划出的折线经过迭代平滑，飞行中用多线射线扫描（ParallelFor 并行，16 线、10 Hz）检测移动障碍，必要时重规划。</p>
             <p>UE5 工程依赖 Windows 和完整的场景资产，没法在现在的机器上直接跑。我把 <code>Source/Drone/</code> 下的规划、预约、平滑、扫描逻辑逐函数移植到 Python，场景换成随机生成的体素城市，作为基线。</p>
             <ol class="insight-flow" role="list"><li><strong>规划</strong><span>A* + 预约表</span></li><li><strong>平滑</strong><span>迭代平滑 + 净空检查</span></li><li><strong>执行</strong><span>射线扫描、近距离急停、重规划</span></li></ol>
           </section>
 
-          <section class="chapter" id="review">
+          <section class="chapter" id="review" tabindex="-1">
             <h2>基线为什么会撞</h2>
             <p>让 10 架无人机互换位置，基线几乎每张地图都会撞。逐行对照代码，问题在四处：</p>
             <ul class="plain-list">
@@ -88,7 +93,7 @@
             </ul>
           </section>
 
-          <section class="chapter" id="methods">
+          <section class="chapter" id="methods" tabindex="-1">
             <h2>方法一览</h2>
             <p>MAPF（多智能体路径规划）把地图离散成格子、时间离散成步，要求所有机器人的路径在任何时刻都不冲突。下表是本页出现的全部方法。</p>
             <figure class="data-table"><table><caption><strong>规划层</strong>都在 50 cm 体素栅格上运行，安全半径 1 格（两机同一时刻不能处于相邻格）。</caption><thead><tr><th>方法</th><th>怎么工作</th><th>性质 / 需要的信息</th></tr></thead><tbody>
@@ -110,7 +115,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="v1">
+          <section class="chapter" id="v1" tabindex="-1">
             <h2>10 架互换：碰撞降到 0</h2>
             <p>规划换成时空 A* 加剪枝 CBS 协调，平滑换成管道约束平滑，用 ADG 取代急停规则，移动障碍用 VO 避让。场景 6 / 8 / 10 架，带移动障碍。</p>
             <figure class="case-media bar-compare">
@@ -142,7 +147,7 @@
             </figure>
           </section>
 
-          <section class="chapter" id="scaling">
+          <section class="chapter" id="scaling" tabindex="-1">
             <h2>规模扩到 50 架</h2>
             <p>只和自己的基线比说服力不够。把规模扩到 10 / 20 / 30 / 50 架（静态城市，只看多机协调），每个规划器 30 秒预算，和最优 CBS、ECBS、优先级规划、纯反应式 ORCA 放在同一批地图上比。规划时间是 Python 在共享 CPU 上的墙钟时间，只看相对大小。</p>
             <figure class="data-table"><table><caption><strong>30 秒内解出的地图比例</strong>括号内为已解地图的平均规划耗时。ORCA 不规划，这里列任务成功率。</caption><thead><tr><th>方法</th><th class="num">10 架</th><th class="num">20 架</th><th class="num">30 架</th><th class="num">50 架</th></tr></thead><tbody>
@@ -170,7 +175,7 @@
             </figure>
           </section>
 
-          <section class="chapter" id="dynamics">
+          <section class="chapter" id="dynamics" tabindex="-1">
             <h2>轨迹飞得出来吗</h2>
             <p>沿平滑后的折线飞时，拐角处只能做经验限速，速度方向在航点处瞬间改变。改为把同一份计划变成三次 B 样条再做时间参数化，并在连续轨迹上检查（每个 20 Hz 控制步内取 9 个子样本），而不只检查航点。</p>
             <figure class="data-table"><table><caption><strong>折线执行与 B 样条轨迹</strong>同一份 ECBS 计划，30 张地图平均；上限 |v| ≤ 100 cm/s、|a| ≤ 200 cm/s²。</caption><thead><tr><th>指标</th><th class="num">10 架</th><th class="num">20 架</th><th class="num">30 架</th><th class="num">50 架</th></tr></thead><tbody>
@@ -187,7 +192,7 @@
             </figure>
           </section>
 
-          <section class="chapter" id="robust">
+          <section class="chapter" id="robust" tabindex="-1">
             <h2>执行出现延迟时</h2>
             <p>计划再好，执行时也会有人晚起飞、飞得慢。同一份 ECBS 计划，两种执行器在每张图上看到完全相同的扰动：按时刻执行（落后就全速追赶）和 ADG。</p>
             <figure class="case-media">
@@ -218,7 +223,7 @@
             </figure>
           </section>
 
-          <section class="chapter" id="next">
+          <section class="chapter" id="next" tabindex="-1">
             <h2>结论与局限</h2>
             <ul class="plain-list">
               <li><strong>结论。</strong>30 架以内用优先级规划或 ECBS 都能在几秒内拿到无冲突计划，执行用 ADG 才能在延迟下保持零碰撞；只追求到达快、能接受没有事前保证时，纯反应式 ORCA 在开阔三维空间里更简单也更快。</li>
@@ -229,6 +234,13 @@
           </section>
         </div>
       </div>
+<!-- build:pager -->
+      <nav class="case-pager" aria-label="其他项目">
+        <a rel="prev" href="../drone-hover-rl/"><span>上一个项目</span><strong>无人机抗风悬停：PID、LQR 与强化学习</strong></a>
+        <a class="case-pager-all" href="../../#projects"><span>返回</span><strong>全部项目</strong></a>
+        <a rel="next" href="../multi-x5-time-sync/"><span>下一个项目</span><strong>多 X5 蓝牙配对与对时</strong></a>
+      </nav>
+<!-- /build:pager -->
     </main>
     <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
   </body>

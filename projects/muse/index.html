@@ -16,7 +16,8 @@
     <title>Muse · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/muse/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
+    <link rel="stylesheet" href="../../assets/site.css?v=b49bae4f">
+    <script src="../../assets/case.js?v=6579f5e5" defer></script>
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -24,7 +25,8 @@
       <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
       <nav aria-label="主导航">
         <ul class="nav-list">
-          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#featured">代表作</a></li>
+          <li><a href="../../#projects">全部项目</a></li>
           <li><a href="../../#about">关于</a></li>
           <li><a href="../../#contact">联系</a></li>
           <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
@@ -44,6 +46,9 @@
         </figure>
       </header>
 
+<!-- build:metrics -->
+      <dl class="key-metrics" aria-label="关键指标"><div><dt>热机转写 3.97 秒语音（Whisper small，GPU）</dt><dd>116 ms</dd></div><div><dt>打开项目时的状态查询（原先超过 15 秒导致掉线）</dt><dd>4.5–5.3 ms</dd></div></dl>
+<!-- /build:metrics -->
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>做什么</dt><dd>用语音给电脑上的 Codex 会话派任务，在小屏上看回复、回答选择题、处理审批</dd></div>
         <div><dt>我做的</dt><dd>个人项目：硬件接线、ESP32 触摸固件、电脑端 Agent、本地语音识别、USB 与无线连接</dd></div>
@@ -67,7 +72,7 @@
           </ul>
         </nav>
         <div class="case-text">
-          <section class="chapter" id="methods">
+          <section class="chapter" id="methods" tabindex="-1">
             <h2>方法一览</h2>
             <figure class="data-table"><table style="min-inline-size:38rem"><caption><strong>系统用到的组件和技术</strong>按数据流顺序：设备 → 连接 → 识别 → 执行。</caption><thead><tr><th>名称</th><th>怎么工作</th><th>输入 / 条件</th></tr></thead><tbody>
               <tr><td>LVGL</td><td>嵌入式图形库，在 ESP32 上绘制按钮、列表和文本，处理触摸按下、松开事件</td><td>320×240 SPI 屏，电阻触摸需先做四点校准</td></tr>
@@ -82,7 +87,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="interaction">
+          <section class="chapter" id="interaction" tabindex="-1">
             <h2>触摸界面与确认</h2>
             <p>原型由 XIAO ESP32S3 Plus、2.8 寸触摸屏和 INMP441 数字麦克风组成。项目和会话列表从电脑读取。按住录音、松开识别，屏幕先显示转写文字，点“发送”后才提交给选定的会话。同一块屏还能滑动阅读回复、回答选择题、批准电脑端的操作请求。</p>
             <figure class="case-media">
@@ -92,7 +97,7 @@
             <p>回复最多每 80 ms 向设备推送一次，首段立即发送；设备约每 33 ms 处理一次界面状态，没变化的标签不重绘 SPI 屏幕。审批详情超过 18 KB 时不截断后让设备批准，直接拒绝并提示到电脑处理。</p>
           </section>
 
-          <section class="chapter" id="asr">
+          <section class="chapter" id="asr" tabindex="-1">
             <h2>本地识别与耗时</h2>
             <p>设备边录边把 PCM 流传到电脑，松开后识别。音频只留在内存里，不调用任何语音云服务。模型在服务启动后后台预加载并常驻，加载与识别共用一把互斥锁。</p>
             <ol class="insight-flow" role="list"><li><strong>音频</strong><span>16 kHz PCM 流送到电脑</span></li><li><strong>转写</strong><span>VAD 去静音，Whisper 解码，失败回退 CPU</span></li><li><strong>预览</strong><span>文字回到屏幕，确认后提交</span></li></ol>
@@ -110,10 +115,10 @@
               <tr><td>CPU，INT8</td><td class="num">3514 ms</td><td class="num">1292 ms</td></tr>
               <tr class="is-best"><td>GPU，FP16</td><td class="num">961 ms</td><td class="num">90 ms</td></tr>
             </tbody></table></figure>
-            <p>热机下 GPU 比 CPU 快约 14 倍，所以默认优先 GPU；显卡库缺失、初始化或推理时报错，就用 CPU 重跑同一段输入，转写结果仍能返回，只是更慢。</p>
+            <p>热机下 GPU 比 CPU 快约 14 倍，所以默认优先 GPU；显卡库缺失、初始化或推理时报错，就改用 CPU 处理同一段输入，转写结果仍能返回，只是更慢。</p>
           </section>
 
-          <section class="chapter" id="one-submit">
+          <section class="chapter" id="one-submit" tabindex="-1">
             <h2>一次语音，一次提交</h2>
             <p>语音终端的主要风险是“说了一句，执行了两次”，或者确认落到了别的会话上。一次语音从头到尾绑在同一个请求上：</p>
             <ol class="insight-flow" role="list"><li><strong>录音开始</strong><span>锁定项目与会话</span></li><li><strong>生成预览</strong><span>带唯一标识，五分钟过期</span></li><li><strong>确认到达</strong><span>校验预览标识与状态后提交</span></li><li><strong>写账本</strong><span>任务标识写入 SQLite</span></li></ol>
@@ -129,7 +134,7 @@
             <p>Codex 通过本机 App Server 运行，不暴露到网络上，只能选择配置里登记过的项目，并使用 Codex 自身的审批机制。账号凭据留在电脑上，设备只持有自己的配对令牌。</p>
           </section>
 
-          <section class="chapter" id="usb-stall">
+          <section class="chapter" id="usb-stall" tabindex="-1">
             <h2>打开项目时的卡顿</h2>
             <p>实机联调时，点开一个项目要等很久才出对话列表，有时还会退回项目列表。原因是两件事叠在一起：</p>
             <ul class="plain-list">
@@ -145,7 +150,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="network">
+          <section class="chapter" id="network" tabindex="-1">
             <h2>USB、局域网与热点</h2>
             <p>同一个电脑端程序同时接 USB 和无线，共用会话、预览和任务账本。设备优先用已建立的 USB 数据会话，没有 USB 时走 Wi-Fi；无线端点依次尝试局域网和 Funnel，连上后不会为了试别的端点打断任务。</p>
             <figure class="data-table"><table style="min-inline-size:38rem"><caption><strong>三种连接方式</strong>设备只支持 2.4 GHz Wi-Fi，最多保存 8 个网络。</caption><thead><tr><th>方式</th><th>数据路径</th><th>认证与加密</th><th>实测</th></tr></thead><tbody>
@@ -162,7 +167,7 @@
             <p>Wi-Fi 也能在屏幕上扫描、添加和切换：新网络先试连，并验证能完成到电脑端点的认证握手，成功后才保存；网络不可达时最长约 41 秒退回原网络（实测 40.97 秒，保存列表未变）。另可用手机蓝牙配网，配网码每次随机生成，两分钟后自动关闭。</p>
           </section>
 
-          <section class="chapter" id="verification">
+          <section class="chapter" id="verification" tabindex="-1">
             <h2>实机验证</h2>
             <figure class="data-table"><table><caption><strong>已完成的实机闭环</strong>闭环指设备录音 → 电脑识别 → 屏幕确认 → Codex 执行 → 回复显示在设备上。</caption><thead><tr><th>场景</th><th>录音</th><th>结果</th></tr></thead><tbody>
               <tr><td>USB</td><td>42496 样本（2.656 s）</td><td>识别、手动发送、Codex 完成，设备显示回复</td></tr>
@@ -173,7 +178,7 @@
             <p>第一次实录时数字增益设为 4 倍，约 18% 的样本削波（超出 16 位范围被截平），已改为 1 倍。软件侧有 68 项 Python 与固件回归测试，覆盖确认前不提交、重复提交、过期确认、断线不重放、GPU 失败回退 CPU 等情况；LVGL 的按住、松开和故障取消事件在实际界面代码上测试。</p>
           </section>
 
-          <section class="chapter" id="next">
+          <section class="chapter" id="next" tabindex="-1">
             <h2>局限与下一步</h2>
             <ul class="plain-list">
               <li><strong>热点语音往返未验收。</strong>热点下设备已能联网并同步项目，完整的录音、发送、收回复还没单独确认。</li>
@@ -184,6 +189,13 @@
           </section>
         </div>
       </div>
+<!-- build:pager -->
+      <nav class="case-pager" aria-label="其他项目">
+        <a rel="prev" href="../ir-led-tracker/"><span>上一个项目</span><strong>红外 LED 定位</strong></a>
+        <a class="case-pager-all" href="../../#projects"><span>返回</span><strong>全部项目</strong></a>
+        <a rel="next" href="../ego-data-pipeline/"><span>下一个项目</span><strong lang="en">Ego Data Pipeline</strong></a>
+      </nav>
+<!-- /build:pager -->
     </main>
     <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
   </body>

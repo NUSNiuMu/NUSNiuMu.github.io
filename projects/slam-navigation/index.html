@@ -16,7 +16,8 @@
     <title>SLAM Navigation Benchmark · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/slam-navigation/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
+    <link rel="stylesheet" href="../../assets/site.css?v=b49bae4f">
+    <script src="../../assets/case.js?v=6579f5e5" defer></script>
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -24,7 +25,8 @@
       <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
       <nav aria-label="主导航">
         <ul class="nav-list">
-          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#featured">代表作</a></li>
+          <li><a href="../../#projects">全部项目</a></li>
           <li><a href="../../#about">关于</a></li>
           <li><a href="../../#contact">联系</a></li>
           <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
@@ -44,6 +46,9 @@
         </figure>
       </header>
 
+<!-- build:metrics -->
+      <dl class="key-metrics" aria-label="关键指标"><div><dt>同一规划参数下到障碍的最小距离差（0.678 vs 0.200 m）</dt><dd>3 倍</dd></div><div><dt>对比的激光惯性 SLAM</dt><dd>4 种</dd></div></dl>
+<!-- /build:metrics -->
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>问题</dt><dd>四种开源激光惯性 SLAM 接到同一套导航上，表现差在哪里、为什么</dd></div>
         <div><dt>我做的</dt><dd>新加坡国立大学硕士毕业项目，独立完成：平台搭建与传感器适配、统一导航接口、录包与切换脚本、评测工具、全部实验和报告</dd></div>
@@ -66,7 +71,7 @@
           </ul>
         </nav>
         <div class="case-text">
-          <section class="chapter" id="methods">
+          <section class="chapter" id="methods" tabindex="-1">
             <h2>方法一览</h2>
             <figure class="data-table"><table><caption><strong>参与对比的四种 SLAM</strong>都是紧耦合激光惯性里程计：雷达点云和 IMU 在同一个估计器里融合。四种都吃 MID360 的点云和内置 IMU。</caption><thead><tr><th>算法</th><th>全称 / 核心做法</th><th>本项目中的输出频率</th><th>出处</th></tr></thead><tbody>
               <tr><td lang="en">LIO-SAM</td><td>LiDAR Inertial Odometry via Smoothing and Mapping。因子图平滑：把 IMU 预积分、激光里程计和回环约束放进同一张图联合优化。</td><td>IMU 预积分里程计约 200 Hz；建图优化约 5.2 Hz</td><td>Shan 等，IROS 2020</td></tr>
@@ -86,7 +91,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="platform">
+          <section class="chapter" id="platform" tabindex="-1">
             <h2>平台与约束</h2>
             <p>实验室只有一台 TurtleBot3 差速底盘，所有对比都在这一台车上做。车上的树莓派 3 只跑底盘通信和传感器驱动，SLAM、可视化和批量评测放在外部工作站上，两边用 ROS 多机配置连起来。</p>
             <ul class="plain-list">
@@ -96,7 +101,7 @@
             </ul>
           </section>
 
-          <section class="chapter" id="contract">
+          <section class="chapter" id="contract" tabindex="-1">
             <h2>统一导航接口</h2>
             <p>四种算法输出的里程计话题、点云话题和 TF 树都不一样。如果各自直接接导航，比出来的差异说不清是算法的还是接法的。做法是固定导航这一侧：导航只读 <code>/slam/odom</code> 和 <code>/slam/cloud_registered</code> 两个话题，机体坐标统一为 <code>base_link</code>，全局坐标链统一为 map → odom → base_link。每种算法用 <code>topic_tools relay</code> 把选定的原生输出转发到这两个话题。</p>
             <figure class="data-table"><table><caption><strong>每种算法桥接到导航的原生话题</strong>扫描坐标系四种都是 base_link。</caption><thead><tr><th>算法</th><th>里程计</th><th>点云</th><th>为什么选这一路</th></tr></thead><tbody>
@@ -120,7 +125,7 @@
             </div>
           </section>
 
-          <section class="chapter" id="workflow">
+          <section class="chapter" id="workflow" tabindex="-1">
             <h2>实验流程与参数</h2>
             <ul class="plain-list">
               <li><strong>录包。</strong>统一的录包 launch 同时记录雷达、IMU、轮式里程计和 TF。键盘遥控的阶跃指令先经过 50 Hz 的平滑节点（加速限幅 0.15 m/s²、0.40 rad/s²，减速限幅为其 2 倍）再给底盘，减少冲击和晃动。早期有一次录的包只有雷达、IMU 和静态 TF，没有参考里程计，ATE/RPE 根本算不出来；之后录包前先检查参考话题。</li>
@@ -141,7 +146,7 @@
             <p>远离障碍的权重只有 0.01，而贴合路径是 32：DWA 基本只排除穿过致命障碍格的轨迹，不会主动拉开距离。所以机器人离障碍多远，主要取决于障碍在代价地图里被画了多厚、多及时，也就是取决于 SLAM 给的点云。这是后面最小距离差 3 倍的直接原因。</p>
           </section>
 
-          <section class="chapter" id="offline">
+          <section class="chapter" id="offline" tabindex="-1">
             <h2>离线回放</h2>
             <p>实验室、走廊、室外三个场景各录两段包，四种算法吃同样的传感器输入。ATE/RPE 的参考是包里的轮式里程计，不是动捕或测绘级真值，只能做相对比较。</p>
             <figure class="case-media">
@@ -170,7 +175,7 @@
             </ul>
           </section>
 
-          <section class="chapter" id="online">
+          <section class="chapter" id="online" tabindex="-1">
             <h2>在线导航与避障</h2>
             <p>在线实验只在实验室和走廊做。室外有坡、轮子打滑，轮胎也明显磨损，轮式里程计已经不可靠，在线对比不再公平，室外只保留离线回放。</p>
             <figure class="case-media">
@@ -225,7 +230,7 @@
             <p>规划参数一行没改，行为却明显不同：规划器只能对它收到的位姿和障碍观测做反应，所以要比较的是从感知到规划的整条链路，而不是孤立的估计器。</p>
           </section>
 
-          <section class="chapter" id="next">
+          <section class="chapter" id="next" tabindex="-1">
             <h2>局限与下一步</h2>
             <ul class="plain-list">
               <li><strong>没有外部真值。</strong>离线 ATE/RPE 以轮式里程计为参考，只能做相对比较，不能当作绝对精度。</li>
@@ -236,6 +241,13 @@
           </section>
         </div>
       </div>
+<!-- build:pager -->
+      <nav class="case-pager" aria-label="其他项目">
+        <a rel="prev" href="../tinynav/"><span>上一个项目</span><strong lang="en">TinyNav</strong></a>
+        <a class="case-pager-all" href="../../#projects"><span>返回</span><strong>全部项目</strong></a>
+        <a rel="next" href="../multi-robot-patrol/"><span>下一个项目</span><strong>多机器人协同巡逻</strong></a>
+      </nav>
+<!-- /build:pager -->
     </main>
     <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
   </body>

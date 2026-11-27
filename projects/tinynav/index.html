@@ -16,7 +16,8 @@
     <title>TinyNav · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/tinynav/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
+    <link rel="stylesheet" href="../../assets/site.css?v=b49bae4f">
+    <script src="../../assets/case.js?v=6579f5e5" defer></script>
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -24,7 +25,8 @@
       <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
       <nav aria-label="主导航">
         <ul class="nav-list">
-          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#featured">代表作</a></li>
+          <li><a href="../../#projects">全部项目</a></li>
           <li><a href="../../#about">关于</a></li>
           <li><a href="../../#contact">联系</a></li>
           <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
@@ -44,6 +46,9 @@
         </figure>
       </header>
 
+<!-- build:metrics -->
+      <dl class="key-metrics" aria-label="关键指标"><div><dt>相机前移量从 Go2 改到 LeKiwi</dt><dd>0.2 → 0.05 m</dd></div><div><dt>/cmd_vel 超时自动停车</dt><dd>0.5 s</dd></div></dl>
+<!-- /build:metrics -->
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>项目</dt><dd>开源双目导航栈：双目深度、视觉惯性里程计、建图、局部规划，一直到底盘控制</dd></div>
         <div><dt>我做的</dt><dd>LeKiwi 底盘适配：规划器的外形与相机偏置配置、<code>/cmd_vel</code> 桥接和 0.5 s 超时停车、键盘遥控与远程 RViz 脚本、numba 缓存自恢复、可选的点云体素确认</dd></div>
@@ -67,7 +72,7 @@
           </ul>
         </nav>
         <div class="case-text">
-          <section class="chapter" id="methods">
+          <section class="chapter" id="methods" tabindex="-1">
             <h2>方法一览</h2>
             <figure class="data-table"><table><caption><strong>TinyNav 用到的方法</strong>除 LeKiwi 一行外都是上游代码，这里列出是因为适配时要读懂它们。</caption><thead><tr><th>名称</th><th>怎么工作</th><th>输入 / 条件</th><th>在栈里的位置</th></tr></thead><tbody>
               <tr><td>双目深度（立体匹配网络）</td><td>左右红外图逐像素找视差，深度 = 焦距 × 基线 ÷ 视差；网络用 TensorRT 加速，默认一个轻量模型，可切换到 FoundationStereo</td><td>已校正的左右图、内参和基线</td><td>感知节点</td></tr>
@@ -83,7 +88,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="stack">
+          <section class="chapter" id="stack" tabindex="-1">
             <h2>上游导航栈</h2>
             <p>感知节点先用双目网络得到深度，再用 SuperPoint 与 LightGlue 把当前帧和上一关键帧的特征配起来，PnP 给出位姿初值，IMU 预积分补上两帧之间的运动，最后用 GTSAM 在 5 个关键帧的滑动窗口里联合优化。相机移动超过 0.1 m 或转过 0.1° 就生成新关键帧。建图端用 DINOv2 特征找潜在回环，再做位姿图优化。</p>
             <ol class="insight-flow" role="list"><li><strong>感知</strong><span>双目深度 + 特征匹配 + IMU，输出相机位姿和深度图</span></li><li><strong>建图</strong><span>关键帧、回环、全局点云与占据栅格</span></li><li><strong>规划</strong><span>滚动栅格 → ESDF → 候选轨迹打分</span></li><li><strong>控制</strong><span>路径 → 速度指令 → 底盘</span></li></ol>
@@ -93,7 +98,7 @@
             </figure>
           </section>
 
-          <section class="chapter" id="planner">
+          <section class="chapter" id="planner" tabindex="-1">
             <h2>局部规划怎样避障</h2>
             <p>规划器把每帧深度沿相机射线投进一张跟着机器人滚动的三维占据栅格（100 × 100 × 10 格，分辨率 0.1 m，即 10 × 10 × 1 m）。旧观测每帧乘 0.99 衰减、整体截断在 ±0.2，所以移走的障碍会慢慢消失。障碍掩码做欧氏距离变换得到 ESDF。</p>
             <figure class="case-media">
@@ -110,7 +115,7 @@
             <p>候选共 105 条正向轨迹（7 档速度 × 15 档角速度）加 1 条倒车。全部候选都碰撞时规划节点不再发布新路径；下游控制节点发现路径至少 0.8 s 没刷新，就把速度降到 0。<a href="https://github.com/UniflexAI/tinynav/blob/main/tinynav/core/planning_node.py">上游规划源码</a>。</p>
           </section>
 
-          <section class="chapter" id="lekiwi">
+          <section class="chapter" id="lekiwi" tabindex="-1">
             <h2>接入 LeKiwi</h2>
             <p>换底盘时规划器需要知道两件事：相机装在机身哪里，机身占多大地方。规划器拿到的是相机位姿，要先减去相机相对控制中心的偏移才得到底盘中心；碰撞检查再按机身前后长度和半宽取四个角。偏移填错，整张足迹会前后错位；外形填错，要么擦碰，要么过窄的通道也不敢进。</p>
             <figure class="data-table"><table><caption><strong>两套机器人配置</strong>LeKiwi 一列是我加的；碰撞检查用的前长、后长、半宽由外形和控制中心推出。</caption><thead><tr><th>参数</th><th class="num">Go2（上游默认）</th><th class="num">LeKiwi</th></tr></thead><tbody>
@@ -127,7 +132,7 @@
             <p>配套脚本：键盘遥控节点直接发 <code>/cmd_vel</code>，可以绕开规划器单独驱动底盘；一键启动感知、规划、地图、控制、桥接和 RViz；在另一台电脑上通过 ROS 2 网络发现机载计算机上的话题，远程打开 RViz。</p>
           </section>
 
-          <section class="chapter" id="control">
+          <section class="chapter" id="control" tabindex="-1">
             <h2>两条控制链路对比</h2>
             <p>上游已有一个 LeKiwi 控制节点。我没有用它，而是走“通用控制节点 → <code>/cmd_vel</code> → 我的桥接”。对照两边源码：</p>
             <figure class="data-table"><table><caption><strong>上游 LeKiwi 节点 与 通用控制 + 桥接</strong>依据当前代码逐项对照，不是实测数据。</caption><thead><tr><th>项</th><th>上游 LeKiwi 节点</th><th>通用控制节点 + 我的桥接</th></tr></thead><tbody>
@@ -139,7 +144,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="other">
+          <section class="chapter" id="other" tabindex="-1">
             <h2>其他本地改动</h2>
             <ul class="plain-list">
               <li><strong>numba 缓存损坏后自动恢复。</strong>numba 是把 Python 数值函数即时编译成机器码的库，编译结果缓存在磁盘上。规划器三个热点函数（射线投影、候选轨迹生成、ESDF 打分）加载缓存时如果抛出 EOFError 或反序列化错误，就删掉对应的缓存文件重新编译，而不是让节点直接崩掉。</li>
@@ -148,7 +153,7 @@
             </ul>
           </section>
 
-          <section class="chapter" id="demos">
+          <section class="chapter" id="demos" tabindex="-1">
             <h2>上游实机演示</h2>
             <p>以下四段都是团队上游仓库的公开演示，不是我拍的：四足 Go2 与轮式 LeKiwi 的实机导航，以及 3DGS 地图和纯视觉建图。</p>
             <div class="insight-media-grid">
@@ -183,7 +188,7 @@
             </div>
           </section>
 
-          <section class="chapter" id="next">
+          <section class="chapter" id="next" tabindex="-1">
             <h2>局限与下一步</h2>
             <ul class="plain-list">
               <li><strong>还没提交上游。</strong>LeKiwi 配置和桥接都在本地。上游已有 LeKiwi 控制节点，下一步把上面的对照整理清楚，再决定哪些改动值得提 PR。</li>
@@ -194,6 +199,13 @@
           </section>
         </div>
       </div>
+<!-- build:pager -->
+      <nav class="case-pager" aria-label="其他项目">
+        <a rel="prev" href="../egohalo/"><span>上一个项目</span><strong>EgoHalo 设备与数据工程</strong></a>
+        <a class="case-pager-all" href="../../#projects"><span>返回</span><strong>全部项目</strong></a>
+        <a rel="next" href="../slam-navigation/"><span>下一个项目</span><strong lang="en">SLAM Navigation Benchmark</strong></a>
+      </nav>
+<!-- /build:pager -->
     </main>
     <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
   </body>

@@ -1,0 +1,113 @@
+{
+  "site": "https://nusniumu.github.io/",
+  "categories": [
+    {"id": "data", "label": "采集与数据"},
+    {"id": "navigation", "label": "感知与导航"},
+    {"id": "control", "label": "控制、规划与学习"}
+  ],
+  "featured": ["drone-hover-rl", "drone-swarm-planning", "multi-x5-time-sync", "so101-lerobot"],
+  "projects": [
+    {
+      "slug": "insight-capture", "title": "Insight Capture Dashboard", "lang": "en",
+      "kind": "工作项目", "category": "data",
+      "thumb": "assets/project-media/insight-wearable-kit.webp", "thumb_class": "kit-thumb",
+      "thumb_alt": "Insight 头部采集设备及两台腕部相机",
+      "summary": "头部加双腕三相机同步采集，腕部画面匹配头部地图，统一到一个坐标系。",
+      "repo": "https://github.com/NUSNiuMu/insight-capture-dashboard",
+      "metrics": [["10.8–15.2 mm", "腕部相对头部的位置 RMSE（离线标定板）"], ["66,698 条", "双端实录合包消息逐条哈希一致"], ["5.67–5.99 ms", "收帧到显示的中位延迟"]]
+    },
+    {
+      "slug": "drone-hover-rl", "title": "无人机抗风悬停：PID、LQR 与强化学习",
+      "kind": "研究项目", "year": "2025–2026", "category": "control",
+      "thumb": "assets/project-media/hover-v2-poster.webp",
+      "thumb_alt": "仿真中两架四旋翼在同一阵风下悬停，左为串级 PID，右为 RMA 自适应策略",
+      "summary": "Isaac Lab 里对比串级 PID、LQR/LQI 与 PPO、TD3、DQN、RMA 自适应策略，在理想和接近真实（电机滞后、延迟、噪声）两套仿真中按同一协议评估。",
+      "repo": "https://github.com/NUSNiuMu/Drone-Stable-Hover-RL",
+      "metrics": [["9.2 vs 21.0 cm", "阵风峰值误差：RMA 自适应策略 vs PID"], ["93% vs ≤54%", "80% 机重强风下成功率：PID vs RL"], ["3 种子 × 512 回合", "每个控制器的评估规模"]]
+    },
+    {
+      "slug": "drone-swarm-planning", "title": "无人机集群路径规划与协同避障",
+      "kind": "实习项目", "year": "2025", "category": "control",
+      "thumb": "assets/project-media/swarm-v2-poster.webp",
+      "thumb_alt": "城市街区中多架无人机按规划轨迹交叉飞行",
+      "summary": "中科院智能机械所实习项目。城市街区里的多无人机协同规划：时空 A* 冲突协调 + B 样条轨迹，扩到 50 架与 CBS、ECBS、ORCA 对比。",
+      "repo": "https://github.com/NUSNiuMu/UE5-Drone-Swarm",
+      "metrics": [["93% → 0", "10 架交叉飞行的机间碰撞率"], ["720 次 / 0 碰撞", "30 架叠加延迟和噪声，动作依赖图执行"], ["50 架", "与 CBS、ECBS、ORCA 的规模对比"]]
+    },
+    {
+      "slug": "multi-x5-time-sync", "title": "多 X5 蓝牙配对与对时",
+      "kind": "工作项目", "category": "data",
+      "thumb": "assets/project-media/x5-sync-method-compare.webp",
+      "thumb_alt": "NTP 与共享蓝牙时钟两种对时方法的偏差对比图",
+      "summary": "蓝牙让多块 X5 自动组网对时，板间偏差从毫秒级降到微秒级估计。",
+      "metrics": [["57.1 µs", "共享蓝牙时钟方案的软件自估偏差 P95"], ["1/70–1/110", "相对蓝牙 PAN 上 NTP 的 4–6 ms"]]
+    },
+    {
+      "slug": "so101-lerobot", "title": "大模型操控 SO101 机械臂",
+      "kind": "个人项目", "category": "control",
+      "thumb": "assets/project-media/so101-cup-dual.webp",
+      "thumb_alt": "Codex 控制机械臂叠纸杯的双路画面",
+      "summary": "让 Codex 自己看图、下发关节目标，在真机上闭环完成红块入箱和叠纸杯，再把成功轨迹交给 ACT 学习。",
+      "repo": "https://github.com/NUSNiuMu/so101-lerobot-closed-loop",
+      "metrics": [["20 + 15 条", "红块入箱、叠纸杯的真机成功记录"], ["3.5–8.3%", "机械臂真正在动的时间占比"]]
+    },
+    {
+      "slug": "ir-led-tracker", "title": "红外 LED 定位",
+      "kind": "工作项目", "category": "navigation",
+      "thumb": "assets/project-media/ir-viewer.webp",
+      "thumb_alt": "红外相机的实时三维位姿查看器",
+      "summary": "20 颗红外 LED 的六自由度定位，修复灯点可见却丢跟踪的问题。",
+      "metrics": [["0 → 60 帧", "失锁片段的有效位姿输出"], ["21 → 67", "90 帧运动记录中的合格帧"]]
+    },
+    {
+      "slug": "muse", "title": "Muse", "lang": "en",
+      "kind": "个人项目", "category": "control",
+      "thumb": "assets/project-media/muse-ui.webp",
+      "thumb_alt": "Muse 触摸屏交互预览",
+      "summary": "自己做的触摸屏语音终端，本地转写，确认后才提交给 Codex 会话。",
+      "metrics": [["116 ms", "热机转写 3.97 秒语音（Whisper small，GPU）"], ["4.5–5.3 ms", "打开项目时的状态查询（原先超过 15 秒导致掉线）"]]
+    },
+    {
+      "slug": "ego-data-pipeline", "title": "Ego Data Pipeline", "lang": "en",
+      "kind": "工作项目", "category": "data",
+      "thumb": "assets/project-media/ego-action-review.webp",
+      "thumb_alt": "录制画面与动作候选的对照",
+      "summary": "把第一视角录制自动变成动作标注和手部三维数据。",
+      "metrics": [["17,336 个", "Viewer 中累计的 episode（1,138 条录制）"]]
+    },
+    {
+      "slug": "egohalo", "title": "EgoHalo 设备与数据工程",
+      "kind": "工作项目", "category": "data",
+      "thumb": "assets/insight-v1/insight-egohalo-four-view.webp",
+      "thumb_alt": "EgoHalo 的四路实机相机与位姿",
+      "summary": "四路鱼眼头戴设备的采集控制台，设备端直写 MCAP 的多路对齐起录。",
+      "metrics": [["−30%", "设备端直接写 MCAP 相对 ROS 录包的 CPU"], ["65 → 15", "图像间隔超过 50 ms 的次数"]]
+    },
+    {
+      "slug": "tinynav", "title": "TinyNav", "lang": "en",
+      "kind": "开源贡献", "category": "navigation",
+      "thumb": "assets/tinynav-map.webp",
+      "thumb_alt": "TinyNav 上游地图示例",
+      "summary": "开源双目导航栈，我把它接到 LeKiwi 轮式底盘上，实机跑通。",
+      "repo": "https://github.com/UniflexAI/tinynav",
+      "metrics": [["0.2 → 0.05 m", "相机前移量从 Go2 改到 LeKiwi"], ["0.5 s", "/cmd_vel 超时自动停车"]]
+    },
+    {
+      "slug": "slam-navigation", "title": "SLAM Navigation Benchmark", "lang": "en",
+      "kind": "研究项目", "category": "navigation",
+      "thumb": "assets/slam-robot.webp",
+      "thumb_alt": "实验桌上的移动机器人底盘和 Livox MID360 激光雷达",
+      "summary": "同一台小车对比四种激光惯性 SLAM，发现点云接法决定避障表现。",
+      "repo": "https://github.com/NUSNiuMu/slam-navigation-benchmark",
+      "metrics": [["3 倍", "同一规划参数下到障碍的最小距离差（0.678 vs 0.200 m）"], ["4 种", "对比的激光惯性 SLAM"]]
+    },
+    {
+      "slug": "multi-robot-patrol", "title": "多机器人协同巡逻",
+      "kind": "研究项目", "year": "2025", "category": "control",
+      "thumb": "assets/project-media/patrol-poster.webp",
+      "thumb_alt": "基线与改进策略的对抗巡逻仿真画面",
+      "summary": "均衡分区加截止期约束的随机巡逻，有安全性证明且不依赖通信；也如实对比了文献方法和机器人故障场景。",
+      "metrics": [["25% → 78%", "有障碍环境下的防御率"], ["0 通信", "机器人之间不交换任何信息"]]
+    }
+  ]
+}

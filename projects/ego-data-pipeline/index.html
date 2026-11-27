@@ -16,7 +16,8 @@
     <title>Ego Data Pipeline · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/ego-data-pipeline/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
+    <link rel="stylesheet" href="../../assets/site.css?v=b49bae4f">
+    <script src="../../assets/case.js?v=6579f5e5" defer></script>
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -24,7 +25,8 @@
       <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
       <nav aria-label="主导航">
         <ul class="nav-list">
-          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#featured">代表作</a></li>
+          <li><a href="../../#projects">全部项目</a></li>
           <li><a href="../../#about">关于</a></li>
           <li><a href="../../#contact">联系</a></li>
           <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
@@ -47,6 +49,9 @@
         </figure>
       </header>
 
+<!-- build:metrics -->
+      <dl class="key-metrics" aria-label="关键指标"><div><dt>Viewer 中累计的 episode（1,138 条录制）</dt><dd>17,336 个</dd></div></dl>
+<!-- /build:metrics -->
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>做什么</dt><dd>多相机第一视角录制 → 动作区间、手部三维关键点、导出包和 Viewer 回放</dd></div>
         <div><dt>我做的</dt><dd>采样与分窗、Qwen 动作分段与审理规则、双目手部三角化、导出发布，以及按阶段回执续跑</dd></div>
@@ -68,7 +73,7 @@
           </ul>
         </nav>
         <div class="case-text">
-          <section class="chapter" id="methods">
+          <section class="chapter" id="methods" tabindex="-1">
             <h2>方法一览</h2>
             <ol class="insight-flow" role="list"><li><strong>前段</strong><span>NAS 下载 → CPU 解码采样 → Qwen 给动作候选</span></li><li><strong>审理</strong><span>整条文本审理 → 疑点按需看图 → 接纳 episode</span></li><li><strong>下游</strong><span>手部 2D/3D → 导出 → 对象存储 → Viewer 发布</span></li></ol>
             <figure class="data-table"><table><caption><strong>流水线里用到的模型和方法</strong>模型均为现成权重，未做训练或微调。</caption><thead><tr><th>方法</th><th>怎么工作</th><th>输入 / 条件</th><th>出处</th></tr></thead><tbody>
@@ -85,7 +90,7 @@
             <p>本页的 episode 指一次完整任务循环（例如叠好一件衣服），是数据集的基本单元；Take 指一次录制，一条 Take 通常含多个 episode。MCAP 是带索引的多话题日志格式，录制的原始数据就是 MCAP。</p>
           </section>
 
-          <section class="chapter" id="input">
+          <section class="chapter" id="input" tabindex="-1">
             <h2>按源时间戳采样</h2>
             <p>录制从 NAS（网络存储）进入，按源内容哈希查重，已发布的来源直接跳过。采样以参考相机的源时间戳为准：从首个 header 时间起按 3 秒半开窗口 [t, t+3) 切分，每 0.5 秒取不早于目标时间的第一个实际解码帧，再补窗口末帧并去重，末尾不足 3 秒的窗口也保留。每张图都能回查源帧号和时间。</p>
             <ol class="insight-flow" role="list"><li><strong>MCAP</strong><span>按参考相机源时间解码</span></li><li><strong>取样</strong><span>3 秒分窗，0.5 秒取帧</span></li><li><strong>模型输入</strong><span>图像、窗口和源帧映射</span></li></ol>
@@ -103,7 +108,7 @@
             <p>短提示词版本在窗口 10、20 输出空数组，画面里却明确有抚平、折叠和折袖，低耗时来自“什么都没说”。恢复完整提示词后边界、证据帧与原结果一致。只验证了三个窗口，生产仍用 544×960。</p>
           </section>
 
-          <section class="chapter" id="review">
+          <section class="chapter" id="review" tabindex="-1">
             <h2>动作分段与证据复核</h2>
             <p>Qwen 对每个窗口给出动作候选，窗口之间互不知情。文本审理把相邻窗口拼回整条记录，检查任务边界、动作顺序和完成条件；证据不足时才请求疑点范围内的采样图，可以拆分、合并或记为待审理，并在输出里保留父候选 ID（source_episode_ids）。</p>
             <dl class="insight-facts"><div><dt>时间约束</dt><dd>用源帧半开区间检查重叠与越界，保留真实短动作和显式留白（允许 episode 内部有不命名的空档）。</dd></div><div><dt>异常恢复</dt><dd>局部错误独立记录，其余合格 episode 继续；网络或服务容量这类暂态失败按 60 / 300 秒最多再试两次。恢复按阶段回执复用已通过的结果。</dd></div><div><dt>实录抽查</dt><dd>一条录制 13 个窗口、88 张图；两个疑点额外复核 14 张图，最终接纳 1 个 episode，含 7 个命名动作与 3 段留白。</dd></div></dl>
@@ -129,7 +134,7 @@
             <p>不一致的一处是“与下一窗口连续”的标记丢了一条。下游文本审理两版都得到同样的 4 个 episode 边界，但图像复核发现：双输入版把一段可见的展开衣物标成了“抚平”。这不能算语义等价；收益与这个已知差异一起交给负责人决定，确认接受后才接入生产。</p>
           </section>
 
-          <section class="chapter" id="hand">
+          <section class="chapter" id="hand" tabindex="-1">
             <h2>多视角手部</h2>
             <p>头部三路相机（一路单目 + 一对双目）逐帧检测和跟踪手，每只手按左、右两种假设分别过 WiLoR；全部帧推理完后，再离线读真实内外参，按同一相机时钟在 1 ms 内配对双目帧，用重投影几何决定左右手和跨视角身份。</p>
             <figure class="data-table"><table><caption><strong>双目三维点的接受门限</strong>不通过的点留空并写进有效性掩码（valid mask），记录拒绝原因；模型估计的 3D 与双目标定 3D 分开保存。</caption><thead><tr><th>检查</th><th class="num">门限</th></tr></thead><tbody>
@@ -179,7 +184,7 @@
             <p>插值的增益很小（单目双手同时可见的比例 67.7% → 68.3%），因为缺失主要在画外。同一次检查还发现单目相机的模型 3D 深度中位约 21 米：它用的是 WiLoR 的虚拟焦距而不是真实内参，所以单目 3D 不可用，三维只认双目三角化的结果。</p>
           </section>
 
-          <section class="chapter" id="deliver">
+          <section class="chapter" id="deliver" tabindex="-1">
             <h2>交付与吞吐</h2>
             <p>导出包保留分集 MCAP、源帧映射、关键点、有效性掩码、审理依据和三路预览。Viewer 并排回放各相机，在同一时间线查看手部叠加和动作。</p>
             <figure class="case-media">
@@ -215,7 +220,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="next">
+          <section class="chapter" id="next" tabindex="-1">
             <h2>局限与下一步</h2>
             <ul class="plain-list">
               <li><strong>手部轨迹断点多。</strong>按左右手重连身份的原型能把每路 24–27 个 ID 降到 2–3 个，还没进生产；画内真实漏检集中在抓布、手指被遮挡时，调阈值没用，需要更强的检测器或跨相机补充。</li>
@@ -225,6 +230,13 @@
           </section>
         </div>
       </div>
+<!-- build:pager -->
+      <nav class="case-pager" aria-label="其他项目">
+        <a rel="prev" href="../muse/"><span>上一个项目</span><strong lang="en">Muse</strong></a>
+        <a class="case-pager-all" href="../../#projects"><span>返回</span><strong>全部项目</strong></a>
+        <a rel="next" href="../egohalo/"><span>下一个项目</span><strong>EgoHalo 设备与数据工程</strong></a>
+      </nav>
+<!-- /build:pager -->
     </main>
     <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
   </body>

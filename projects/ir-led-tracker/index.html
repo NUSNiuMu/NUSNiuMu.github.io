@@ -16,7 +16,8 @@
     <title>红外 LED 定位 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/ir-led-tracker/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
+    <link rel="stylesheet" href="../../assets/site.css?v=b49bae4f">
+    <script src="../../assets/case.js?v=6579f5e5" defer></script>
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -24,7 +25,8 @@
       <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
       <nav aria-label="主导航">
         <ul class="nav-list">
-          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#featured">代表作</a></li>
+          <li><a href="../../#projects">全部项目</a></li>
           <li><a href="../../#about">关于</a></li>
           <li><a href="../../#contact">联系</a></li>
           <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
@@ -44,6 +46,9 @@
         </figure>
       </header>
 
+<!-- build:metrics -->
+      <dl class="key-metrics" aria-label="关键指标"><div><dt>失锁片段的有效位姿输出</dt><dd>0 → 60 帧</dd></div><div><dt>90 帧运动记录中的合格帧</dt><dd>21 → 67</dd></div></dl>
+<!-- /build:metrics -->
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>做什么</dt><dd>固定红外相机跟踪 20 颗 LED 的标记物，实时输出六自由度位姿</dd></div>
         <div><dt>我做的</dt><dd>在参考设计上修改 LED 载体与 PCB；LED 模型接入 Monado、相机标定、曝光与光斑参数调试、实时适配器和三维查看器、失锁定位与修复</dd></div>
@@ -67,7 +72,7 @@
           </ul>
         </nav>
         <div class="case-text">
-          <section class="chapter" id="methods">
+          <section class="chapter" id="methods" tabindex="-1">
             <h2>方法一览</h2>
             <figure class="data-table"><table style="min-inline-size:38rem"><caption><strong>流水线中用到的算法</strong>前五项直接链接 Monado 源码中的 constellation 静态库，后两项是我写的适配和显示部分。</caption><thead><tr><th>模块</th><th>怎么工作</th><th>输入 / 条件</th><th>出处</th></tr></thead><tbody>
               <tr><td>blobwatch 光斑检测</td><td>在灰度图上按像素阈值找连通域（相邻亮像素组成的块），求中心、大小，并跨帧给光斑分配 ID、估计速度</td><td>8 位灰度图（MJPEG 解码后转换）；手动曝光</td><td>Monado t_rift_blobwatch</td></tr>
@@ -80,7 +85,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="marker">
+          <section class="chapter" id="marker" tabindex="-1">
             <h2>LED 标记的建模</h2>
             <p>标记物是一个四面锥台支架，四块灯板分别朝 ±X、±Y，各装 5 颗 LED，每面向上倾斜 8°，外形约 124.7 × 124.7 × 68.0 mm。LED 为 940 nm 红外贴片灯，规格书给出半光强全角 120°（单侧 60°）。从 PCB 外形图提取 20 颗灯的中心，结合支架几何得到每颗灯的三维位置和法向，再生成 Monado 的 LED 模型。</p>
             <div class="insight-media-grid"><figure class="case-media">
@@ -97,7 +102,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="calib">
+          <section class="chapter" id="calib" tabindex="-1">
             <h2>相机标定</h2>
             <p>相机为 KM2010 红外 USB 相机，1280×720、30 FPS。用 4×4 AprilGrid（tag36h11 码族，码边长 55 mm、间隙 16.5 mm）拍 28 张，覆盖画面中央、四角、远近和倾斜，每张检出 13–16 个码，没有图像被剔除。畸变用 OpenCV 五参数径向–切向模型。</p>
             <figure class="case-media">
@@ -108,7 +113,7 @@
             <p>0.506 px 衡量的是标定图上角点的拟合误差，不是 LED 定位精度。</p>
           </section>
 
-          <section class="chapter" id="blobs">
+          <section class="chapter" id="blobs" tabindex="-1">
             <h2>曝光与光斑阈值</h2>
             <p>自动曝光会让桌面反光饱和、光斑数量不稳，所以改为手动曝光、增益 0。曝光值越大，LED 光斑越大，也越容易拖影和粘连；阈值越低，反光和粘连块越多。</p>
             <figure class="case-media">
@@ -124,7 +129,7 @@
             <p>最终取曝光 20（V4L2 驱动控制值，不是毫秒）。在 300 帧实机对照里，曝光 20 有 298 帧有效，位置波动 P95 比曝光 40 低约 21%。</p>
           </section>
 
-          <section class="chapter" id="pose">
+          <section class="chapter" id="pose" tabindex="-1">
             <h2>从光斑到位姿</h2>
             <ol class="insight-flow" role="list"><li><strong>取帧</strong><span>V4L2 读 MJPEG，解码为灰度</span></li><li><strong>光斑</strong><span>阈值连通域，跨帧 ID</span></li><li><strong>对应</strong><span>有先验走快路径，否则全局搜索</span></li><li><strong>求解</strong><span>RANSAC PnP，剔除错配后精修</span></li><li><strong>验证</strong><span>评分、运动一致性、显示门限</span></li></ol>
             <figure class="data-table"><table><caption><strong>各级门限</strong>先验通过位置与朝向两项检查时才能降低灯数要求；先验过期或检查失败一律按无先验处理。</caption><thead><tr><th>条件</th><th>门限</th></tr></thead><tbody>
@@ -140,7 +145,7 @@
             <p>每个面只有 5 颗灯，正对单面冷启动时必须 5 颗全部检出，没有余量；斜视同时看到两面时，灯数和几何约束都更好。</p>
           </section>
 
-          <section class="chapter" id="loss">
+          <section class="chapter" id="loss" tabindex="-1">
             <h2>灯点可见却丢跟踪</h2>
             <figure class="case-media">
               <a class="screenshot-link" href="../../assets/project-media/ir-lost-frame.webp" aria-label="打开原图 · 报告失锁时的一帧"><img src="../../assets/project-media/ir-lost-frame.webp" width="1280" height="720" loading="lazy" decoding="async" alt="黑色背景上 10 个清晰的红外 LED 光斑，分布在标记物的两个面上。"></a>
@@ -159,7 +164,7 @@
               <li><strong>慢线程的旧结果覆盖内部最新位姿。</strong></li>
             </ul>
             <figure class="data-table"><table><caption><strong>逐项消融：同一段 60 帧失锁记录</strong>离线回放相同图像。“合格”指通过质量判断，“显示”指通过显示层门限。不是真值精度测量。</caption><thead><tr><th>版本</th><th class="num">输出</th><th class="num">合格</th><th class="num">显示</th><th class="num">每帧匹配灯数</th><th class="num">RMS P50 / P95</th></tr></thead><tbody>
-              <tr><td>原版</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">—</td><td class="num">—</td></tr>
+              <tr><td>原跟踪器</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">—</td><td class="num">—</td></tr>
               <tr><td>只修求解器，60° 模型</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">—</td><td class="num">—</td></tr>
               <tr><td>只修求解器，70° 模型</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">—</td><td class="num">—</td></tr>
               <tr><td>统一 RMS 门限，60° 模型</td><td class="num">60</td><td class="num">60</td><td class="num">60</td><td class="num">7</td><td class="num">2.49 / 2.53 px</td></tr>
@@ -172,7 +177,7 @@
             </figure>
           </section>
 
-          <section class="chapter" id="display">
+          <section class="chapter" id="display" tabindex="-1">
             <h2>显示层滤波与时间戳</h2>
             <p>旧显示层限制每帧最多移动 25 mm，快速运动时会被当成跳变拒绝。新版改为把原始测量与运动预测比较（而不是与滞后的显示位置比较），并用速度自适应平滑。下表是合成数据上的对照，不是相机实测精度。</p>
             <figure class="data-table"><table><caption><strong>显示层滤波：合成数据对照</strong>30 Hz。运动：2 m/s 匀速 50 帧；静止：位置加 σ = 2 mm 高斯噪声，300 帧去掉前 30 帧，随机种子 42。</caption><thead><tr><th>指标</th><th class="num">旧版</th><th class="num">新版</th></tr></thead><tbody>
@@ -183,7 +188,7 @@
             <p>时间戳：相机申请 2 个 V4L2 缓冲区，取驱动给出的缓冲区时间戳，只有单调递增且与主机单调时钟相差小于 1 秒时才采用，否则退回主机取帧时间。实测缓冲区时间戳到主机取帧约 32 ms。这个时间戳不是曝光时刻，OpenCV 接口不提供曝光起止标志，因此没有做曝光中点补偿。位姿解出后立即在回调中输出，不等下一次取帧。</p>
           </section>
 
-          <section class="chapter" id="next">
+          <section class="chapter" id="next" tabindex="-1">
             <h2>局限与下一步</h2>
             <ul class="plain-list">
               <li><strong>运动段仍有丢帧。</strong>90 帧运动记录修复后 67 帧合格，还有 22 帧无输出。</li>
@@ -194,6 +199,13 @@
           </section>
         </div>
       </div>
+<!-- build:pager -->
+      <nav class="case-pager" aria-label="其他项目">
+        <a rel="prev" href="../so101-lerobot/"><span>上一个项目</span><strong>大模型操控 SO101 机械臂</strong></a>
+        <a class="case-pager-all" href="../../#projects"><span>返回</span><strong>全部项目</strong></a>
+        <a rel="next" href="../muse/"><span>下一个项目</span><strong lang="en">Muse</strong></a>
+      </nav>
+<!-- /build:pager -->
     </main>
     <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
   </body>

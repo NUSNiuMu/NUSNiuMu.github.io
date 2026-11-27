@@ -6,7 +6,10 @@ const status = filter.querySelector('[role="status"]');
 function showCategory(category) {
   let visible = 0;
   for (const project of list.children) {
-    project.hidden = category !== 'all' && project.dataset.category !== category;
+    // "全部" lists the projects not already shown under 代表作; a category shows all of its projects.
+    project.hidden = category === 'all'
+      ? project.dataset.featured === 'true'
+      : project.dataset.category !== category;
     if (!project.hidden) visible += 1;
   }
   for (const button of buttons) {

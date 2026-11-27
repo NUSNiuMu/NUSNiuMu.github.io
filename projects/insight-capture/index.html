@@ -16,7 +16,8 @@
     <title>Insight Capture Dashboard · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/insight-capture/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
+    <link rel="stylesheet" href="../../assets/site.css?v=b49bae4f">
+    <script src="../../assets/case.js?v=6579f5e5" defer></script>
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -24,7 +25,8 @@
       <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
       <nav aria-label="主导航">
         <ul class="nav-list">
-          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#featured">代表作</a></li>
+          <li><a href="../../#projects">全部项目</a></li>
           <li><a href="../../#about">关于</a></li>
           <li><a href="../../#contact">联系</a></li>
           <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
@@ -50,6 +52,9 @@
         </figure>
       </header>
 
+<!-- build:metrics -->
+      <dl class="key-metrics" aria-label="关键指标"><div><dt>腕部相对头部的位置 RMSE（离线标定板）</dt><dd>10.8–15.2 mm</dd></div><div><dt>双端实录合包消息逐条哈希一致</dt><dd>66,698 条</dd></div><div><dt>收帧到显示的中位延迟</dt><dd>5.67–5.99 ms</dd></div></dl>
+<!-- /build:metrics -->
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>做什么</dt><dd>头部 + 双腕三相机的同步采集系统，覆盖现场采集、回放、质检和轨迹复查</dd></div>
         <div><dt>我做的</dt><dd>独立开发：Jetson 端采集与定位后端、手机采集页、原生 Qt 桌面客户端</dd></div>
@@ -73,7 +78,7 @@
           </ul>
         </nav>
         <div class="case-text">
-          <section class="chapter" id="system">
+          <section class="chapter" id="system" tabindex="-1">
             <h2>采集系统</h2>
             <p>常用配置是头部 Insight9 加两台腕部 Insight3，三台相机经 USB 网口接入 Jetson（NVIDIA 的嵌入式 GPU 计算板）。Jetson 同时负责录制、在线建图定位、手机预览和 Qt 回放。</p>
             <figure class="case-media">
@@ -106,7 +111,7 @@
             </figure>
           </section>
 
-          <section class="chapter" id="spatial">
+          <section class="chapter" id="spatial" tabindex="-1">
             <h2>多相机空间定位</h2>
             <div class="insight-text-media">
               <div>
@@ -130,7 +135,7 @@
               <tr><td>Huber 损失细化</td><td>误差小时按平方、大时按线性计，减弱离群点对位姿的拉扯</td><td>RANSAC 内点；阈值 1 px，最多 20 次函数求值，未收敛直接拒绝</td><td>—</td></tr>
               <tr><td>EKF，扩展卡尔曼滤波</td><td>把小幅视觉修正平滑地融进 VIO 输出，避免位姿跳变</td><td>VIO 位姿 + 地图修正；&gt; 5 cm 的修正不走 EKF，需可靠重定位确认</td><td>—</td></tr>
             </tbody></table></figure>
-            <figure class="data-table"><table><caption><strong>腕部位姿被接受的门限</strong>任何一条不满足，本次匹配都不更新位姿，状态报告为 verifying 或 vio_only（只沿用旧修正外推）。</caption><thead><tr><th>检查</th><th class="num">门限</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>腕部位姿被接受的门限</strong>任何一条不满足，本次匹配都不更新位姿，状态报告为 verifying 或 vio_only（只用上一次的修正外推）。</caption><thead><tr><th>检查</th><th class="num">门限</th></tr></thead><tbody>
               <tr><td>图像对应数</td><td class="num">≥ 12</td></tr>
               <tr><td>PnP 内点数 / 内点比例</td><td class="num">≥ 10 / ≥ 0.45</td></tr>
               <tr><td>重投影误差</td><td class="num">≤ 3 px</td></tr>
@@ -171,7 +176,7 @@
             <p><a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/EGOHALO_MAPPING.md">建图与腕部定位说明</a></p>
           </section>
 
-          <section class="chapter" id="precision">
+          <section class="chapter" id="precision" tabindex="-1">
             <h2>定位精度对照</h2>
             <p>在线链路没有真值，我用已录数据做了一次离线对照：画面里有 AprilGrid（由多个 AprilTag 二维码组成的标定板），用板子独立求出每对相机的相对变换作为参照，再比较两版定位算法给出的相对变换。训练图像 21 张，评估 109 张查询图像，两版全部通过定位门限。</p>
             <figure class="data-table"><table><caption><strong>参与对照的两版算法</strong>同一批图像、同一 TensorRT SuperPoint 特征、同一 RANSAC 随机种子。</caption><thead><tr><th>版本</th><th>地标怎么建</th><th>位姿怎么求</th></tr></thead><tbody>
@@ -200,7 +205,7 @@
             </ul>
           </section>
 
-          <section class="chapter" id="preview">
+          <section class="chapter" id="preview" tabindex="-1">
             <h2>手机与本机预览</h2>
             <div class="insight-text-media insight-phone-section">
               <figure class="case-media device-phone">
@@ -257,7 +262,7 @@
             <p><a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/NATIVE_PERFORMANCE.md">性能记录</a> · <a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/MOBILE_PREVIEW.md">手机预览与离线采集说明</a></p>
           </section>
 
-          <section class="chapter" id="review">
+          <section class="chapter" id="review" tabindex="-1">
             <h2>原生 Qt 回放与质检</h2>
             <p>桌面端用 C++、QML、Qt Quick 3D 和 GStreamer，没有内嵌网页。多视角回放、空间检查和数据诊断在同一个客户端里。</p>
             <figure class="case-media">
@@ -321,7 +326,7 @@
             <p><a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/native_dashboard/PARITY.md">原生 Qt 功能说明</a></p>
           </section>
 
-          <section class="chapter" id="recording">
+          <section class="chapter" id="recording" tabindex="-1">
             <h2>双端录制与时间同步</h2>
             <p>EgoHalo 配置下，Qt 的一个起停按钮同时控制两端：EgoHalo 在自己的 TF 卡写四路原始 H.264、IMU、VIO、标定和静态 TF；Jetson 写左右腕和在线定位产生的统一位姿。每条录制生成共同的 session_id，配对只认这个编号，不按文件名或起录时间猜。</p>
             <ol class="insight-flow" role="list">
@@ -355,7 +360,7 @@
             <p>合包成功不等于数据合格：这一条因为前左路的时间戳缺口被标成可疑。<a href="https://github.com/NUSNiuMu/insight-capture-dashboard/blob/main/docs/EGOHALO_DISTRIBUTED_RECORDING.md">双端录制说明</a></p>
           </section>
 
-          <section class="chapter" id="next">
+          <section class="chapter" id="next" tabindex="-1">
             <h2>局限与下一步</h2>
             <ul class="plain-list">
               <li><strong>在线定位精度没验收。</strong>离线对照只覆盖两个已录片段，在线整链路（双目建图、回环、VIO 融合）没有真值。下一步：现场复测时同时保留头部左右目、三路 VIO、完整 TF 和地图关键帧，用固定标定板做独立观测。</li>
@@ -364,7 +369,7 @@
             </ul>
           </section>
 
-          <section class="chapter" id="demos">
+          <section class="chapter" id="demos" tabindex="-1">
             <h2>团队演示</h2>
             <p>同一套设备上其他同事负责的部分，不属于我的工作。</p>
             <details class="insight-disclosure">
@@ -396,6 +401,13 @@
           </section>
         </div>
       </div>
+<!-- build:pager -->
+      <nav class="case-pager" aria-label="其他项目">
+        <a rel="prev" href="../multi-robot-patrol/"><span>上一个项目</span><strong>多机器人协同巡逻</strong></a>
+        <a class="case-pager-all" href="../../#projects"><span>返回</span><strong>全部项目</strong></a>
+        <a rel="next" href="../drone-hover-rl/"><span>下一个项目</span><strong>无人机抗风悬停：PID、LQR 与强化学习</strong></a>
+      </nav>
+<!-- /build:pager -->
     </main>
     <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
   </body>

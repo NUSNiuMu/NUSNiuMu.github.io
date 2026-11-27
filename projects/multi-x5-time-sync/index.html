@@ -16,7 +16,8 @@
     <title>多 X5 蓝牙配对与对时 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/multi-x5-time-sync/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
+    <link rel="stylesheet" href="../../assets/site.css?v=b49bae4f">
+    <script src="../../assets/case.js?v=6579f5e5" defer></script>
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -24,7 +25,8 @@
       <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
       <nav aria-label="主导航">
         <ul class="nav-list">
-          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#featured">代表作</a></li>
+          <li><a href="../../#projects">全部项目</a></li>
           <li><a href="../../#about">关于</a></li>
           <li><a href="../../#contact">联系</a></li>
           <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
@@ -44,6 +46,9 @@
         </figure>
       </header>
 
+<!-- build:metrics -->
+      <dl class="key-metrics" aria-label="关键指标"><div><dt>共享蓝牙时钟方案的软件自估偏差 P95</dt><dd>57.1 µs</dd></div><div><dt>相对蓝牙 PAN 上 NTP 的 4–6 ms</dt><dd>1/70–1/110</dd></div></dl>
+<!-- /build:metrics -->
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>目标</dt><dd>多块 X5 靠近后自动发现、选主，板间相对时间偏差在 10 ms 以内，进一步尝试 3 ms 以内</dd></div>
         <div><dt>我做的</dt><dd>自动选主与组网程序、三板 PAN + chrony 部署与实板问题修复、共享蓝牙时钟映射程序和两板实验</dd></div>
@@ -66,7 +71,7 @@
           </ul>
         </nav>
         <div class="case-text">
-          <section class="chapter" id="methods">
+          <section class="chapter" id="methods" tabindex="-1">
             <h2>方法一览</h2>
             <figure class="data-table"><table style="min-inline-size:38rem"><caption><strong>参与对比的两种对时方法与验证方法</strong>前两行都已在 X5 上实测；第三行是计划中的独立验证，尚未进行。</caption><thead><tr><th>方法</th><th>怎么工作</th><th>需要的条件</th><th>出处</th></tr></thead><tbody>
               <tr><td>PAN + NTP（chrony）</td><td>从板向主板发请求，记录 4 个时间戳（从板发出 t1、主板收到 t2、主板回复 t3、从板收到 t4），估计时差 ((t2−t1)+(t3−t4))/2 和往返时延 (t4−t1)−(t3−t2)。chrony 过滤多次样本后逐步调整本机时钟频率与相位。</td><td>两板之间有 IP 网络。这里由蓝牙 PAN 提供：主板作 NAP（网络接入点），从板通过 BNEP（蓝牙网络封装协议）获得网卡。假设去程与回程时延相等。</td><td>NTP（RFC 5905）；chrony 4.2</td></tr>
@@ -76,14 +81,14 @@
             <p>文中的统计量：<strong>Last offset</strong> 是 chrony 最近一次测得的本机与时间源之差；<strong>RMS offset</strong> 是其长期均方根；<strong>Root delay</strong> 是到参考时钟的往返时延；<strong>P95</strong> 是 95% 的样本不超过的值；<strong>ppm</strong> 是百万分之一，1 ppm 的频率误差每秒累积 1 µs。</p>
           </section>
 
-          <section class="chapter" id="pairing">
+          <section class="chapter" id="pairing" tabindex="-1">
             <h2>配对、选主与组网</h2>
             <p>三块板逐对完成数字比较配对（两端核对同一个 6 位数后确认）并互设可信。所有板运行同一个程序，不预设主从。程序基于 BlueZ（Linux 官方蓝牙协议栈），每 5 秒做一轮经典蓝牙扫描和选主。</p>
             <ol class="insight-flow" role="list"><li><strong>发现</strong><span>按设备名识别同类节点，已连接的节点不因扫描漏报而过期，未连接节点保留 30 秒</span></li><li><strong>选主</strong><span>按（时钟等级，节点编号）取最小；已与外部时间源同步的板等级为 0，其余为 5；本次三板都是 5，蓝牙地址最小的板当选</span></li><li><strong>组网</strong><span>主板注册 BlueZ NAP，地址固定；从板加入 PAN，chrony 把主板设为唯一可信时间源</span></li></ol>
             <p>chrony 对主板时间源使用 <code>prefer trust require</code>。原因来自实测：一块联网的从板同时看到 8 个公网 NTP 服务器，它们与离线主板的读数相差约 0.34–0.37 s。只写 <code>prefer</code> 时，chrony 可能按多数源把主板判成错误源（falseticker）；<code>trust require</code> 明确以主板为本组的时间权威。代价是只保证板间一致，不保证 UTC 绝对时间。</p>
           </section>
 
-          <section class="chapter" id="pan">
+          <section class="chapter" id="pan" tabindex="-1">
             <h2>PAN + NTP 的三板结果</h2>
             <p>一台主板、两台从板。主板用本地时钟作参考（stratum 8，即时间层级），每 5 秒在从板上读一次 <code>chronyc tracking</code>，共 240 秒、49 次。统计窗口事先定为排除前 60 秒，以隔开断链恢复和收敛阶段。</p>
             <figure class="case-media">
@@ -103,7 +108,7 @@
             <p>NTP 只能测出往返时延，无法知道去程和回程各占多少；两者不相等时，误差最多可达往返时延的一半。蓝牙 PAN 上的往返时延有 8–31 ms，并随无线重传跳变，所以偏差停在毫秒级。从板 B 的往返时延中位数是 A 的近 2 倍，P95 偏差也高 55%。两块板的最大偏差都在 10 ms 目标内，但从板 B 的 ≤5 ms 比例为 94.6%，略低于 95% 的验收线。</p>
           </section>
 
-          <section class="chapter" id="clock">
+          <section class="chapter" id="clock" tabindex="-1">
             <h2>映射到同一蓝牙时钟</h2>
             <p>为达到 3 ms 目标，另做了一轮两板实验。经典蓝牙连接建立后，从端控制器按主端时钟跳频，两端都能读到同一个 28 位时钟值，约 23.3 小时回绕一次。只要两板各自知道“某个 tick 对应本机系统时间几点”，相减就是两板时差，报文在空中传了多久不影响结果。</p>
             <ol class="insight-flow" role="list"><li><strong>连续读钟 15 次</strong><span>每次在 HCI 调用前后各取一次系统时间，记中点和 tick</span></li><li><strong>换算到同一 tick</strong><span>每次读数按 312.5 µs/tick 推到参考 tick，回绕按有符号最短距离处理，取中位数</span></li><li><strong>主板发映射</strong><span>经已配对的 L2CAP（蓝牙逻辑链路控制与适配协议）通道发送参考 tick、对应系统时间和离散度</span></li><li><strong>从板相减</strong><span>换算到同一 tick 后相减，合格样本送入 chrony</span></li></ol>
@@ -121,7 +126,7 @@
             <p>被拒绝的那一轮离散度为 3.251 ms，超过 2 ms 门限。控制器对读钟精度字段返回 0xffff，即不提供精度保证。</p>
           </section>
 
-          <section class="chapter" id="compare">
+          <section class="chapter" id="compare" tabindex="-1">
             <h2>两种方案对比</h2>
             <figure class="data-table"><table style="min-inline-size:38rem"><caption><strong>PAN + NTP 与共享蓝牙时钟</strong>偏差均为软件自估：前者是 chrony 的 Last offset，后者是本程序每轮算出的时差。</caption><thead><tr><th></th><th>PAN + NTP</th><th>共享蓝牙时钟</th></tr></thead><tbody>
               <tr><td>板数</td><td>1 主 + 2 从，一主可带多从（按 7 个活跃从板设计）</td><td>1 主 + 1 从，每对需要一条固定角色的 ACL</td></tr>
@@ -135,7 +140,7 @@
             <p>两种方案的数字都不是独立测量。共享时钟方案的 offset 和 chrony 的反馈都来自同一套读钟，二者不能互相验证，因此 57.1 µs 只说明这套映射在 185 秒内自洽、稳定，不能当作真实物理偏差的上限。</p>
           </section>
 
-          <section class="chapter" id="fixes">
+          <section class="chapter" id="fixes" tabindex="-1">
             <h2>实板问题与修复</h2>
             <figure class="data-table"><table style="min-inline-size:38rem"><caption><strong>三板部署中遇到的问题</strong>修复后本地回归测试与三板环境检查全部通过。</caption><thead><tr><th>现象</th><th>原因</th><th>修复</th></tr></thead><tbody>
               <tr><td>首次配对后从板连不上 NAP</td><td>配对时主板还没注册 NAP，SDP（服务发现协议）缓存里没有这项服务</td><td>用 BlueZ 的定向 ConnectProfile 补做一次服务发现</td></tr>
@@ -147,7 +152,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="next">
+          <section class="chapter" id="next" tabindex="-1">
             <h2>验收差距与下一步</h2>
             <figure class="data-table"><table style="min-inline-size:38rem"><caption><strong>验收标准与当前结果</strong>验收标准为项目开始时定的目标。</caption><thead><tr><th>标准</th><th>当前结果</th><th>状态</th></tr></thead><tbody>
               <tr><td>95% 的 |Last offset| ≤ 5 ms（PAN）</td><td>从板 A 97.3%，从板 B 94.6%</td><td>B 未达</td></tr>
@@ -163,6 +168,13 @@
           </section>
         </div>
       </div>
+<!-- build:pager -->
+      <nav class="case-pager" aria-label="其他项目">
+        <a rel="prev" href="../drone-swarm-planning/"><span>上一个项目</span><strong>无人机集群路径规划与协同避障</strong></a>
+        <a class="case-pager-all" href="../../#projects"><span>返回</span><strong>全部项目</strong></a>
+        <a rel="next" href="../so101-lerobot/"><span>下一个项目</span><strong>大模型操控 SO101 机械臂</strong></a>
+      </nav>
+<!-- /build:pager -->
     </main>
     <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
   </body>

@@ -16,7 +16,8 @@
     <title>EgoHalo 设备与数据工程 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/egohalo/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
+    <link rel="stylesheet" href="../../assets/site.css?v=b49bae4f">
+    <script src="../../assets/case.js?v=6579f5e5" defer></script>
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -24,7 +25,8 @@
       <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
       <nav aria-label="主导航">
         <ul class="nav-list">
-          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#featured">代表作</a></li>
+          <li><a href="../../#projects">全部项目</a></li>
           <li><a href="../../#about">关于</a></li>
           <li><a href="../../#contact">联系</a></li>
           <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
@@ -47,6 +49,9 @@
         </figure>
       </header>
 
+<!-- build:metrics -->
+      <dl class="key-metrics" aria-label="关键指标"><div><dt>设备端直接写 MCAP 相对 ROS 录包的 CPU</dt><dd>−30%</dd></div><div><dt>图像间隔超过 50 ms 的次数</dt><dd>65 → 15</dd></div></dl>
+<!-- /build:metrics -->
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>做什么</dt><dd>头戴采集设备从连接、预览、录制到取回和上传数据的整条链路</dd></div>
         <div><dt>我做的</dt><dd>从零搭建并负责采集控制台（网页 + 原生 Android）；主导浏览器上传；参与 OTA、相机运行时、固件和云端手部处理</dd></div>
@@ -68,7 +73,7 @@
           </ul>
         </nav>
         <div class="case-text">
-          <section class="chapter" id="console">
+          <section class="chapter" id="console" tabindex="-1">
             <h2>采集控制台</h2>
             <div class="insight-text-media">
               <div>
@@ -94,7 +99,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="direct-mcap">
+          <section class="chapter" id="direct-mcap" tabindex="-1">
             <h2>多路起录与直接写包</h2>
             <p>EgoHalo 在设备本机直接写 MCAP，不经过 ROS 录制。四路视频各自编码：如果按下录制就开始写包，某一路可能从 P 帧开始，回放器在它的第一个关键帧之前什么也解不出来，四路的有效起点也对不齐。</p>
             <p>处理方式是开录前先等：H.264/H.265 每一路都收到完整参数集和 IDR，所有选中的相机都到达可解码起点后，取共同的起录边界，再向用户确认“已开始录制”。写包沿用源时间戳、ROS 消息类型和原有话题，与 ROS 录制的包结构一致，下游读取方式不变。MJPEG 每帧都是独立 JPEG，原样写入即可。</p>
@@ -116,7 +121,7 @@
             <p>停止后视频约 0.03–0.06 秒停止采集，剩下的时间花在排空队列、关闭 MCAP、改名写清单、逐文件 fsync 和目录同步上。同一次分析发现录音开启时最后一个音频采样比视频晚约 3.0 秒：源码在排空视频后才停止音频输入；修正方向是在停止边界先冻结音频采集，再排空已收数据。</p>
           </section>
 
-          <section class="chapter" id="compare">
+          <section class="chapter" id="compare" tabindex="-1">
             <h2>ROS 录制与直接写包对照</h2>
             <figure class="data-table"><table><caption><strong>参与对照的两种录制方式</strong>同一编码器、同一消息格式，差别只在传输和写盘的位置。</caption><thead><tr><th>方式</th><th>数据怎么走</th><th>录制中能做什么</th></tr></thead><tbody>
               <tr><td>ROS 录制（rosbag2）</td><td>相机发布 ROS 消息 → DDS → 独立 Recorder 进程订阅 → 写 MCAP</td><td>外部节点可同时订阅，ROS 轨迹持续更新</td></tr>
@@ -151,7 +156,7 @@
             </ul>
           </section>
 
-          <section class="chapter" id="take-data">
+          <section class="chapter" id="take-data" tabindex="-1">
             <h2>存储、频率与机型</h2>
             <p><strong>实际采集频率。</strong>Take 详情按话题显示平均记录频率。为了不读整个文件，先读 MCAP 摘要里的消息计数和各块的时间上下界，再只读可能包含首尾消息的索引；合并各分包的总数和全局首尾时间，按 (N − 1) / (t末 − t首) 算出 Hz。这是平均值，逐帧缺口交给单独的诊断检查。</p>
             <p><strong>存储与恢复。</strong>Take 按任务归档，录制索引按 TF 卡隔离；换卡后可以扫描重建索引；空间不足时尽量把正在录的这条保存完，之后可只读导出。</p>
@@ -167,7 +172,7 @@
             <dl class="insight-facts"><div><dt>EgoHalo</dt><dd>四路鱼眼，Buildroot 系统，固定使用本机直接写 MCAP。</dd></div><div><dt>Insight 7 / Duo</dt><dd>Insight 7 三路（RGB 与左右目），Duo 双路，各自保留配置与校准；起录等三路都拿到可独立解码的首个 IDR。</dd></div><div><dt>独立 RDK 双 UVC</dt><dd>自动识别 MJPEG UVC 相机并协商参数，C++ 原生采集。</dd></div></dl>
           </section>
 
-          <section class="chapter" id="pipeline">
+          <section class="chapter" id="pipeline" tabindex="-1">
             <h2>链路上的其他环节</h2>
             <p>下面几块是团队共同维护的系统。浏览器上传由我主导，其余几块我参与了一部分。</p>
             <h3>浏览器上传</h3>
@@ -203,7 +208,7 @@
             </figure>
           </section>
 
-          <section class="chapter" id="next">
+          <section class="chapter" id="next" tabindex="-1">
             <h2>局限与下一步</h2>
             <ul class="plain-list">
               <li><strong>验收范围还窄。</strong>直接写包的实机对照都在单台 X5 上、每轮 180 秒，一次 ABBA。长时录制、拔卡、满卡、慢卡、功耗和多设备绝对同步都还待验收。</li>
@@ -214,6 +219,13 @@
           </section>
         </div>
       </div>
+<!-- build:pager -->
+      <nav class="case-pager" aria-label="其他项目">
+        <a rel="prev" href="../ego-data-pipeline/"><span>上一个项目</span><strong lang="en">Ego Data Pipeline</strong></a>
+        <a class="case-pager-all" href="../../#projects"><span>返回</span><strong>全部项目</strong></a>
+        <a rel="next" href="../tinynav/"><span>下一个项目</span><strong lang="en">TinyNav</strong></a>
+      </nav>
+<!-- /build:pager -->
     </main>
     <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
   </body>

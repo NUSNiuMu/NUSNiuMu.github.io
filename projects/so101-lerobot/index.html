@@ -16,7 +16,8 @@
     <title>大模型操控 SO101 机械臂 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/so101-lerobot/">
     <link rel="icon" href="../../assets/mark.png" type="image/png">
-    <link rel="stylesheet" href="../../assets/site.css?v=f06f04c3">
+    <link rel="stylesheet" href="../../assets/site.css?v=b49bae4f">
+    <script src="../../assets/case.js?v=6579f5e5" defer></script>
   </head>
   <body id="top">
     <a class="skip-link" href="#main">跳到正文</a>
@@ -24,7 +25,8 @@
       <a class="brand" href="../../" aria-label="牛牧首页"><span aria-hidden="true">牛</span></a>
       <nav aria-label="主导航">
         <ul class="nav-list">
-          <li><a href="../../#projects">项目</a></li>
+          <li><a href="../../#featured">代表作</a></li>
+          <li><a href="../../#projects">全部项目</a></li>
           <li><a href="../../#about">关于</a></li>
           <li><a href="../../#contact">联系</a></li>
           <li><a href="https://github.com/NUSNiuMu">GitHub</a></li>
@@ -47,6 +49,9 @@
         </figure>
       </header>
 
+<!-- build:metrics -->
+      <dl class="key-metrics" aria-label="关键指标"><div><dt>红块入箱、叠纸杯的真机成功记录</dt><dd>20 + 15 条</dd></div><div><dt>机械臂真正在动的时间占比</dt><dd>3.5–8.3%</dd></div></dl>
+<!-- /build:metrics -->
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>做什么</dt><dd>让大模型智能体直接操控真机械臂，完成桌面抓放</dd></div>
         <div><dt>我做的</dt><dd>搭建常驻控制进程和双相机链路、设计技能树与复盘格式、把智能体的成功轨迹整理成 ACT 训练数据</dd></div>
@@ -70,7 +75,7 @@
           </ul>
         </nav>
         <div class="case-text">
-          <section class="chapter" id="methods">
+          <section class="chapter" id="methods" tabindex="-1">
             <h2>方法一览</h2>
             <figure class="data-table"><table><caption><strong>这一页出现的方法和缩写</strong></caption><thead><tr><th>名称</th><th>是什么 / 怎么工作</th><th>输入或条件</th><th>出处</th></tr></thead><tbody>
               <tr><td lang="en">Codex</td><td>基于 GPT 大语言模型的编程智能体：能读图、读文件、调用命令行工具。这里它通过工具调用读双图和关节状态，输出下一步关节目标和理由</td><td>两张 RGB 图、六维关节读数、任务描述和经验文档</td><td>现成产品，未微调</td></tr>
@@ -83,7 +88,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="setup">
+          <section class="chapter" id="setup" tabindex="-1">
             <h2>给大模型一双眼睛和一只手</h2>
             <p>大模型不能直接驱动舵机。常驻控制进程把机械臂包装成三条 JSON 指令：<code>observe</code> 返回腕部和外部两张图、六个关节的实际角度、按 URDF 算出的末端位置和肘弯角，以及健康状态；<code>step</code> 接收绝对关节目标、时长、所属技能节点和这一步的理由，分段执行后再返回双图和反馈；<code>finish</code> 结束并保存整条 episode。每条指令的请求值、实际下发值和反馈值都写进遥测。</p>
             <p>两路相机分工明确：腕部相机（叠杯配置下 544 × 640）看夹爪和物体的接触细节，固定的外部相机（960 × 544）看离桌高度、障碍物和撤离路径。只用 RGB，不用深度、IMU 或双目测距；两路曝光不同步，外部相机外参也没有标定，所以“离桌多高”靠看图判断，不靠几何计算。</p>
@@ -91,7 +96,7 @@
             <p>任务组织参考 RoboRSI 的技能树：桌面操作 → 摆底座、叠上杯、入箱等复合技能 → 观察、抓取、搬运、放置、撤离等原子技能 → 相机、运动、几何、策略建议等基础接口。</p>
           </section>
 
-          <section class="chapter" id="loop">
+          <section class="chapter" id="loop" tabindex="-1">
             <h2>看一步，走一步</h2>
             <p>智能体按四种职责推进：Manager 选任务、排修订队列；Planner 读当前画面，确定物体和阶段；Engineer 下发动作，必要时改代码；Reviewer 看执行后的连续图像，判断成功或失败，定位最早出问题的节点。四种职责由同一个 Codex 会话轮流承担。</p>
             <ol class="insight-flow" role="list"><li><strong>观察</strong><span>双图 + 关节反馈</span></li><li><strong>决策</strong><span>确定这一阶段的关节目标</span></li><li><strong>执行</strong><span>分段运动，记录实际轨迹</span></li><li><strong>复看</strong><span>对照画面与反馈，修正或进入下一阶段</span></li></ol>
@@ -103,7 +108,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="tasks">
+          <section class="chapter" id="tasks" tabindex="-1">
             <h2>两项任务</h2>
             <h3>红块入箱</h3>
             <p>沿红块长轴找中点夹取，确认离桌，整块越过箱沿，箱内松爪，高位撤离。难点是对中、越障和撤离时别把箱子带走。</p>
@@ -126,7 +131,7 @@
             <p>累计红块入箱 20 条、叠纸杯 15 条成功示范。每次尝试保存任务计划、每一步的决策理由、遥测和双图证据。实验之间由我摆回物体；任务中的每一步运动都由 Codex 调接口下发，不是我遥控。</p>
           </section>
 
-          <section class="chapter" id="lessons">
+          <section class="chapter" id="lessons" tabindex="-1">
             <h2>翻车与经验</h2>
             <p>早期失败几乎都有一个共同点：局部动作看起来完成了，但物体或路径并不满足任务。夹了红块尾部、抬得不够高撞箱沿、收臂时把箱子带走、接近纸杯时把杯子推走。每次复盘后，可迁移的规则写进经验文档，下一轮读取：</p>
             <ul class="plain-list">
@@ -143,7 +148,7 @@
             </tbody></table></figure>
           </section>
 
-          <section class="chapter" id="speed">
+          <section class="chapter" id="speed" tabindex="-1">
             <h2>瓶颈在思考，不在电机</h2>
             <figure class="case-media">
               <a class="screenshot-link" href="../../assets/project-media/so101-time-budget.webp" aria-label="打开原图 · 运动时间与等待时间"><img src="../../assets/project-media/so101-time-budget.webp" width="1600" height="640" loading="lazy" decoding="async" alt="左：9 条成功记录的横向堆叠条，橙色运动段只有 6 到 43 秒，灰色等待段约 177 到 833 秒，运动占比 3.5% 到 8.3%。右：133 个相邻指令间隔的直方图，集中在 10 到 25 秒，中位数 21.6 秒，最长一次是舵机温度暂停约 186 秒。"></a>
@@ -162,7 +167,7 @@
             <p>本地 ACT 推理一次（热机）的中位数是 45 ms（P95 52 ms，只含模型前向和反归一化），比一次大模型决策快约 480 倍。这就是把大模型的经验交给小模型的理由：小模型负责连续执行，大模型只在接触、越障和环境变化时介入。</p>
           </section>
 
-          <section class="chapter" id="act">
+          <section class="chapter" id="act" tabindex="-1">
             <h2>把经验交给 ACT</h2>
             <p>智能体每次成功都留下一条完整 episode：双路 RGB、六维关节与夹爪状态、实际下发的动作。我用其中两条叠杯成功轨迹在 LeRobot 上训练双 RGB 输入的 ACT。</p>
             <figure class="data-table"><table><caption><strong>训练配置</strong></caption><thead><tr><th>项</th><th class="num">取值</th></tr></thead><tbody>
@@ -193,7 +198,7 @@
             </ul>
           </section>
 
-          <section class="chapter" id="next">
+          <section class="chapter" id="next" tabindex="-1">
             <h2>局限与下一步</h2>
             <ul class="plain-list">
               <li><strong>太慢。</strong>9 条成功记录里，红块一次 3–11 分钟，叠杯 9–15 分钟。下一步把稳定的分段流程固化成本地函数，大模型只在关键节点判断。</li>
@@ -205,6 +210,13 @@
           </section>
         </div>
       </div>
+<!-- build:pager -->
+      <nav class="case-pager" aria-label="其他项目">
+        <a rel="prev" href="../multi-x5-time-sync/"><span>上一个项目</span><strong>多 X5 蓝牙配对与对时</strong></a>
+        <a class="case-pager-all" href="../../#projects"><span>返回</span><strong>全部项目</strong></a>
+        <a rel="next" href="../ir-led-tracker/"><span>下一个项目</span><strong>红外 LED 定位</strong></a>
+      </nav>
+<!-- /build:pager -->
     </main>
     <footer class="shell site-footer"><a href="#top">回到顶部</a></footer>
   </body>
