@@ -50,13 +50,13 @@
       </header>
 
 <!-- build:metrics -->
-      <dl class="key-metrics" aria-label="关键指标"><div><dt>Viewer 中累计的 episode（1,138 条录制）</dt><dd>17,336 个</dd></div></dl>
+      <dl class="key-metrics" aria-label="关键指标"><div><dt>已发布 184.5 小时第一视角数据</dt><dd>20.8K 个 episode</dd></div><div><dt>GPT 审理每分钟视频的用量</dt><dd>约 2.9 万 token / 分钟</dd></div><div><dt>33 条录制的处理前后</dt><dd>119 分钟 → 207 个 episode</dd></div></dl>
 <!-- /build:metrics -->
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>做什么</dt><dd>多相机第一视角录制 → 动作区间、手部三维关键点、导出包和 Viewer 回放</dd></div>
         <div><dt>我做的</dt><dd>采样与分窗、Qwen 动作分段与审理规则、双目手部三角化、导出发布，以及按阶段回执续跑</dd></div>
         <div><dt>技术栈</dt><dd>MCAP · Qwen3.5-9B · WiLoR/MANO · 双目三角化 · Python 常驻服务 · 多 GPU 调度</dd></div>
-        <div><dt>规模</dt><dd>11 月 17 日 Viewer 累计 1,138 条录制、17,336 个 episode（前一天为 1,089 / 16,433）</dd></div>
+        <div><dt>规模</dt><dd>11 月 27 日 Viewer 已发布 1.4K 条采集、20.8K 个 episode、184.5 小时数据；GPT 审理每分钟视频约 2.9 万 token</dd></div>
         <div class="summary-key"><dt>难点与解决</dt><dd>模型分段随措辞摆动。我让文本审理把相邻窗口拼回整条记录核对，只在证据不足的疑点请求额外图像，并保留父候选 ID 以便追溯。</dd></div>
         <div><dt>目前进展</dt><dd>叠衣服持续自动运行；叠杯子 1,643 条录制已登记，首批 2 条录制、11 个 episode 已发布。</dd></div>
       </dl>
@@ -65,6 +65,7 @@
         <nav class="toc" aria-label="章节目录">
           <ul>
             <li><a href="#methods">方法一览</a></li>
+            <li><a href="#before-after">处理前后</a></li>
             <li><a href="#input">按源时间戳采样</a></li>
             <li><a href="#review">动作分段与证据复核</a></li>
             <li><a href="#hand">多视角手部</a></li>
@@ -88,6 +89,26 @@
               <tr><td>One Euro 滤波</td><td>截止频率随速度自适应的低通：慢时去抖，快时少滞后；正反向各跑一遍</td><td>连续的 2D 轨迹；帧间隔超过 1.5 倍时断开，不补造</td><td>Casiez 等，2012</td></tr>
             </tbody></table></figure>
             <p>本页的 episode 指一次完整任务循环（例如叠好一件衣服），是数据集的基本单元；Take 指一次录制，一条 Take 通常含多个 episode。MCAP 是带索引的多话题日志格式，录制的原始数据就是 MCAP。</p>
+          </section>
+
+          <section class="chapter" id="before-after" tabindex="-1">
+            <h2>处理前后</h2>
+            <p>处理前，一条录制就是一个连续的 MCAP：三路相机画面、IMU 和时间戳，没有任何标注，也不知道哪段是有效操作。处理后，它被切成若干个 episode，每个 episode 带任务描述、按时间排好的原子动作、每帧的双手 21 关节关键点（双目三维、单目二维分别标明），以及被剔除区间的理由，导出为 LeRobot 格式。截至 11 月 27 日，Viewer 上已发布 1.4K 条采集、20.8K 个 episode、184.5 小时数据。</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/egp-viewer-frame.webp" aria-label="打开原图：Viewer 中的一帧"><img src="../../assets/project-media/egp-viewer-frame.webp" width="900" height="265" loading="lazy" decoding="async" alt="Viewer 并排显示同一时刻的三路画面：头部 RGB、左目、右目，桌上一件花衬衫，双手按在衣服上，蓝色左手、橙色右手的关键点骨架叠加在画面上并标注为 stereo。右侧任务信息：任务名“Smooth the garment with both hands.”，时间 00:08–00:11，动作标签 smooth_garment。"></a>
+              <figcaption><strong class="insight-media-title">处理后：一帧画面上的标注</strong>同一 episode 第 290 帧的三路画面，叠加双手关键点（stereo 为双目三维、monocular 为单目二维）；右侧是这一时刻所在的原子动作及其时间范围。</figcaption>
+            </figure>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/egp-viewer-timeline.webp" aria-label="打开原图：标注时间轴"><img src="../../assets/project-media/egp-viewer-timeline.webp" width="925" height="316" loading="lazy" decoding="async" alt="标注时间轴，横轴 0 到 23 秒。上方一条蓝色长条是 episode 任务“Fold one garment.”，下方橙色短块是原子动作：两段 smooth_garment、一段 adjust_folded_garment 和末尾一段 adjust 开头的动作，动作之间有未标注的空隙。"></a>
+              <figcaption><strong class="insight-media-title">处理后：一个 episode 的标注时间轴</strong>上层是 episode 任务，下层是原子动作；动作之间的空白是审理认定不属于任何动作、被显式标为未标注的区间。</figcaption>
+            </figure>
+            <figure class="data-table"><table><caption><strong>同一批 33 条叠衣服录制的处理前后</strong></caption><thead><tr><th>阶段</th><th class="num">数量</th><th>说明</th></tr></thead><tbody>
+              <tr><td>原始录制</td><td class="num">119.0 分钟</td><td>33 个连续 MCAP，无标注</td></tr>
+              <tr><td>本地大模型窗口</td><td class="num">2,399</td><td>每窗 3 秒、步长 0.5 秒，送本地 Qwen</td></tr>
+              <tr><td>动作候选</td><td class="num">2,628</td><td>窗口之间互不知情，存在重复和边界冲突</td></tr>
+              <tr class="is-best"><td>审理后的 episode</td><td class="num">207</td><td>另有 2 个待复核</td></tr>
+              <tr><td>剔除的区间</td><td class="num">492</td><td>每个都写明理由，例如“完成后把叠好的衣服拿走”“无手的静止”</td></tr>
+            </tbody></table></figure>
           </section>
 
           <section class="chapter" id="input" tabindex="-1">
@@ -132,6 +153,21 @@
               <tr><td>token 和解析内容完全一致的窗口</td><td class="num" colspan="2">107 / 111</td></tr>
             </tbody></table></figure>
             <p>不一致的一处是“与下一窗口连续”的标记丢了一条。下游文本审理两版都得到同样的 4 个 episode 边界，但图像复核发现：双输入版把一段可见的展开衣物标成了“抚平”。这不能算语义等价；收益与这个已知差异一起交给负责人决定，确认接受后才接入生产。</p>
+            <h3>GPT 审理的成本：一分钟数据多少 token</h3>
+            <p>审理用的是 GPT（高推理强度）。每条录制先做一次整条文本审理，证据不足时才追加一次图像复核。我把本地留存的 33 条叠衣服录制的每次调用回执逐条汇总：</p>
+            <figure class="case-media">
+              <a class="screenshot-link" href="../../assets/project-media/egp-review-tokens.webp" aria-label="打开原图：审理 token 用量"><img src="../../assets/project-media/egp-review-tokens.webp" width="2250" height="720" loading="lazy" decoding="async" alt="(a) 散点图，横轴录制时长 0 到 17 分钟，纵轴每条录制的 GPT token 数（千）。灰点是只做文本审理的 15 条，蓝点是加了图像复核的 18 条，蓝点整体高约 40 到 60 千。橙色拟合线：37.3 千 加 每分钟 18.9 千。最长的一条 17 分钟用了约 374 千。(b) 对数柱状图：原始视频 119 分钟、3 秒窗口 2,399 个、动作候选 2,628 个、审理后 episode 207 个、剔除区间 492 个。"></a>
+              <figcaption><strong class="insight-media-title">审理 token 用量与处理前后的数量</strong>(a) 每个点是一条录制，token 为该录制所有审理调用的输入与输出之和；橙线是最小二乘拟合。(b) 同一批录制在各阶段的数量，纵轴为对数。</figcaption>
+            </figure>
+            <figure class="data-table"><table><caption><strong>审理 token 用量</strong>33 条录制、共 119.0 分钟视频；均按调用回执里的计数统计。</caption><thead><tr><th>指标</th><th class="num">数值</th></tr></thead><tbody>
+              <tr class="is-best"><td>每分钟视频的 token（总量 ÷ 总时长）</td><td class="num">约 29,300</td></tr>
+              <tr><td>其中输入 / 输出</td><td class="num">约 26,000 / 3,200</td></tr>
+              <tr><td>按是否图像复核分开拟合：每条固定 + 每分钟 + 图像复核</td><td class="num">9.2k + 17.1k / 分钟 + 63.8k</td></tr>
+              <tr><td>33 条合计</td><td class="num">349 万 token</td></tr>
+              <tr><td>需要追加图像复核的录制</td><td class="num">18 / 33</td></tr>
+              <tr><td>审理耗时（墙钟）</td><td class="num">约 81 秒 / 分钟视频</td></tr>
+            </tbody></table></figure>
+            <p>用量主要由两项决定：时长，每分钟约 1.7 万 token；以及是否追加图像复核，一次约 6.4 万 token。每次调用都要带上审理规则和任务说明，所以短录制按分钟算更贵：不到 1 分钟的录制每分钟 3.8–23 万 token，5 分钟以上的为 1.6–2.7 万。图 (a) 的橙线把两类录制混在一起拟合，斜率因此偏高。</p>
           </section>
 
           <section class="chapter" id="hand" tabindex="-1">

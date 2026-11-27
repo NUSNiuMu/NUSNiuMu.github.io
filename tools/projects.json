@@ -183,11 +183,19 @@
       "category": "data",
       "thumb": "assets/project-media/ego-action-review.webp",
       "thumb_alt": "录制画面与动作候选的对照",
-      "summary": "把第一视角录制自动变成动作标注和手部三维数据。",
+      "summary": "把第一视角录制自动变成动作标注和手部三维数据：本地大模型给动作候选、GPT 审理、Viewer 可视化查看。",
       "metrics": [
         [
-          "17,336 个",
-          "Viewer 中累计的 episode（1,138 条录制）"
+          "20.8K 个 episode",
+          "已发布 184.5 小时第一视角数据"
+        ],
+        [
+          "约 2.9 万 token / 分钟",
+          "GPT 审理每分钟视频的用量"
+        ],
+        [
+          "119 分钟 → 207 个 episode",
+          "33 条录制的处理前后"
         ]
       ]
     },
