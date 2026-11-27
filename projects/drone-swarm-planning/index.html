@@ -8,10 +8,10 @@
     <meta name="theme-color" content="#e8e9e5" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#181e21" media="(prefers-color-scheme: dark)">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <meta name="description" content="实习时在 UE5 里写的无人机集群规划器，2026 年移植成独立仿真复盘重做：机间碰撞从 93% 降到 0；再扩展到 50 架，与 CBS、ECBS、优先级规划、ORCA 对比，并测试动力学可行性和执行扰动。">
+    <meta name="description" content="多无人机城市集群规划：时空 A* 冲突协调、B 样条轨迹和动作依赖图执行，10 架互换位置机间碰撞从 93% 降到 0；扩展到 50 架，与 CBS、ECBS、优先级规划、ORCA 对比，并测试动力学可行性和执行扰动。">
     <meta property="og:type" content="article">
     <meta property="og:title" content="无人机集群路径规划 · 牛牧">
-    <meta property="og:description" content="UE5 集群规划器复盘重做；10–50 架规模对比、B 样条轨迹、动作依赖图执行。">
+    <meta property="og:description" content="10–50 架无人机规划器对比、B 样条轨迹、动作依赖图执行。">
     <meta property="og:image" content="https://nusniumu.github.io/assets/project-media/swarm-poster.webp">
     <title>无人机集群路径规划 · 牛牧</title>
     <link rel="canonical" href="https://nusniumu.github.io/projects/drone-swarm-planning/">
@@ -35,21 +35,21 @@
       <header class="insight-hero">
         <div class="case-title">
           <h1>无人机集群路径规划</h1>
-          <p class="lead">2025 年实习时，我在 UE5 里写了一套多无人机协同规划器。2026 年我把它逐函数移植成独立仿真，复盘原版为什么会撞，重做规划、平滑和执行三层；然后把规模扩到 50 架，和文献中的规划器、纯反应式避障对比，并检查轨迹能不能飞、执行出现延迟时会不会撞。</p>
-          <div class="actions"><a class="button primary" href="#methods">看方法对比</a><a class="button" href="https://github.com/NUSNiuMu/UE5-Drone-Swarm">原 UE5 仓库</a></div>
+          <p class="lead">让几十架无人机在城市街区里同时飞向各自目标、互不相撞。基线是我在 UE5 里写的预约表 A* 规划器；我把它移植到独立仿真，找出它碰撞的原因，再设计规划、平滑和执行三层；然后把规模扩到 50 架，和文献中的规划器、纯反应式避障对比，并检查轨迹能不能飞、执行出现延迟时会不会撞。</p>
+          <div class="actions"><a class="button primary" href="#methods">看方法对比</a><a class="button" href="https://github.com/NUSNiuMu/UE5-Drone-Swarm">UE5 基线仓库</a></div>
         </div>
         <figure class="case-media">
-          <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/swarm-poster.webp" width="1280" height="640" aria-label="原版与优化版的集群飞行对比">
+          <video class="sample-video" controls playsinline preload="none" poster="../../assets/project-media/swarm-poster.webp" width="1280" height="640" aria-label="基线与本方案的集群飞行对比">
             <source src="../../assets/project-media/swarm-demo.mp4" type="video/mp4">
             <a href="../../assets/project-media/swarm-demo.mp4">打开视频 · 集群飞行对比</a>
           </video>
-          <figcaption><strong class="insight-media-title">同一场景，两套规划器</strong>10 架无人机穿过城市街区互换位置，场上有移动障碍。左：原版移植，10 次机间碰撞；右：第一版重做，0 次。橙线是小于 100 cm 的近距离，红圈是碰撞。</figcaption>
+          <figcaption><strong class="insight-media-title">同一场景，两套规划器</strong>10 架无人机穿过城市街区互换位置，场上有移动障碍。左：UE5 预约表基线，10 次机间碰撞；右：本方案，0 次。橙线是小于 100 cm 的近距离，红圈是碰撞。</figcaption>
         </figure>
       </header>
 
       <dl class="case-summary" aria-label="项目摘要">
         <div><dt>问题</dt><dd>10–50 架无人机在有建筑的三维空间里同时飞向各自目标，互不相撞，轨迹满足速度和加速度上限</dd></div>
-        <div><dt>我做的</dt><dd>原版：UE5 C++ 集群管理、A* 规划、预约表、平滑和雷达扫描。重做：移植与复盘、时空 A* / ECBS / 优先级规划、B 样条轨迹、动作依赖图执行</dd></div>
+        <div><dt>我做的</dt><dd>UE5 C++ 集群管理与预约表 A*（基线）；移植与碰撞分析、时空 A* / CBS / ECBS / 优先级规划、B 样条轨迹、动作依赖图执行、50 架规模评估</dd></div>
         <div><dt>技术栈</dt><dd>UE5 C++ · 时空 A* · CBS / ECBS · 优先级规划 · ORCA · B 样条 · 动作依赖图 · Python</dd></div>
         <div><dt>评估</dt><dd>6–50 架，每档 30 张随机城市地图，起终点对穿强制冲突；均值与 95% 置信区间</dd></div>
         <div class="summary-key"><dt>结果</dt><dd>10 架时至少碰撞一次的飞行从 93% 降到 0。30 架、叠加延迟和噪声时，按时刻执行 97% 的飞行发生碰撞，动作依赖图执行 720 次全部 0 碰撞。</dd></div>
@@ -59,10 +59,10 @@
       <div class="case-layout">
         <nav class="toc" aria-label="章节目录">
           <ul>
-            <li><a href="#original">原版做了什么</a></li>
-            <li><a href="#review">为什么会撞</a></li>
+            <li><a href="#original">基线：UE5 预约表规划器</a></li>
+            <li><a href="#review">基线为什么会撞</a></li>
             <li><a href="#methods">方法一览</a></li>
-            <li><a href="#v1">第一版重做与结果</a></li>
+            <li><a href="#v1">10 架互换：碰撞降到 0</a></li>
             <li><a href="#scaling">规模扩到 50 架</a></li>
             <li><a href="#dynamics">轨迹飞得出来吗</a></li>
             <li><a href="#robust">执行出现延迟时</a></li>
@@ -71,15 +71,15 @@
         </nav>
         <div class="case-text">
           <section class="chapter" id="original">
-            <h2>原版做了什么</h2>
-            <p>原工程是 UE5 的 C++ 组件：三维栅格地图、每架无人机一个 A* 规划器、全局预约表记录别的无人机何时在哪，规划时避开预约冲突；规划出的折线经过迭代平滑，飞行中用多线射线扫描（ParallelFor 并行，16 线、10 Hz）检测移动障碍，必要时重规划。</p>
+            <h2>基线：UE5 预约表规划器</h2>
+            <p>基线是我在 UE5 里写的 C++ 组件：三维栅格地图、每架无人机一个 A* 规划器、全局预约表记录别的无人机何时在哪，规划时避开预约冲突；规划出的折线经过迭代平滑，飞行中用多线射线扫描（ParallelFor 并行，16 线、10 Hz）检测移动障碍，必要时重规划。</p>
             <p>UE5 工程依赖 Windows 和完整的场景资产，没法在现在的机器上直接跑。我把 <code>Source/Drone/</code> 下的规划、预约、平滑、扫描逻辑逐函数移植到 Python，场景换成随机生成的体素城市，作为基线。</p>
             <ol class="insight-flow" role="list"><li><strong>规划</strong><span>A* + 预约表</span></li><li><strong>平滑</strong><span>迭代平滑 + 净空检查</span></li><li><strong>执行</strong><span>射线扫描、近距离急停、重规划</span></li></ol>
           </section>
 
           <section class="chapter" id="review">
-            <h2>为什么会撞</h2>
-            <p>让 10 架无人机互换位置，原版几乎每张地图都会撞。逐行对照代码，问题在四处：</p>
+            <h2>基线为什么会撞</h2>
+            <p>让 10 架无人机互换位置，基线几乎每张地图都会撞。逐行对照代码，问题在四处：</p>
             <ul class="plain-list">
               <li><strong>A* 没有时间维。</strong>搜索状态只有空间格子，没有“原地等待”动作，预约表只能剪掉邻居，不能让一架机停下来让路。冲突检测只比较点，不检查两架机沿线段对穿。</li>
               <li><strong>时间轴对不上。</strong>所有无人机 t = 0 同时起飞；规划器按 100 cm/s 算预约时间，实际飞行速度不同；中途重规划时时间又从 0 开始。</li>
@@ -92,37 +92,37 @@
             <h2>方法一览</h2>
             <p>MAPF（多智能体路径规划）把地图离散成格子、时间离散成步，要求所有机器人的路径在任何时刻都不冲突。下表是本页出现的全部方法。</p>
             <figure class="data-table"><table><caption><strong>规划层</strong>都在 50 cm 体素栅格上运行，安全半径 1 格（两机同一时刻不能处于相邻格）。</caption><thead><tr><th>方法</th><th>怎么工作</th><th>性质 / 需要的信息</th></tr></thead><tbody>
-              <tr><td>原版移植</td><td>按直线距离排优先级，逐架做没有时间维的 3D A*；用 160 cm / 0.04 s 的预约表剪枝</td><td>集中式；不完备，常产生冲突</td></tr>
+              <tr><td>UE5 预约表基线</td><td>按直线距离排优先级，逐架做没有时间维的 3D A*；用 160 cm / 0.04 s 的预约表剪枝</td><td>集中式；不完备，常产生冲突</td></tr>
               <tr><td>时空 A*<br>（Silver 2005）</td><td>状态是“格子 × 时间步”，有等待动作，禁止穿角；启发式是静态地图上的 Dijkstra 距离</td><td>单机搜索，避让约束来自上层</td></tr>
               <tr><td>优先级规划 + 随机重启<br>（Erdmann 与 Lozano-Pérez 1987）</td><td>按顺序逐架用时空 A* 规划，后规划的避开前面已占的时空格；失败就随机换顺序重来，直到时间预算用完</td><td>集中式；不完备，没有最优性界</td></tr>
               <tr><td>CBS，Conflict-Based Search<br>（Sharon 等 2015）</td><td>先各自规划；高层找到一处冲突，就分裂成两个子问题，分别给两架机加约束重新规划；按总代价最小优先展开</td><td>集中式；最优且完备，但冲突多时约束树爆炸</td></tr>
               <tr><td>ECBS(w)，Enhanced CBS<br>（Barer 等 2014）</td><td>CBS 的有界次优版：高层和低层都在“代价 ≤ w × 下界”的候选里选冲突最少的展开</td><td>集中式；解的代价 ≤ w × 最优</td></tr>
-              <tr><td>第一版重做的规划器</td><td>对称邻域约束 + 只在高层做 w = 1.15 的焦点搜索</td><td>后来发现会剪掉合法解，既不完备也不最优（见下文）</td></tr>
+              <tr><td>剪枝 CBS</td><td>时空 A* + CBS 式协调；用对称邻域约束一次排除一片冲突，只在高层做 w = 1.15 的焦点搜索</td><td>小规模快；会剪掉合法解，既不完备也不最优（见下文）</td></tr>
               <tr><td>ORCA，Optimal Reciprocal Collision Avoidance<br>（van den Berg 等 2011）</td><td>不做全局规划：每架沿自己的最短路飞，每个控制步把期望速度投影到“与邻机、建筑都不会在 2 s 内相撞”的速度集合里</td><td>分布式；需要邻机位置和速度；没有无死锁保证</td></tr>
             </tbody></table></figure>
             <figure class="data-table"><table><caption><strong>轨迹与执行层</strong></caption><thead><tr><th>方法</th><th>怎么工作</th><th>性质 / 需要的信息</th></tr></thead><tbody>
-              <tr><td>原版迭代平滑</td><td>航点加斥力迭代平滑；任何一点不安全就整条退回折线</td><td>单机后处理</td></tr>
+              <tr><td>基线迭代平滑</td><td>航点加斥力迭代平滑；任何一点不安全就整条退回折线</td><td>单机后处理</td></tr>
               <tr><td>管道约束平滑</td><td>每个航点只能在格心 ±0.35 格的盒子内移动，并保持与建筑的净空，逐点接受或拒绝</td><td>单机后处理</td></tr>
               <tr><td>B 样条 + 时间最优速度剖面</td><td>以平滑航点为控制点的三次 B 样条（加速度连续）；沿弧长按曲率限速并反向传播制动距离（Bobrow 等 1985 的思路），保证 |v| ≤ 100 cm/s、|a| ≤ 200 cm/s²</td><td>单机；需要地图</td></tr>
               <tr><td>按时刻执行（对照）</td><td>跟踪计划时间表，落后就全速追赶；机间不耦合</td><td>只需共同时钟</td></tr>
               <tr><td>ADG，Action Dependency Graph<br>（Hönig 等 2019）</td><td>不看时钟，看顺序：计划里先经过某片区域的无人机离开之前，后面的不进入</td><td>需要知道别机已到达的航点序号（通信或共享状态）</td></tr>
-              <tr><td>速度障碍法 VO<br>（Fiorini 与 Shiller 1998）</td><td>对跟踪到的移动障碍做 3.5 s 前向推演，采样选代价最小且不相撞的速度</td><td>机载感知；只用于第一版的移动障碍</td></tr>
+              <tr><td>速度障碍法 VO<br>（Fiorini 与 Shiller 1998）</td><td>对跟踪到的移动障碍做 3.5 s 前向推演，采样选代价最小且不相撞的速度</td><td>机载感知；只用于带移动障碍的 6–10 架实验</td></tr>
             </tbody></table></figure>
           </section>
 
           <section class="chapter" id="v1">
-            <h2>第一版重做与结果</h2>
-            <p>第一版把规划换成时空 A* 加 CBS 式协调，平滑换成管道约束平滑，用 ADG 取代急停规则，移动障碍用 VO 避让。场景 6 / 8 / 10 架，带移动障碍。</p>
+            <h2>10 架互换：碰撞降到 0</h2>
+            <p>规划换成时空 A* 加剪枝 CBS 协调，平滑换成管道约束平滑，用 ADG 取代急停规则，移动障碍用 VO 避让。场景 6 / 8 / 10 架，带移动障碍。</p>
             <figure class="case-media bar-compare">
               <figcaption><strong class="insight-media-title">至少发生一次机间碰撞的飞行比例</strong>每档 30 张随机地图，越短越好。</figcaption>
               <dl>
-                <div><dt>6 架 · 原版</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:57%"></span></span><b>57%</b></dd></div>
-                <div><dt>8 架 · 原版</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:77%"></span></span><b>77%</b></dd></div>
-                <div><dt>10 架 · 原版</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:93%"></span></span><b>93%</b></dd></div>
-                <div class="is-best"><dt>6 / 8 / 10 架 · 第一版重做</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:0%"></span></span><b>0%</b></dd></div>
+                <div><dt>6 架 · 基线</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:57%"></span></span><b>57%</b></dd></div>
+                <div><dt>8 架 · 基线</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:77%"></span></span><b>77%</b></dd></div>
+                <div><dt>10 架 · 基线</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:93%"></span></span><b>93%</b></dd></div>
+                <div class="is-best"><dt>6 / 8 / 10 架 · 本方案</dt><dd><span class="bar-track" aria-hidden="true"><span style="inline-size:0%"></span></span><b>0%</b></dd></div>
               </dl>
             </figure>
-            <figure class="data-table"><table><caption><strong>原版与第一版重做</strong>6 / 8 / 10 架，每档 30 张地图，带移动障碍。</caption><thead><tr><th>指标</th><th class="num">原版</th><th class="num">第一版重做</th></tr></thead><tbody>
+            <figure class="data-table"><table><caption><strong>基线与本方案</strong>6 / 8 / 10 架，每档 30 张地图，带移动障碍。</caption><thead><tr><th>指标</th><th class="num">基线</th><th class="num">本方案</th></tr></thead><tbody>
               <tr><td>最小机间距离</td><td class="num">15–32 cm</td><td class="num">80–93 cm</td></tr>
               <tr><td>建筑擦碰（次 / 飞行）</td><td class="num">3.6–5.1</td><td class="num">0</td></tr>
               <tr><td>全部到达且零碰撞</td><td class="num">0–3%</td><td class="num">90–100%</td></tr>
@@ -131,23 +131,23 @@
               <tr><td>完成时间</td><td class="num">基准</td><td class="num">−8 到 −10%</td></tr>
               <tr><td>规划耗时（10 架）</td><td class="num">基准</td><td class="num">约 3 倍（1.6–2.0 s）</td></tr>
             </tbody></table></figure>
-            <p>第一版没撞上的几次失败，都是移动障碍突然掉头。关掉 VO 避让层，10 架时 87% 的飞行会撞上移动障碍。</p>
+            <p>本方案没撞上的几次失败，都是移动障碍突然掉头。关掉 VO 避让层，10 架时 87% 的飞行会撞上移动障碍。</p>
             <figure class="case-media">
-              <a class="screenshot-link" href="../../assets/project-media/swarm-safety.webp" aria-label="打开原图 · 安全性对比"><img src="../../assets/project-media/swarm-safety.webp" width="1280" height="400" loading="lazy" decoding="async" alt="四个柱状图：机间碰撞次数、至少一次碰撞的比例、移动障碍碰撞、建筑擦碰，按 6、8、10 架分组，原版为橙色、第一版重做为蓝色"></a>
-              <figcaption><strong class="insight-media-title">安全性</strong>橙色为原版移植，蓝色为第一版重做，30 张地图的均值 ± 标准差。</figcaption>
+              <a class="screenshot-link" href="../../assets/project-media/swarm-safety.webp" aria-label="打开原图 · 安全性对比"><img src="../../assets/project-media/swarm-safety.webp" width="1280" height="400" loading="lazy" decoding="async" alt="四个柱状图：机间碰撞次数、至少一次碰撞的比例、移动障碍碰撞、建筑擦碰，按 6、8、10 架分组，基线为橙色、本方案为蓝色"></a>
+              <figcaption><strong class="insight-media-title">安全性</strong>橙色为 UE5 预约表基线，蓝色为本方案，30 张地图的均值 ± 标准差。</figcaption>
             </figure>
             <figure class="case-media">
-              <a class="screenshot-link" href="../../assets/project-media/swarm-efficiency.webp" aria-label="打开原图 · 效率对比"><img src="../../assets/project-media/swarm-efficiency.webp" width="1280" height="400" loading="lazy" decoding="async" alt="五个柱状图：平均飞行路径、拐点数、加速度能量代理、完成时间、规划耗时，原版与第一版重做对比"></a>
+              <a class="screenshot-link" href="../../assets/project-media/swarm-efficiency.webp" aria-label="打开原图 · 效率对比"><img src="../../assets/project-media/swarm-efficiency.webp" width="1280" height="400" loading="lazy" decoding="async" alt="五个柱状图：平均飞行路径、拐点数、加速度能量代理、完成时间、规划耗时，基线与本方案对比"></a>
               <figcaption><strong class="insight-media-title">效率与平顺性</strong>路径长度基本不变；拐点、加速度能量代理和完成时间都下降，规划耗时约 3 倍。</figcaption>
             </figure>
           </section>
 
           <section class="chapter" id="scaling">
             <h2>规模扩到 50 架</h2>
-            <p>只和原版比说服力不够。第二轮把规模扩到 10 / 20 / 30 / 50 架（静态城市，只看多机协调），每个规划器 30 秒预算，和最优 CBS、ECBS、优先级规划、纯反应式 ORCA 放在同一批地图上比。规划时间是 Python 在共享 CPU 上的墙钟时间，只看相对大小。</p>
+            <p>只和自己的基线比说服力不够。把规模扩到 10 / 20 / 30 / 50 架（静态城市，只看多机协调），每个规划器 30 秒预算，和最优 CBS、ECBS、优先级规划、纯反应式 ORCA 放在同一批地图上比。规划时间是 Python 在共享 CPU 上的墙钟时间，只看相对大小。</p>
             <figure class="data-table"><table><caption><strong>30 秒内解出的地图比例</strong>括号内为已解地图的平均规划耗时。ORCA 不规划，这里列任务成功率。</caption><thead><tr><th>方法</th><th class="num">10 架</th><th class="num">20 架</th><th class="num">30 架</th><th class="num">50 架</th></tr></thead><tbody>
               <tr><td>CBS（最优）</td><td class="num">50%（5.5 s）</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td></tr>
-              <tr><td>第一版重做的规划器</td><td class="num">100%</td><td class="num">90%（6.5 s）</td><td class="num">13%</td><td class="num">0%</td></tr>
+              <tr><td>剪枝 CBS</td><td class="num">100%</td><td class="num">90%（6.5 s）</td><td class="num">13%</td><td class="num">0%</td></tr>
               <tr><td>ECBS，w = 1.5</td><td class="num">100%（0.25 s）</td><td class="num">100%（1.2 s）</td><td class="num">100%（4.0 s）</td><td class="num">67%（15.6 s）</td></tr>
               <tr class="is-best"><td>优先级规划 + 随机重启</td><td class="num">100%（0.14 s）</td><td class="num">100%</td><td class="num">100%（1.9 s）</td><td class="num">80%（14.3 s）</td></tr>
               <tr><td>ORCA，与规划器同规格</td><td class="num">100%</td><td class="num">100%</td><td class="num">97%</td><td class="num">100%</td></tr>
@@ -162,17 +162,17 @@
               <li><strong>ECBS 起作用的是“挑冲突最少的”，不是更松的界。</strong>实际代价只比下界高 0.5% / 1.7% / 2.6% / 4.0%（10 / 20 / 30 / 50 架），w = 1.2 和 1.5 结果一样。</li>
               <li><strong>ECBS 没有赢过优先级规划。</strong>50 架时优先级规划解出 80%，ECBS 67%，前者还更快，完成时间没有显著差异。ECBS 多给的只是一个次优性上界。</li>
               <li><strong>纯反应式 ORCA 在这个场景里很难打败。</strong>10–30 架时它到达更快、间距更大；规划方法只在 50 架时完成时间稳定胜出（33.4 对 36.2 s，ORCA 在中心拥堵）。城市是三维的、垂直空间充足、任务对称，正是 ORCA 的舒适区。规划方法的价值在于起飞前就能验证无碰撞、到达时间可预期，以及下一节的执行保证；ORCA 没有无死锁保证（30 架时有 1 张图没全部到达），实验里也没给它加通信延迟和感知噪声。</li>
-              <li><strong>第一版重做的规划器不能扩展。</strong>我当初写的“CBS”其实是剪枝过度的变体，会剪掉合法解（比如两机左右交换），既不完备也不最优，30 架以上基本解不出。这里如实改正。</li>
+              <li><strong>剪枝 CBS 不能扩展。</strong>对称邻域约束会剪掉合法解（比如两机左右交换），既不完备也不最优，30 架以上基本解不出。所以规模化时改用 ECBS 和优先级规划。</li>
             </ul>
             <figure class="case-media">
-              <a class="screenshot-link" href="../../assets/project-media/swarm-v2-scaling.webp" aria-label="打开原图 · 规模扩展"><img src="../../assets/project-media/swarm-v2-scaling.webp" width="1280" height="500" loading="lazy" decoding="async" alt="四个子图，横轴为无人机数 10 到 50：30 秒内解出比例、规划耗时、任务成功率、全部到达时间，比较 ECBS、优先级规划、CBS、第一版规划器和两种 ORCA"></a>
+              <a class="screenshot-link" href="../../assets/project-media/swarm-v2-scaling.webp" aria-label="打开原图 · 规模扩展"><img src="../../assets/project-media/swarm-v2-scaling.webp" width="1280" height="500" loading="lazy" decoding="async" alt="四个子图，横轴为无人机数 10 到 50：30 秒内解出比例、规划耗时、任务成功率、全部到达时间，比较 ECBS、优先级规划、CBS、剪枝 CBS 和两种 ORCA"></a>
               <figcaption><strong class="insight-media-title">规模扩展</strong>从左到右：30 秒内解出比例（虚线为 10 秒）、已解地图的规划耗时（对数轴）、任务成功率、全部到达时间。阴影为 95% 置信区间。</figcaption>
             </figure>
           </section>
 
           <section class="chapter" id="dynamics">
             <h2>轨迹飞得出来吗</h2>
-            <p>第一版沿平滑后的折线飞，拐角处只做经验限速，速度方向在航点处瞬间改变。第二轮把同一份计划变成三次 B 样条再做时间参数化，并在连续轨迹上检查（每个 20 Hz 控制步内取 9 个子样本），而不只检查航点。</p>
+            <p>沿平滑后的折线飞时，拐角处只能做经验限速，速度方向在航点处瞬间改变。改为把同一份计划变成三次 B 样条再做时间参数化，并在连续轨迹上检查（每个 20 Hz 控制步内取 9 个子样本），而不只检查航点。</p>
             <figure class="data-table"><table><caption><strong>折线执行与 B 样条轨迹</strong>同一份 ECBS 计划，30 张地图平均；上限 |v| ≤ 100 cm/s、|a| ≤ 200 cm/s²。</caption><thead><tr><th>指标</th><th class="num">10 架</th><th class="num">20 架</th><th class="num">30 架</th><th class="num">50 架</th></tr></thead><tbody>
               <tr><td>峰值加速度，折线（cm/s²）</td><td class="num">1192</td><td class="num">1273</td><td class="num">1288</td><td class="num">1336</td></tr>
               <tr class="is-best"><td>峰值加速度，B 样条（cm/s²）</td><td class="num">178</td><td class="num">185</td><td class="num">190</td><td class="num">192</td></tr>
@@ -223,7 +223,7 @@
             <ul class="plain-list">
               <li><strong>结论。</strong>30 架以内用优先级规划或 ECBS 都能在几秒内拿到无冲突计划，执行用 ADG 才能在延迟下保持零碰撞；只追求到达快、能接受没有事前保证时，纯反应式 ORCA 在开阔三维空间里更简单也更快。</li>
               <li><strong>不是 UE5 物理。</strong>20 Hz 质点运动学仿真，加速度约束是沿路径的一维模型，没有姿态、推力上限和 jerk / snap 约束，也没有做 minimum-snap。</li>
-              <li><strong>感知理想化。</strong>射线命中即得到障碍中心，真实雷达还需要点云聚类和跟踪；第二轮实验没有移动障碍。</li>
+              <li><strong>感知理想化。</strong>射线命中即得到障碍中心，真实雷达还需要点云聚类和跟踪；10–50 架的规模实验没有移动障碍。</li>
               <li><strong>没有在线重规划。</strong>无人机偏离路径太远时不会重新规划，阵风下的建筑擦碰就是这个原因。</li>
             </ul>
           </section>
